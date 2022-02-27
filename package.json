@@ -1,27 +1,10 @@
 {
   "name": "@iztiar/iztiar-core",
   "version": "0.2.0",
-  "description": "Itziar : vient du basque et signifie « champ d’étoiles ». \tHas been changed here to iztiaz as I find easier to pronounce...",
+  "description": "The core of the Iztiar software family",
   "main": "index.js",
-  "directories": {
-    "src": "src"
-  },
-  "dependencies": {
-    "aedes": "^0.46.2",
-    "aedes-logging": "^2.0.1",
-    "aedes-persistence": "^8.1.3",
-    "aedes-server-factory": "^0.2.1",
-    "aedes-stats": "^4.0.0",
-    "chalk": "^5.0.0",
-    "commander": "^8.3.0",
-    "deepequal": "^0.0.1",
-    "mqemitter": "^4.5.0",
-    "pidusage": "^3.0.0",
-    "pino": "^7.6.4",
-    "ps": "^1.0.0",
-    "semver": "^7.3.5",
-    "sprintf-js": "^1.1.2"
-  },
+  "directories": {},
+  "dependencies": {},
   "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

@@ -23,11 +23,14 @@ You can also download and examine it to know exactly what it does. In brief:
 
 - check that we are run by root
 - accept command-line arguments
-    - storage-dir
-    - account-name
-    - account-uid
-    - account-gid
+    - storage directory
+    - account name
+    - account uid
+    - account gid
     - environment name
+    - controller name
+    - controller ports
+    - broker ports
 - detect, gather and later install all prerequisites
     - the latest Node.js LTS version
     - development and compilation tools for the host: gcc-c++, make, python3, 'Development Tools' group
@@ -45,13 +48,13 @@ You can also download and examine it to know exactly what it does. In brief:
 
         `useradd -b /var/lib -G wheel -m -r -U iztiar`
     - create storageDir
+    - create the initial set of configuration files
     - define the systemd services
         - controller
         - meteor-web-ui
         - rest-api
         - mongodb
     - install a set of selectionned Iztiar base packages
-    - define the initial set of configuration files
-    - provide a full log of its actions
+    - provide a full log of its actions and their results
 
 The installer should focalize on installing all services on a single host. Spanning the environment on several hosts should be considered as an advanced alternative.
