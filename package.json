@@ -4,7 +4,10 @@
   "description": "The core of the Iztiar software family",
   "main": "index.js",
   "directories": {},
-  "dependencies": {},
+  "dependencies": {
+    "iztiar-core-cli": "",
+    "iztiar-core-ui": ""
+  },
   "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
