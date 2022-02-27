@@ -1,9 +1,12 @@
 {
   "name": "@iztiar/iztiar-core",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "The core of the Iztiar software family",
   "main": "index.js",
-  "directories": {},
+  "directories": {
+    "docs": "docs",
+    "maintainer": "maintainer"
+  },
   "dependencies": {
     "iztiar-core-cli": "",
     "iztiar-core-ui": ""
