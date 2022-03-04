@@ -1,6 +1,6 @@
-# Iztiar #
+# Iztiar
 
-## Liminaries ##
+## Liminaries
 
 Iztiar aims to form a big family of packages (and, of course, nothing less) to drive a set of sensors, actioners, scenarios, and the glue around all of these.
 Put in together, we so are building a home automation application, the dream of an automated home, a building supervision software, etc.
@@ -15,23 +15,33 @@ At least, it is almost bug-free!
 
 So, please be patient...
 
-## iztiar-core ##
+## iztiar-core
 
-___iztiar-core___ (this package) is the very core of the whole software family. It is expected to provide:
+___iztiar-core___ (this package) is the very core of the whole software family. Through its command-line interface, it is expected to provide the core services required by _Iztiar_:
 
-- the coreController service to be initially started, along with the commands to manage it
-- the core of the Meteor user interface
-- the REST API server and its first primitives
+- the coreBroker messaging bus
+- the coreController service
+- the REST API server
 - the certificate-based security framework.
 
-See also:
+### Command-line interface
+
+```shell
+iztiar {start|stop|test} [--storage-dir <storage_dir>] [--loglevel <loglevel>]
+```
+
+It is a design decision that the command-line accept as few options as possible. The rationale is that we want the configuration be written.
+
+The <storage_dir> option addresses the _iztiar_ configuration file, which itself is expected to fully describe all services to be started (respectively stopped, tested).
+
+### See also:
 
 - the [Technologies](./docs/Technologies.md) document which describes the used technologies
 - the [Architecture](./docs/Architecture.md) description
 - the [Taxonomy](./docs/Taxonomy.md) document which defines and  explain the notions used here
 - , and, last, the [Installation](./docs/Installation.md) to know how to install this piece of gold :)
 
-## Some notes about the _iztiar_ word ##
+## Some notes about the _iztiar_ word
 
 According to [Wikipedia](https://en.wikipedia.org/), _Itziar_ may be understood as both a spain city and a female given name.
 
@@ -41,9 +51,9 @@ Other considered names were:
 
 - adomojs: Authomatized Domus Javascript
 - adomong: Authomatized Dom New Generation
-- or see also how [NodeJS](https://nodejs.com) which finds three new words each time we reload the page..;)
+- or see also how [NodeJS](https://nodejs.com) finds three new words each time we reload the page..;)
 
-## A copyright notice ##
+## A copyright notice
 
 First, and though lot of the code has been redesigned or rewritten, the very first code set has been shamelessly forked from [Homebridge](https://github.com/homebridge).
 

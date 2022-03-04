@@ -1,28 +1,42 @@
 {
   "name": "@iztiar/iztiar-core",
   "version": "0.4.0",
+  "type": "module",
   "description": "The core of the Iztiar software family",
-  "main": "index.js",
-  "directories": {
-    "docs": "docs",
-    "maintainer": "maintainer"
+  "keywords": [
+    "iztiar"
+  ],
+  "homepage": "https://github.com/iztiar/iztiar-core",
+  "bugs": {
+    "url": "https://github.com/iztiar/iztiar-core/issues",
+    "email": "iztiar-leader@trychlos.org"
   },
-  "dependencies": {
-    "iztiar-core-cli": "",
-    "iztiar-core-ui": ""
-  },
-  "devDependencies": {},
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+  "license": "GPL-3.0",
+  "author": "Pierre Wieser <iztiar-leader@trychlos.org> (https://github.com/orgs/iztiar/people/iztiar-0)",
+  "contributors": [],
+  "funding": [],
+  "main": "./src/main.js",
+  "exports": {
+    ".": "./src/main.js"
   },
   "repository": {
     "type": "git",
     "url": "git+ssh://git@github.com/iztiar/iztiar-core.git"
   },
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/iztiar/iztiar-core/issues"
+  "dependencies": {
+    "chalk": "^5.0.0",
+    "commander": "^9.0.0",
+    "es6-interfaces": "^1.0.4"
   },
-  "homepage": "https://github.com/iztiar/iztiar-core#readme"
+  "peerDependencies": {},
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "engines": {
+    "node": ">12.x"
+  },
+  "iztiar": {
+    "accept-plugins": true
+  }
 }

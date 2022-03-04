@@ -37,5 +37,6 @@ Initializing development environment
     2. then, locally
         $ vi package.json
           bumping version number
+        $ git branch -b v0.0.0 <new version>
         $ git commit -am "Bump version number"
 

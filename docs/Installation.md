@@ -21,20 +21,46 @@ You can also download and examine it to know exactly what it does. In brief:
 
 ### install.sh development notes ###
 
+As the script is expected to be run from a http get, it is supposed (required ?) to be one-piece: no external function can be used here.
+
+Nonetheless, we have probably to write it so that each dependant package be easily maintained:
+
+- have a 'iztiar-core' part
+- have a 'iztiar-core-cli' part
+- have a 'iztiar-code-ui' part
+- and so on.
+
+Also, all our installed packages, and the future installed plugins will be NPM packages. We prefer:
+
+- keep the NPM packages away from the live data (seems obvious)
+- keep the Iztiar NPM packages and their dependancies away from maybe already installed other packages.
+
+What to do:
+
 - check that we are run by root
 - accept command-line arguments
-    - storage directory
-    - account name
-    - account uid
-    - account gid
-    - environment name
-    - controller name
-    - controller ports
-    - broker ports
+
+    - iztiar-core
+        - install NPM directory (default to /usr/lib/iztiar) -- maybe not this one
+
+    - iztiar-core-cli
+        - storage directory (default to /var/lib/iztiar)
+        - account name (default to iztiar)
+        - account uid (system default)
+        - account gid (system default)
+        - environment name (default to production)
+        - controller name (application default)
+        - controller ports (application default)
+        - broker ports (application default)
+    - iztiar-core-ui
+        - admin initial user (default to admin)
+        - admin initial password (default to admin)
 - detect, gather and later install all prerequisites
     - the latest Node.js LTS version
     - development and compilation tools for the host: gcc-c++, make, python3, 'Development Tools' group
-    - mongodb software
+
+    - mongodb software -- or another database service ?
+
 - interactively ask to the user the configuration informations if they have not been provided in the command-line
 - may propose a set of Iztiar base packages
 - display a summary of:
@@ -43,17 +69,27 @@ You can also download and examine it to know exactly what it does. In brief:
     - the way the system will be modified (user account, directory and so on)
 - request a confirmation or a cancellation
 - if confirmed:
+
     - install missing packages
+        @iztiar packages are installed by root globally
+
     - define a name/uid/guid account
 
-        `useradd -b /var/lib -G wheel -m -r -U iztiar`
+        ```shell
+        # useradd --comment Iztiar --home-dir /var/lib/iztiar --groups wheel --create-home --shell/bin/false --system --user-group iztiar
+        # cat <<! >/etc/sudoers.d/iztiar
+        iztiar ALL=(ALL) NOPASSWD: /usr/bin/systemctl reboot, /usr/bin/systemctl start iztiar, /usr/bin/systemctl stop iztiar, /usr/bin/systemctl restart iztiar, /usr/bin/node, /usr/bin/npm
+        !
+        ```
+
     - create storageDir
     - create the initial set of configuration files
     - define the systemd services
-        - controller
-        - meteor-web-ui
-        - rest-api
-        - mongodb
+        - iztiar-controller
+        - iztiar-broker
+        - iztiar-ui
+        - iztiar-api
+        - mongodb ?
     - install a set of selectionned Iztiar base packages
     - provide a full log of its actions and their results
 
