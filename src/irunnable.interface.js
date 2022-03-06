@@ -6,6 +6,7 @@
 import chalk from 'chalk';
 
 import { IForkable, IMsg } from './imports.js';
+import { cliListInstalled } from './cli-list-installed.js';
 
 export class IRunnable {
 
@@ -61,17 +62,38 @@ export class IRunnable {
 
     /**
      * run the requested action
-     * @param {String} action the requested action
+     * @param {coreApplication} app the application instance
+     *  The action must return a Promise, so that we will wait for its resolution (or rejection)
+     *  Exit code must be set by the action in process.exitCode
      * [-public API-]
      */
-    run( action ){
-        console.log( 'IRunnable.run() action='+action );
-        IMsg.startup( action );
-        IMsg.debug( 'debug message' );
-        IMsg.verbose( 'verbose message' );
-        IMsg.info( 'info message' );
-        IMsg.out( 'out message' );
-        IMsg.warn( 'warn message' );
-        IMsg.error( 'error message' );
+    run( app ){
+        const action = app.ICmdline.getAction();
+        //console.log( 'IRunnable.run() action='+action );
+        let promise = null;
+        process.exitCode = 0;
+        switch( action ){
+            case 'list-installed':
+                promise = cliListInstalled( app );
+                break;
+            default:
+                break;
+        }
+        // Waiting here for the Promise returned by the action be settled, either resolved or rejected.
+        // We are prepared to managed both success and failure, but do not modify in either cases the exit code of the process.
+        // It is up to the action to compute whether its own code is successful or not.
+        if( promise && promise instanceof Promise ){
+            promise.then(( successValue ) => {
+                IMsg.debug( 'IRunnable.run().success with', successValue );
+                IMsg.verbose( 'Exiting with code', process.exitCode );
+                // https://nodejs.org/api/process.html#processexitcode prevents against a direct process.exit() call
+                process.exit();
+
+            }, ( failureReason ) => {
+                IMsg.error( 'IRunnable.run().failure', failureReason );
+                IMsg.verbose( 'Exiting with code', process.exitCode );
+                process.exit();
+            });
+        }
     }
 }

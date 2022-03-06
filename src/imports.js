@@ -13,8 +13,8 @@ export * from './irunnable.interface.js';
 export * from './application.class.js';
 export * from './config.class.js';
 export * from './interface.class.js';
-export * from './json-package.class.js';
 export * from './log-level.class.js';
+export * from './package-json.class.js';
 
 // others
 export * from './utils.js';

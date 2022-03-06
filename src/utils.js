@@ -8,6 +8,51 @@ import { IMsg } from './imports.js';
 
 export const utils = {
     /**
+     * Scans the specified directory for subdirectories which match the specified array of regexs
+     * @param {string} dir the directory to be scanned
+     * @param {Object} options options to filter the search
+     *  type: d|f returns only directories or files, defaulting to all
+     *  regex: an array of regex the entry basename must match, defaulting to all
+     * @returns {Array} an array of the full pathnames of entries which match
+     * @throws {Error}
+     */
+     dirScanSync: function( dir, options={} ){
+        IMsg.debug( 'utils.dirScanSync()', 'dir='+dir );
+        if( !dir || typeof dir !== 'string' || !dir.length || dir === '/' || dir.startsWith( '/dev' )){
+            throw new Error( 'utils.dirScanSync(): dir='+dir+': invalid start directory' );
+        }
+        let _regex = options.regex || [];
+        if( !Array.isArray( _regex )){
+            _regex = [options.regex];
+        }
+        let _matchedEntries = [];
+        let _type = options.type || null;
+        fs.readdirSync( dir, { withFileTypes: true }).every(( ent ) => {
+            //console.log( 'try to match by type', ent.name, ent.isDirectory(), ent.isFile());
+            if(( _type === 'd' && !ent.isDirectory()) || ( _type === 'f' && !ent.isFile())){
+                return true;
+            }
+            //console.log( 'try to match by name', ent.name );
+            let _matched = true;
+            _regex.every(( r ) => {
+                //console.log( ent.name, r.toString());
+                if( !ent.name.match( r )){
+                    _matched = false;
+                    return false;
+                }
+                return true;
+            });
+            if( !_matched ){
+                return true;
+            }
+            _matchedEntries.push( path.join( dir, ent.name ));
+            return true;
+        });
+        IMsg.debug( 'found ', _matchedEntries, '(count='+_matchedEntries.length+')' );
+        return _matchedEntries;
+    },
+
+    /**
      * make sure the target directory exists
      * @param {string} dir the full pathanme of the directory
      * @throws {Error}

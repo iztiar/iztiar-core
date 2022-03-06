@@ -3,7 +3,7 @@
  */
 import path from 'path';
 
-import { ICmdline, IForkable, ILogger, IMsg, IRunnable, coreConfig, Interface, JsonPackage } from './imports.js';
+import { ICmdline, IForkable, ILogger, IMsg, IRunnable, coreConfig, Interface, PackageJson } from './imports.js';
 
 export class coreApplication {
 
@@ -54,7 +54,7 @@ export class coreApplication {
         process.title = title;
 
         // this coreApplication class definition is in /src subdirectory of the module root
-        this._package = new JsonPackage( path.dirname( path.dirname( new URL( import.meta.url ).pathname )));
+        this._package = new PackageJson( path.dirname( path.dirname( new URL( import.meta.url ).pathname )));
 
         coreApplication._singleton = this;
         return coreApplication._singleton;
@@ -70,8 +70,8 @@ export class coreApplication {
             { name: 'stop', description: 'stop the named service' },
             { name: 'status', description: 'display the status of named service' },
             { name: 'restart', description: 'restart the named service' },
-            { name: 'installed', description: 'list installed plugins' },
-            { name: 'configured', description: 'list configured services' }
+            { name: 'list-installed', description: 'list installed plugins' },
+            { name: 'list-configured', description: 'list configured services' }
         ];
     }
 
@@ -121,11 +121,15 @@ export class coreApplication {
     }
 
     /*
-     * the requested console level
+     * Getter/Setter
+     * @param {String} level the desired console (uppercase) level
+     * @returns {String} the current console level (defaulting to 'NORMAL')
      * <-IMsg implementation->
      */
     imsgConsoleLevel(){
-        return this._config ? this.config().consoleLevel.toUpperCase() : ILogger.defaults.consoleLevel;
+        const level = this._config ? this.config().core.consoleLevel.toUpperCase() : ILogger.defaults.consoleLevel;
+        //console.log( 'coreApplication.imsgConsoleLevel()', level );
+        return level;
     }
 
     /*
@@ -141,7 +145,7 @@ export class coreApplication {
      * <-IMsg (ILogger-derived) implementation->
      */
     imsgLogFname(){
-        return this._config ? path.join( this.config().logDir, coreApplication.const.commonName+'.log' ) : ILogger.defaults.logFname;
+        return this._config ? path.join( this.config().core.logDir, coreApplication.const.commonName+'.log' ) : ILogger.defaults.logFname;
     }
 
     /*
@@ -149,7 +153,7 @@ export class coreApplication {
      * <-IMsg (ILogger-derived) implementation->
      */
     imsgLogLevel(){
-        return this._config ? this.config().logLevel.toUpperCase() : ILogger.defaults.logLevel;
+        return this._config ? this.config().core.logLevel.toUpperCase() : ILogger.defaults.logLevel;
     }
 
     /*
@@ -165,7 +169,7 @@ export class coreApplication {
      * <-IRunnable implementation->
      */
     static irunnableCopyrightText(){
-        let _text = coreApplication.const.displayName+' v '+'x.x.x';//corePackage.getVersion();
+        let _text = coreApplication.const.displayName+' v '+this._package.getVersion();
         _text += '\nCopyright (@) 2020,2021,2022 TheDreamTeam&Consorts (and may the force be with us;))';
         return _text;
     }
@@ -179,5 +183,22 @@ export class coreApplication {
             this._config = new coreConfig( options );
         }
         return this._config.filledConfig();
+    }
+
+    /**
+     * @returns {Object} the package.json of the application
+     */
+    getPackage(){
+        return this._package;
+    }
+
+    /**
+     * @param {*} level the desired console level
+     */
+    setConsoleLevel( level ){
+        if( level && typeof level === 'string' && level.length && this._config ){
+            //console.log( 'setting consoleLevel to', level );
+            this.config().core.consoleLevel = level.toUpperCase();
+        }
     }
 }

@@ -7,6 +7,7 @@
  * 
  *  This coreConfig class:
  *  - manages the application settings in <storageDir>/config/iztiar.json
+ *  - stores these application settings in _filled.core
  *  - is able to provide to the plugins a set of useful primitives.
  * 
  *  Application stored configuration
@@ -102,24 +103,25 @@ export class coreConfig {
      */
     filledConfig(){
         if( !this._filled ){
-            this._filled = { ...this._json };
+            this._filled = { core: null };
+            this._filled.core = { ...this._json };
             // console level
             if( !this._json || !this._json.consoleLevel || this._options.consoleLevel !== coreConfig.getDefaultConsoleLevel()){
-                this._filled.consoleLevel = this._options.consoleLevel;
+                this._filled.core.consoleLevel = this._options.consoleLevel;
             }
             // log level
             if( !this._json || !this._json.logLevel || this._options.logLevel !== coreConfig.getDefaultLogLevel()){
-                this._filled.logLevel = this._options.logLevel;
+                this._filled.core.logLevel = this._options.logLevel;
             }
-            this._filled.logLevel = this._filled.logLevel.toLowerCase();
+            this._filled.core.logLevel = this._filled.core.logLevel.toLowerCase();
             // storage dir
-            this._filled.storageDir = coreConfig.storageDir();
+            this._filled.core.storageDir = coreConfig.storageDir();
             // config dir
-            this._filled.configDir = path.join( coreConfig.storageDir(), coreConfig._c.configDir );
+            this._filled.core.configDir = path.join( coreConfig.storageDir(), coreConfig._c.configDir );
             // log dir
-            this._filled.logDir = path.join( coreConfig.storageDir(), coreConfig._c.logDir );
+            this._filled.core.logDir = path.join( coreConfig.storageDir(), coreConfig._c.logDir );
             // run dir
-            this._filled.runDir = path.join( coreConfig.storageDir(), coreConfig._c.runDir );
+            this._filled.core.runDir = path.join( coreConfig.storageDir(), coreConfig._c.runDir );
             //console.log( this._filled );
         }
         return this._filled;

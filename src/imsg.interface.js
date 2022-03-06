@@ -4,6 +4,8 @@
  *  Manage both console output and file logging.
  *  See ILogger interface for a full description of console and log levels.
  */
+import { sprintf } from 'sprintf-js';
+
 import { IForkable, ILogger } from './imports.js';
 
 export class IMsg extends ILogger {
@@ -71,10 +73,13 @@ export class IMsg extends ILogger {
        *** *************************************************************************************** */
 
     /**
-     * @returns {String} the requested console level (defaulting to 'NORMAL')
+     * Getter/Setter
+     * @param {String} level the desired console (uppercase) level
+     * @returns {String} the current console level (defaulting to 'NORMAL')
      * [-implementation Api-]
      */
     _consoleLevel(){
+        console.log( 'IMsg._consoleLevel()', arguments );
         return ILogger.defaults.consoleLevel;
     }
 
@@ -125,6 +130,15 @@ export class IMsg extends ILogger {
     }
 
     /**
+     * Getter/Setter
+     * @param {String} level the desired (temporary) console level
+     * [-public API-]
+     */
+    static consoleLevel( level ){
+        return IMsg._singleton._consoleLevel( level );
+    }
+
+    /**
      * Writes a first line in the log
      * @param {String} action the requested identified action
      * [-public API-]
@@ -133,5 +147,84 @@ export class IMsg extends ILogger {
         ILogger.startup();
         ILogger.info( 'program invoked with args', process.argv );
         ILogger.info( 'command-line arguments successfully parsed: identified action \''+action+'\'');
+    }
+
+    static _tabular_betweencols( instr, prefix ){
+        if( instr !== prefix ){
+            instr += '  ';
+        }
+        return instr;
+    }
+
+    static _tabular_fixedchar( instr, size, ch ){
+        for( let i=0 ; i<size ; ++i ){
+            instr += ch;
+        }
+        return instr;
+    }
+
+    static _tabular_fixedsize( instr, size, str ){
+        if( size < str.length ){
+            instr += str.substring( 0, size-1 );
+        } else {
+            instr += str;
+            for( let i=0 ; i<size-str.length ; ++i ){
+                instr += ' ';
+            }
+        }
+        return instr;
+    }
+
+    /**
+     * Tabular output
+     * Doesn't manage logger neither color, so rather to be used in place of IMsg.out()
+     * @param {Array} theArray an array of objects
+     * @param {Object} options
+     *  prefix {String}
+     */
+    static tabular( theArray, options={} ){
+        let _columns = [];
+        let _prefix = options.prefix || '';
+        Object.keys( theArray[0] ).every(( k ) => {
+            _columns.push({ name:k, size: k.length });
+            return true;
+        });
+        theArray.every(( it ) => {
+            _columns.every(( col ) => {
+                if( it[col.name].length > col.size ){
+                    col.size = it[col.name].length;
+                }
+                return true;
+            })
+            return true;
+        });
+        // header
+        let _line = _prefix;
+        _columns.every(( col ) => {
+            _line = IMsg._tabular_betweencols( _line, _prefix );
+            //console.log( col );
+            _line = IMsg._tabular_fixedsize( _line, col.size, col.name );
+            return true;
+        });
+        IMsg.out( _line );
+        // underlined headers
+        _line = _prefix;
+        _columns.every(( col ) => {
+            _line = IMsg._tabular_betweencols( _line, _prefix );
+            _line = IMsg._tabular_fixedchar( _line, col.size, '-' );
+            return true;
+        });
+        IMsg.out( _line );
+        // each item
+        theArray.every(( it ) => {
+            _line = _prefix;
+            _columns.every(( col ) => {
+                _line = IMsg._tabular_betweencols( _line, _prefix );
+                _line = IMsg._tabular_fixedsize( _line, col.size, it[col.name] );
+                return true;
+            });
+            IMsg.out( _line );
+            return true;
+        });
     }
 }
