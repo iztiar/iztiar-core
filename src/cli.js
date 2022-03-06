@@ -1,21 +1,20 @@
 #!/usr/bin/env node
 /*
  * Main command-line interface
- * Is expected to be automatically started at host boot.
- *
- * Command-line options:
- *  See coreCmdline class definition.
+ * Is expected to be automatically run at host boot.
  * 
  * Environment:
  *  - NODE_ENV
  *  - DEBUG
- *  - IZTIAR_CONFIG
  *  - IZTIAR_ENV
  *  - IZTIAR_LOGLEVEL
  */
-import { coreApplication } from './application.js';
+import { coreApplication } from './imports.js';
 
 const app = new coreApplication( 'iztiar' );
-console.log( app );
+//console.log( app );
 
-app.IRunnable.run();
+app.IRunnable.displayCopyright();
+app.ICmdline.parseArgs();
+app.config( app.ICmdline.getOptions());
+app.IRunnable.run( app.ICmdline.getAction());
