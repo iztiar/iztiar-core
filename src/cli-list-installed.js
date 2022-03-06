@@ -55,11 +55,13 @@ export function cliListInstalled( app, options={} ){
             result.packages[name] = { package: pck };
             const iztiar = pck.getIztiar();
             result.packages[name].target = iztiar && iztiar.targets ? iztiar.targets : '';
+            result.packages[name].enabled = iztiar && iztiar.enabled ? iztiar.enabled : true;
             //console.log( result.packages );
             resolve( result );
         });
     };
 
+    // resulting promise
     const _resultPromise = function(){
         return new Promise(( resolve, reject ) => {
             let _count = 0;
@@ -69,14 +71,15 @@ export function cliListInstalled( app, options={} ){
                     name: name,
                     version: pck.getVersion(),
                     description: pck.getDescription(),
-                    target: result.packages[name].target
+                    target: result.packages[name].target,
+                    enabled: result.packages[name].enabled
                 };
                 result.pckArray.push( _res );
                 _count += 1;
                 return true;
             })
             IMsg.tabular( result.pckArray, { prefix:'  ' });
-            IMsg.out( _count+' found installed modules targeting '+coreApplication.const.displayName+' family' );
+            IMsg.out( _count+' found installed module(s) targeting '+coreApplication.const.displayName+' family' );
             app.setConsoleLevel( _origLevel );
             resolve( result.pckArray );
         });

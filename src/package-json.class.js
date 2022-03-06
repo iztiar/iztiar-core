@@ -64,7 +64,7 @@ export class PackageJson {
     getOrganization(){
         const fullname = this.getFullName();
         const words = fullname.split( '/' );
-        return words.length === 1 ? '' : words[0];
+        return words.length === 1 ? '' : words[0].substring( 1 );
     }
 
     /**

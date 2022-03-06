@@ -1,8 +1,8 @@
-# Iztiar #
+# Iztiar
 
-## Technologies ##
+## Technologies
 
-### Development language ###
+### Development language
 
 Our first technical strategy and decision is to build a full (i.e. both client-side and server-side) javascript software.
 
@@ -15,17 +15,17 @@ See also :
 - [Pure ESM package](https://gist.github.com/sindresorhus/a39789f98801d908bbc7ff3ecc99d99c)
 - [ES Modules in NodeJS](https://docs.joshuatz.com/cheatsheets/node-and-npm/node-esm/)
 
-### User interface framework ###
+### User interface framework
 
 Our second technical strategy and decision is to use [Meteor](https://www.meteor.com/) to handle the user interface. This decision is obviously at least in a part driven by the first decision above.
 
 As a consequence, the database will be a mongodb instance.
 
-### Messaging ###
+### Messaging
 
 The software relies on a messaging bus, which is MQTT-driven.
 
-### Security ###
+### Security
 
 From our point of view, the security of any information system depends of three main aspects:
 
@@ -37,4 +37,4 @@ We have chosen to implement these three points at the very core of the architect
 
 In other words, all the security relies on a predefined configuration, where a trustee administrator configures each point-to-point communication channel by defining who is authorized to communicate which who.
 
-### Javascript consequences ###
+### Javascript consequences

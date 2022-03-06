@@ -6,6 +6,8 @@
 import chalk from 'chalk';
 
 import { IForkable, IMsg } from './imports.js';
+
+import { cliListEnabled } from './cli-list-enabled.js';
 import { cliListInstalled } from './cli-list-installed.js';
 
 export class IRunnable {
@@ -73,6 +75,9 @@ export class IRunnable {
         let promise = null;
         process.exitCode = 0;
         switch( action ){
+            case 'list-enabled':
+                promise = cliListEnabled( app );
+                break;
             case 'list-installed':
                 promise = cliListInstalled( app );
                 break;

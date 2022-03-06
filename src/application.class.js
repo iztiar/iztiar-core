@@ -71,7 +71,7 @@ export class coreApplication {
             { name: 'status', description: 'display the status of named service' },
             { name: 'restart', description: 'restart the named service' },
             { name: 'list-installed', description: 'list installed plugins' },
-            { name: 'list-configured', description: 'list configured services' }
+            { name: 'list-enabled', description: 'list targeted enabled services' }
         ];
     }
 

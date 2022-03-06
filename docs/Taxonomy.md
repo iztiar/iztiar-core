@@ -1,6 +1,6 @@
-# Iztiar #
+# Iztiar
 
-## Taxonomy ##
+## Taxonomy
 
 - coreBroker
 

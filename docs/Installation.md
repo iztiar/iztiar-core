@@ -1,10 +1,10 @@
-# Iztiar #
+# Iztiar
 
-## Installation ##
+## Installation
 
 Note: at the moment, this a rather a tool specification than an actual tool description.
 
-### Installing ###
+### Installing
 
 Install this piece of gold that Iztiar aims to be is as simple as just running one command in the console:
 
@@ -19,7 +19,7 @@ You can also download and examine it to know exactly what it does. In brief:
 - before doing anything, display a summary of what the script will do, requesting for a confirmation of a cancellation
 - last, does the work hoping you have confirmed the stuff.
 
-### install.sh development notes ###
+### install.sh development notes
 
 As the script is expected to be run from a http get, it is supposed (required ?) to be one-piece: no external function can be used here.
 
