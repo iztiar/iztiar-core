@@ -8,6 +8,8 @@ import chalk from 'chalk';
 import { IForkable, IMsg } from './imports.js';
 
 import { cliStart } from './cli-start.js';
+import { cliStatus } from './cli-status.js';
+import { cliStop } from './cli-stop.js';
 import { cliListEnabled } from './cli-list-enabled.js';
 import { cliListInstalled } from './cli-list-installed.js';
 
@@ -78,6 +80,12 @@ export class IRunnable {
         switch( action ){
             case 'start':
                 promise = cliStart( app, app.ICmdline.getOptions().service );
+                break;
+            case 'status':
+                promise = cliStatus( app, app.ICmdline.getOptions().service );
+                break;
+            case 'stop':
+                promise = cliStop( app, app.ICmdline.getOptions().service );
                 break;
             case 'list-enabled':
                 promise = cliListEnabled( app );

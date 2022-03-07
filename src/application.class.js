@@ -3,7 +3,10 @@
  */
 import path from 'path';
 
-import { ICmdline, IForkable, ILogger, IMsg, IPluginManager, IRunnable, coreConfig, Interface, PackageJson } from './imports.js';
+import {
+    ICmdline, IForkable, ILogger, IMsg, IPluginManager, IRunnable, IServiceManager,
+    coreConfig, Interface, PackageJson
+} from './imports.js';
 
 export class coreApplication {
 
@@ -52,6 +55,8 @@ export class coreApplication {
             _copyrightColor: coreApplication.irunnableCopyrightColor,
             _copyrightText: coreApplication.irunnableCopyrightText
         });
+
+        Interface.add( this, IServiceManager );
 
         process.title = title;
 

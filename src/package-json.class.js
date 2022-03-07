@@ -50,6 +50,13 @@ export class PackageJson {
     }
 
     /**
+     * @returns {String} the main entry point of the package
+     */
+    getMain(){
+        return this._json ? this._json.main || 'index.js' : 'index.js';
+    }
+
+    /**
      * @returns {String} the name of the package, i.e. the full name minus the organization if present
      */
     getName(){

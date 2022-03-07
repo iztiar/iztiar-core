@@ -1,10 +1,10 @@
 /*
- * corePlugin
+ * coreService
  */
-export class corePlugin {
+export class coreService {
 
     constructor(){
-        console.log( 'corePlugin constructor' );
+        console.log( 'coreService constructor' );
         return this;
     }
 }

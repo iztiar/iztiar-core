@@ -36,9 +36,9 @@ export function cliListEnabled( app, options={} ){
     
     const _promise = cliListInstalled( app, { consoleLevel:'QUIET' })
         .then(( res ) => {
-            const enabledPlugins = app.IPluginManager.enabled( app, res );
+            const services = app.IPluginManager.enabled( app, res );
             let sceDisplay = [];
-            enabledPlugins.every(( p ) => {
+            services.every(( p ) => {
                 const conf = p.config();
                 const enabled = conf.enabled || true;   // is always true here
                 const pck = p.package();
@@ -59,7 +59,7 @@ export function cliListEnabled( app, options={} ){
             IMsg.out( 'Found '+sceDisplay.length+' enabled plugin(s) targeting \''+app.getPackage().getFullName()+'\'' );
 
             app.setConsoleLevel( _origLevel );
-            return Promise.resolve( enabledPlugins );
+            return Promise.resolve( services );
         });
 
     return _promise;
