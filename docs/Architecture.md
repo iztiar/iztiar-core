@@ -55,6 +55,6 @@ The _plugins_ group is a group:
     - whose key is a unique (inside of this environment on this host) identifier
     - whose value is itself a group, with following keys:
 
-        - name: the name of the corresponding (obviously installed) module
+        - module: the name of the corresponding (obviously installed) module
         - enabled: whether the service is enabled or not, defaults to true
         - plus other keys which describe the configuration of this instance of the plugin.

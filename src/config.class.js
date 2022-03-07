@@ -34,7 +34,7 @@ export class coreConfig {
 
     static _c = {
         configDir: 'config',
-        logDir: 'log',
+        logDir: 'logs',
         runDir: 'run'
     }
 

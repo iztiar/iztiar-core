@@ -53,13 +53,13 @@ export class IPluginManager {
                 let _found = null;
                 Object.keys( appPlugins ).every(( id ) => {
                     const enabled = appPlugins[id].enabled || true;
-                    if( enabled && ( appPlugins[id].name === pck.getFullName() || appPlugins[id].name === pck.getName())){
-                        _found = plugin;
+                    if( enabled && ( appPlugins[id].module === pck.getFullName() || appPlugins[id].module === pck.getName())){
+                        _found = pck;
                     }
                     return _found === null;
                 });
                 if( _found ){
-                    result.push( pck );
+                    result.push( _found );
                 }
             }
             return true;
