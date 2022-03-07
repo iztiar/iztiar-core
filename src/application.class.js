@@ -137,7 +137,7 @@ export class coreApplication {
      * <-IMsg (ILogger-derived) implementation->
      */
     iloggerFname(){
-        return this._config ? path.join( this.config().core.logDir, coreApplication.const.commonName+'.log' ) : ILogger.defaults.logFname;
+        return this._config ? path.join( this.config().core.logDir, coreApplication.const.commonName+'.log' ) : ILogger.defaults.fname;
     }
 
     /*
@@ -145,7 +145,7 @@ export class coreApplication {
      * <-IMsg (ILogger-derived) implementation->
      */
     iloggerLevel(){
-        return this._config ? this.config().core.logLevel.toUpperCase() : ILogger.defaults.logLevel;
+        return this._config ? this.config().core.logLevel.toUpperCase() : ILogger.defaults.level;
     }
 
     /*
@@ -155,7 +155,7 @@ export class coreApplication {
      * <-IMsg implementation->
      */
     imsgConsoleLevel(){
-        const level = this._config ? this.config().core.consoleLevel.toUpperCase() : ILogger.defaults.consoleLevel;
+        const level = this._config ? this.config().core.consoleLevel.toUpperCase() : IMsg.defaults.level;
         //console.log( 'coreApplication.imsgConsoleLevel()', level );
         return level;
     }

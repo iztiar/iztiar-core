@@ -50,9 +50,8 @@ export class ILogger {
     static _logger = null;
 
     static defaults = {
-        consoleLevel: 'NORMAL',
-        logFname: '/dev/null',
-        logLevel: 'INFO'
+        fname: '/dev/null',
+        level: 'INFO'
     };
 
     static const = null;
@@ -122,7 +121,7 @@ export class ILogger {
      * [-implementation Api-]
      */
     _logLevel(){
-        return ILogger.defaults.logLevel;
+        return ILogger.defaults.level;
     }
 
     /**
@@ -130,7 +129,7 @@ export class ILogger {
      * [-implementation Api-]
      */
     _logFname(){
-        return ILogger.defaults.logFname;
+        return ILogger.defaults.fname;
     }
 
     /* *** ***************************************************************************************

@@ -26,7 +26,7 @@
  */
 import path from 'path';
 
-import { ILogger, coreApplication, utils } from './imports.js';
+import { ILogger, IMsg, coreApplication, utils } from './imports.js';
 
 export class coreConfig {
 
@@ -46,14 +46,14 @@ export class coreConfig {
      * @returns {String} the default verbosity level
      */
     static getDefaultConsoleLevel(){
-        return ILogger.defaults.consoleLevel;
+        return IMsg.defaults.level;
     }
 
     /**
      * @returns {String} the default log level of the application
      */
     static getDefaultLogLevel(){
-        return ILogger.defaults.logLevel;
+        return ILogger.defaults.level;
     }
 
     /**

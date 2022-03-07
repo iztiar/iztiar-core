@@ -10,6 +10,10 @@ export class IMsg extends ILogger {
 
     static _singleton = null;
 
+    static defaults = {
+        level: 'NORMAL'
+    };
+
     constructor(){
         if( IMsg._singleton ){
             return IMsg._singleton;
@@ -78,7 +82,7 @@ export class IMsg extends ILogger {
      */
     _consoleLevel(){
         console.log( 'IMsg._consoleLevel()', arguments );
-        return ILogger.defaults.consoleLevel;
+        return IMsg.defaults.level;
     }
 
     /* *** ***************************************************************************************
