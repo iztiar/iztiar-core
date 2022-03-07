@@ -3,7 +3,7 @@
  */
 import path from 'path';
 
-import { ICmdline, IForkable, ILogger, IMsg, IPluginByPath, IRunnable, coreConfig, Interface, PackageJson } from './imports.js';
+import { ICmdline, IForkable, ILogger, IMsg, IPluginManager, IRunnable, coreConfig, Interface, PackageJson } from './imports.js';
 
 export class coreApplication {
 
@@ -46,7 +46,7 @@ export class coreApplication {
             _logLevel: this.imsgLogLevel
         });
 
-        Interface.add( this, IPluginByPath );
+        Interface.add( this, IPluginManager );
 
         Interface.add( this, IRunnable, {
             _copyrightColor: coreApplication.irunnableCopyrightColor,

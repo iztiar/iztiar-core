@@ -24,21 +24,13 @@ export function cliListInstalled( app, options={} ){
     IMsg.out( 'Listing installed Iztiar modules' );
     IMsg.verbose( 'An Iztiar module is identified by its name; its target is qualified from package.json \'iztiar\' group' );
     
-    let pckArray = [];
-    app.IPluginByPath.installed( app ).every(( pck ) => {
-        const group = pck.getIztiar() || {};
-        pckArray.push({
-            name: pck.getFullName(),
-            version: pck.getVersion(),
-            description: pck.getDescription(),
-            target: group.target || '',
-            enabled: group.enabled || true
-        });
-        return true;
-    });
+    const pckArray = app.IPluginManager.installed( app );
+    const pckDisplay = app.IPluginManager.display( pckArray );
 
-    IMsg.tabular( pckArray, { prefix:'  ' });
-    IMsg.out( pckArray.length+' found installed module(s) targeting '+coreApplication.const.displayName+' family' );
+    if( pckDisplay.length ){
+        IMsg.tabular( pckDisplay, { prefix:'  ' });
+    }
+    IMsg.out( 'Found '+pckDisplay.length+' installed module(s) targeting '+coreApplication.const.displayName+' family' );
 
     app.setConsoleLevel( _origLevel );
 

@@ -50,12 +50,11 @@ The _core_ group is optional. It may contain following keys:
 
 Not all the installed plugins targeting a given module may be automatically started at boot. As said above, each plugin must be configured.
 
-The _plugins_ group is an array of the installed plugins which address the core module, and are configured to be started in this environment on this host.
+The _plugins_ group is a group:
 
-Each item of the array is a JSON object which describes the service.
+    - whose key is a unique (inside of this environment on this host) identifier
+    - whose value is itself a group, with following keys:
 
-Content of the JSON object heavily depends of the plugin and of the service it provides, but may|should|must include following keys:
-
-    - id: uniquely identifies the service in this environment on this host, mandatory (nothing to do with the package ESM name)
-    - name: the name of the corresponding (obviously installed) module
-    - enabled: whether the service is enabled or not, defaults to true
+        - name: the name of the corresponding (obviously installed) module
+        - enabled: whether the service is enabled or not, defaults to true
+        - plus other keys which describe the configuration of this instance of the plugin.
