@@ -100,28 +100,49 @@ export class coreConfig {
     /**
      * @param {Object} options the command-line option values
      * @returns {Object} the filled application configuration
+     * @throws {Error} 
      */
     filledConfig(){
         if( !this._filled ){
-            this._filled = { core: null };
-            this._filled.core = { ...this._json };
-            // console level
-            if( !this._json || !this._json.consoleLevel || this._options.consoleLevel !== coreConfig.getDefaultConsoleLevel()){
+            this._filled = { ...this._json };
+            this._filled.core = this._filled.core || {};
+            this._filled.plugins = this._filled.plugins || {};
+            const _jsonCore = this._json && this._json.core ? this._json.core : {};
+            const _jsonPlugins = this._json && this._json.plugins ? this._json.plugins : [];
+            // core: console level
+            if( !_jsonCore.consoleLevel || this._options.consoleLevel !== coreConfig.getDefaultConsoleLevel()){
                 this._filled.core.consoleLevel = this._options.consoleLevel;
             }
-            // log level
-            if( !this._json || !this._json.logLevel || this._options.logLevel !== coreConfig.getDefaultLogLevel()){
+            // core: log level
+            if( !_jsonCore.logLevel || this._options.logLevel !== coreConfig.getDefaultLogLevel()){
                 this._filled.core.logLevel = this._options.logLevel;
             }
             this._filled.core.logLevel = this._filled.core.logLevel.toLowerCase();
-            // storage dir
+            // core: storage dir
             this._filled.core.storageDir = coreConfig.storageDir();
-            // config dir
+            // core: config dir
             this._filled.core.configDir = path.join( coreConfig.storageDir(), coreConfig._c.configDir );
-            // log dir
+            // core: log dir
             this._filled.core.logDir = path.join( coreConfig.storageDir(), coreConfig._c.logDir );
-            // run dir
+            // core: run dir
             this._filled.core.runDir = path.join( coreConfig.storageDir(), coreConfig._c.runDir );
+            // plugin objects
+            //  we can only take a glance here the key we know: id, name, enabled
+            //  see docs/Architecture.md
+            //  but we also can check for 'id' unicity
+            let _ids = {};
+            let _dups = [];
+            _jsonPlugins.every(( it ) => {
+                if( !_ids[it.id] ){
+                    _ids[it.id] = it.id;
+                } else {
+                    _dups.push( it );
+                }
+                return true;
+            });
+            if( _dups.length ){
+                throw new Error( 'coreConfig.filledConfig() found '+_dups.length+' duplicates in \'plugins\' group' );
+            }
             //console.log( this._filled );
         }
         return this._filled;

@@ -7,6 +7,7 @@ export * from './icmdline.interface.js';
 export * from './iforkable.interface.js';
 export * from './ilogger.interface.js';
 export * from './imsg.interface.js';
+export * from './iplugin-bypath.interface.js';
 export * from './irunnable.interface.js';
 
 // classes

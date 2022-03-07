@@ -1,10 +1,19 @@
 /*
  * cli-list-enabled.js
  *
- *  Display the list of enabled plugins which target this module.
+ *  Display the list of enabled (loadable and startable) plugins which target this module.
+ * 
+ *  As a reminder, in order to be startable, a module must:
+ *  - have a package.json file (as each and every ESM) whose:
+ *      > 'name' value starts with 'iztiar-'
+ *      > has a 'iztiar' group, with
+ *          >> a 'target' key which addresses this module, both '@iztiar/iztiar-core' or 'iztiar-core' being allowed
+ *  - have an entry by its name in the 'plugins' array of the iztiar.json application configuration file, with keys:
+ *      > the 'name' of the module
+ *      > maybe an 'enabled' key, whose value resolves to true
+ * 
  *  Returns a Promise resolved with the array of the corresponding PackageJson objects.
  */
-import path from 'path';
 import { cliListInstalled } from './cli-list-installed.js';
 
 import { IMsg, coreApplication, PackageJson, utils } from './imports.js';
@@ -45,9 +54,22 @@ export function cliListEnabled( app, options={} ){
                 result.target,
                 _name
             ];
+            const _configured = app.config().plugins;
             //console.log( 'org', _org, 'name', _name );
+            // for each found installed plugin, do we have a non-disabled entry in the config ?
+            // the name may be specified either as '@organization/package' or just as 'package'
             result.installed.every(( it ) => {
+                const _itw = it.name.split( '/' );
+                const _itorg = _itw.length === 1 ? '' : _itw[0].substring( 1 );
+                const _itname = _itw.length === 1 ? _itw[0] : _itw[1];
                 if( it.enabled && _allowed.includes( it.target )){
+                    let _found = null;
+                    _configured.every(( o ) => {
+                        const _pwords = o.name.split( '/' );
+                        const _porg = _pwords.length === 1 ? '' : _pwords[0].substring( 1 );
+                        const _pname = _pwords.length === 1 ? _pwords[0] : _pwords[1];
+                        return true;
+                    });
                     result.enabled.push( it );
                 }
                 return true;
