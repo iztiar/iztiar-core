@@ -4,8 +4,6 @@
  *  Display the list of installed plugins, along with their associated target module.
  *  Returns a Promise resolved with the array of the corresponding PackageJson objects.
  */
-import path from 'path';
-
 import { IMsg, coreApplication } from './imports.js';
 
 /**
@@ -24,9 +22,19 @@ export function cliListInstalled( app, options={} ){
     IMsg.out( 'Listing installed Iztiar modules' );
     IMsg.verbose( 'An Iztiar module is identified by its name; its target is qualified from package.json \'iztiar\' group' );
     
-    const pckArray = app.IPluginManager.installed( app );
-    const pckDisplay = app.IPluginManager.display( pckArray );
+    const pckInstalled = app.IPluginManager.installed( app );
 
+    let pckDisplay = [];
+    pckInstalled.every(( pck ) => {
+        const group = pck.getIztiar() || {};
+        pckDisplay.push({
+            module: pck.getFullName(),
+            version: pck.getVersion(),
+            description: pck.getDescription(),
+            target: group.target || ''
+        });
+        return true;
+    });
     if( pckDisplay.length ){
         IMsg.tabular( pckDisplay, { prefix:'  ' });
     }
@@ -34,5 +42,5 @@ export function cliListInstalled( app, options={} ){
 
     app.setConsoleLevel( _origLevel );
 
-    return Promise.resolve( pckArray );
+    return Promise.resolve( pckInstalled );
 }

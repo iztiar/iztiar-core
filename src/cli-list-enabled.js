@@ -12,11 +12,11 @@
  *      > the 'name' of the module
  *      > maybe an 'enabled' key, whose value resolves to true
  * 
- *  Returns a Promise resolved with the array of the corresponding PackageJson objects.
+ *  Returns a Promise resolved with the array of the corresponding Plugin objects.
  */
-import { cliListInstalled } from './cli-list-installed.js';
+import { IMsg, coreApplication } from './imports.js';
 
-import { IMsg, coreApplication, PackageJson, utils } from './imports.js';
+import { cliListInstalled } from './cli-list-installed.js';
 
 /**
  * 
@@ -36,16 +36,30 @@ export function cliListEnabled( app, options={} ){
     
     const _promise = cliListInstalled( app, { consoleLevel:'QUIET' })
         .then(( res ) => {
-            const pckArray = app.IPluginManager.enabled( app, res );
-            const pckDisplay = app.IPluginManager.display( pckArray );
-
-            if( pckDisplay.length ){
-                IMsg.tabular( pckDisplay, { prefix:'  ' });
+            const enabledPlugins = app.IPluginManager.enabled( app, res );
+            let sceDisplay = [];
+            enabledPlugins.every(( p ) => {
+                const conf = p.config();
+                const enabled = conf.enabled || true;   // is always true here
+                const pck = p.package();
+                const group = pck.getIztiar();
+                sceDisplay.push({
+                    name: p.name(),
+                    module: pck.getFullName(),
+                    version: pck.getVersion(),
+                    description: pck.getDescription(),
+                    enabled: enabled ? 'true':'false',
+                    target: group.target
+                });
+                return true;
+            });
+            if( sceDisplay.length ){
+                IMsg.tabular( sceDisplay, { prefix:'  ' });
             }
-            IMsg.out( 'Found '+pckDisplay.length+' enabled plugin(s) targeting \''+app.getPackage().getFullName()+'\'' );
+            IMsg.out( 'Found '+sceDisplay.length+' enabled plugin(s) targeting \''+app.getPackage().getFullName()+'\'' );
 
             app.setConsoleLevel( _origLevel );
-            return Promise.resolve( pckArray );
+            return Promise.resolve( enabledPlugins );
         });
 
     return _promise;

@@ -3,7 +3,7 @@
  */
 import path from 'path';
 
-import { coreApplication, PackageJson, utils } from './imports.js';
+import { coreApplication, corePlugin, PackageJson, utils } from './imports.js';
 
 export class IPluginManager {
 
@@ -16,30 +16,28 @@ export class IPluginManager {
        *** *************************************************************************************** */
 
     /**
-     * @param {PackageJson[]} plugins the selected plugins
-     * @returns {PackageJson[]} the array to be displayed
-     * [-public API-]
+     * @param {coreApplication} app 
+     * @param {String} name the name of the instance of the plugin
+     * @returns {corePlugin|null} the named plugin
+     *  config: the configuration read from the main configuration file
+     *  package: the PackageJson object
      */
-    display( plugins ){
-        let _displayArray = [];
-        plugins.every(( pck ) => {
-            const group = pck.getIztiar() || {};
-            _displayArray.push({
-                name: pck.getFullName(),
-                version: pck.getVersion(),
-                description: pck.getDescription(),
-                target: group.target || '',
-                enabled: group.enabled || true
-            });
-            return true;
-        });
-        return _displayArray;
+    byName( app, name ){
+        let found = null;
+        const plugins = this.enabled( app, this.installed( app ));
+        plugins.every(( p ) => {
+            if( p.name() === name ){
+                found = p;
+            }
+            return found === null;
+        })
+        return found;
     }
 
     /**
      * @param {coreApplication} app
      * @param {PackageJson[]} installed the installed Iztiar modules
-     * @returns {PackageJson[]} the array of enabled plugins which target this one
+     * @returns {corePlugin[]} the array of enabled plugins which target this one
      * [-public API-]
      */
     enabled( app, installed ){
@@ -50,17 +48,14 @@ export class IPluginManager {
         installed.every(( pck ) => {
             const group = pck.getIztiar();
             if( group.target === thisFullName || group.target === thisShortName ){
-                let _found = null;
+                let _found = [];
                 Object.keys( appPlugins ).every(( id ) => {
                     const enabled = appPlugins[id].enabled || true;
                     if( enabled && ( appPlugins[id].module === pck.getFullName() || appPlugins[id].module === pck.getName())){
-                        _found = pck;
+                        result.push( new corePlugin( id, appPlugins[id], pck ));
                     }
-                    return _found === null;
+                    return true;
                 });
-                if( _found ){
-                    result.push( _found );
-                }
             }
             return true;
         });

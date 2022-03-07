@@ -16,6 +16,7 @@ export * from './config.class.js';
 export * from './interface.class.js';
 export * from './log-level.class.js';
 export * from './package-json.class.js';
+export * from './plugin.class.js';
 
 // others
 export * from './utils.js';
