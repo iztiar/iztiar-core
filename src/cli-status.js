@@ -8,12 +8,12 @@
 import { IMsg, coreApplication } from './imports.js';
 
 /**
- * 
+ * Get the status of the named service
  * @param {coreApplication} app the application
  * @param {String} name the service name to be started
  * @param {Object} options 
  *  consoleLevel: defaulting to NORMAL
- * @returns 
+ * @returns {Promise} which resolves to the service status
  */
 export function cliStatus( app, name, options={} ){
 
@@ -28,7 +28,7 @@ export function cliStatus( app, name, options={} ){
     if( service ){
         _promise = _promise
             .then(() => { return service.initialize( app ) })
-            .then(( res ) => { app.IServiceManager.set( service, res ); return service.status() })
+            .then(( res ) => { return service.status() })
     }
 
     return _promise;

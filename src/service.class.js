@@ -62,7 +62,7 @@ export class coreService {
         if( !this._defaultResult.start || typeof this._defaultResult.start !== 'function' ){
             throw new Error( 'dynamically loaded plugin doesn\'t provide start() command' );
         }
-        this._defaultResult.start();
+        this._defaultResult.start( this._defaultResult );
     }
 
     /**

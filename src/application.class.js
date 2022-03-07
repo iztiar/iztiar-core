@@ -4,8 +4,7 @@
 import path from 'path';
 
 import {
-    ICmdline, IForkable, ILogger, IMsg, IPluginManager, IRunnable, IServiceManager,
-    coreConfig, Interface, PackageJson
+    ICmdline, IForkable, ILogger, IMsg, IPluginManager, IRunnable, coreConfig, Interface, PackageJson
 } from './imports.js';
 
 export class coreApplication {
@@ -44,9 +43,9 @@ export class coreApplication {
 
         Interface.add( this, IMsg, {
             _consoleLevel: this.imsgConsoleLevel,
-            _logAppname: this.imsgLogAppname,
-            _logFname: this.imsgLogFname,
-            _logLevel: this.imsgLogLevel
+            _logAppname: this.iloggerAppname,
+            _logFname: this.iloggerFname,
+            _logLevel: this.iloggerLevel
         });
 
         Interface.add( this, IPluginManager );
@@ -55,8 +54,6 @@ export class coreApplication {
             _copyrightColor: coreApplication.irunnableCopyrightColor,
             _copyrightText: coreApplication.irunnableCopyrightText
         });
-
-        Interface.add( this, IServiceManager );
 
         process.title = title;
 
@@ -128,6 +125,30 @@ export class coreApplication {
     }
 
     /*
+     * the application name
+     * <-IMsg (ILogger-derived) implementation->
+     */
+    iloggerAppname(){
+        return coreApplication.const.commonName;
+    }
+
+    /*
+     * the requested log filename
+     * <-IMsg (ILogger-derived) implementation->
+     */
+    iloggerFname(){
+        return this._config ? path.join( this.config().core.logDir, coreApplication.const.commonName+'.log' ) : ILogger.defaults.logFname;
+    }
+
+    /*
+     * the requested log level
+     * <-IMsg (ILogger-derived) implementation->
+     */
+    iloggerLevel(){
+        return this._config ? this.config().core.logLevel.toUpperCase() : ILogger.defaults.logLevel;
+    }
+
+    /*
      * Getter/Setter
      * @param {String} level the desired console (uppercase) level
      * @returns {String} the current console level (defaulting to 'NORMAL')
@@ -137,30 +158,6 @@ export class coreApplication {
         const level = this._config ? this.config().core.consoleLevel.toUpperCase() : ILogger.defaults.consoleLevel;
         //console.log( 'coreApplication.imsgConsoleLevel()', level );
         return level;
-    }
-
-    /*
-     * the application name
-     * <-IMsg (ILogger-derived) implementation->
-     */
-    imsgLogAppname(){
-        return coreApplication.const.commonName;
-    }
-
-    /*
-     * the requested log filename
-     * <-IMsg (ILogger-derived) implementation->
-     */
-    imsgLogFname(){
-        return this._config ? path.join( this.config().core.logDir, coreApplication.const.commonName+'.log' ) : ILogger.defaults.logFname;
-    }
-
-    /*
-     * the requested log level
-     * <-IMsg (ILogger-derived) implementation->
-     */
-    imsgLogLevel(){
-        return this._config ? this.config().core.logLevel.toUpperCase() : ILogger.defaults.logLevel;
     }
 
     /*
@@ -184,6 +181,7 @@ export class coreApplication {
     /**
      * Getter/Setter
      * @param {Object} options the command-line option values
+     * @returns {Object} the filled application configuration
      */
     config( options ){
         if( options ){
@@ -193,9 +191,9 @@ export class coreApplication {
     }
 
     /**
-     * @returns {Object} the package.json of the application
+     * @returns {PackageJson} the package of the application module
      */
-    getPackage(){
+    package(){
         return this._package;
     }
 

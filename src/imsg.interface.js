@@ -4,8 +4,6 @@
  *  Manage both console output and file logging.
  *  See ILogger interface for a full description of console and log levels.
  */
-import { sprintf } from 'sprintf-js';
-
 import { IForkable, ILogger } from './imports.js';
 
 export class IMsg extends ILogger {
@@ -126,6 +124,9 @@ export class IMsg extends ILogger {
      * [-public API-]
      */
     static debug(){
+        IMsg._log( ILogger.const.DEBUG, '(debug)', ...arguments );
+    }
+    debug(){
         IMsg._log( ILogger.const.DEBUG, '(debug)', ...arguments );
     }
 

@@ -56,7 +56,7 @@ export function cliListEnabled( app, options={} ){
             if( sceDisplay.length ){
                 IMsg.tabular( sceDisplay, { prefix:'  ' });
             }
-            IMsg.out( 'Found '+sceDisplay.length+' enabled plugin(s) targeting \''+app.getPackage().getFullName()+'\'' );
+            IMsg.out( 'Found '+sceDisplay.length+' enabled plugin(s) targeting \''+app.package().getFullName()+'\'' );
 
             app.setConsoleLevel( _origLevel );
             return Promise.resolve( services );

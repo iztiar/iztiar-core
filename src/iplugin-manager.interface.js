@@ -40,8 +40,8 @@ export class IPluginManager {
      */
     enabled( app, installed ){
         let result = [];
-        const thisFullName = app.getPackage().getFullName();
-        const thisShortName = app.getPackage().getName();
+        const thisFullName = app.package().getFullName();
+        const thisShortName = app.package().getName();
         const appPlugins = app.config().plugins;
         installed.every(( pck ) => {
             const group = pck.getIztiar();
@@ -66,8 +66,8 @@ export class IPluginManager {
      * [-public API-]
      */
     installed( app ){
-        const parentDir = path.dirname( app.getPackage().getDir());
-        //const pckName = app.getPackage().getName();
+        const parentDir = path.dirname( app.package().getDir());
+        //const pckName = app.package().getName();
         //  new RegExp( '^(?!'+pckName+'$)' )
         const regex = [
             new RegExp( '^[^\.]' ),

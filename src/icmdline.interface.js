@@ -1,25 +1,16 @@
 /*
  * ICmdline interface
- *
- *  Implemented by coreApplication only, so a singleton.
  */
 import { Command } from 'commander';
 
 export class ICmdline {
 
-    _singleton = null;
     _command = null;
     _subFound = {};
     _subCount = 0;
 
     constructor(){
-        if( ICmdline._singleton ){
-            return ICmdline._singleton;
-        }
-        //console.log( 'ICmdline instanciation' );
-
-        ICmdline._singleton = this;
-        return ICmdline._singleton;
+        return this;
     }
 
     // private initialization
@@ -122,7 +113,7 @@ export class ICmdline {
        *** *************************************************************************************** */
 
     /**
-     * @returns {String| ull} the requested command
+     * @returns {String|null} the requested command
      * @throws {Error}
      * [-public API-]
      */
