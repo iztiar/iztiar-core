@@ -56,7 +56,7 @@ export function cliListEnabled( app, options={} ){
             if( sceDisplay.length ){
                 app.IMsg.tabular( sceDisplay, { prefix:'  ' });
             }
-            const _msg = 'Found '+sceDisplay.length+' enabled plugin(s) targeting \''+app.package().getFullName()+'\'';
+            const _msg = 'Found '+sceDisplay.length+' enabled plugin(s) targeting \''+app.ICoreApi.package().getFullName()+'\'';
             IMsg.out( _msg );
             ILogger.info( _msg );
 

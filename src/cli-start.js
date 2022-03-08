@@ -5,7 +5,7 @@
  * 
  *  Returns a Promise which eventually resolves with the service status.
  */
-import { IMsg, coreApplication } from './index.js';
+import { IMsg } from './index.js';
 
 /**
  * Start the named service
@@ -17,7 +17,7 @@ import { IMsg, coreApplication } from './index.js';
  */
 export function cliStart( app, name, options={} ){
 
-    const _origLevel = IMsg.consoleLevel();
+    const _origLevel = app.IMsg.consoleLevel();
     const _consoleLevel = Object.keys( options ).includes( 'consoleLevel' ) ? options.consoleLevel : _origLevel;
     if( _consoleLevel !== _origLevel ) app.IMsg.consoleLevel( _consoleLevel );
 
@@ -27,8 +27,8 @@ export function cliStart( app, name, options={} ){
     let _promise = Promise.resolve( true );
     if( service ){
         _promise = _promise
-            .then(() => { return service.initialize( app ) })
-            .then(( res ) => { return service.start() })
+            .then(() => { return service.initialize( app.ICoreApi ); })
+            .then(( res ) => { return service.start(); })
     }
 
     return _promise;

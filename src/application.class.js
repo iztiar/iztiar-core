@@ -5,7 +5,7 @@ import { appendFile } from 'fs';
 import path from 'path';
 
 import {
-    ICmdline, IForkable, ILogger, IMsg, IPluginManager, IRunnable, coreConfig, Interface, PackageJson
+    ICmdline, ICoreApi, IForkable, ILogger, IMsg, IPluginManager, IRunnable, coreConfig, Interface, PackageJson
 } from './index.js';
 
 export class coreApplication {
@@ -18,9 +18,6 @@ export class coreApplication {
         copyrightColor: 'yellowBright',
         forkable: 'iztiar-bc05bf55-4313-49d7-ab9d-106c93c335eb'
     };
-
-    _package = null;
-    _config = null;
 
     /**
      * @param title the title of the process (replacing 'node')
@@ -37,6 +34,8 @@ export class coreApplication {
             _texts: this.icmdlineTexts,
             _version: this.icmdlineVersion
         });
+
+        Interface.add( this, ICoreApi );
 
         Interface.add( this, IForkable, {
             _forkedVar: coreApplication.iforkableForkedVar
@@ -58,8 +57,8 @@ export class coreApplication {
 
         process.title = title;
 
-        // this coreApplication class definition is in /src subdirectory of the module root
-        this._package = new PackageJson( path.dirname( path.dirname( new URL( import.meta.url ).pathname )));
+        // this coreApplication class definition is stored in /src subdirectory of the module root
+        this.ICoreApi.package( new PackageJson( path.dirname( path.dirname( new URL( import.meta.url ).pathname ))));
 
         coreApplication._singleton = this;
         return coreApplication._singleton;
@@ -113,7 +112,7 @@ export class coreApplication {
      * <-ICmdline implementation->
      */
     icmdlineVersion(){
-        return this._package.getVersion();
+        return this.ICoreApi.package().getVersion();
     }
 
     /*
@@ -138,7 +137,8 @@ export class coreApplication {
      * <-IMsg (ILogger-derived) implementation->
      */
     iloggerFname(){
-        return this._config ? path.join( this.config().core.logDir, coreApplication.const.commonName+'.log' ) : ILogger.defaults.fname;
+        const _config = this.ICoreApi.config();
+        return _config ? path.join( _config.logDir(), coreApplication.const.commonName+'.log' ) : ILogger.defaults.fname;
     }
 
     /*
@@ -146,7 +146,8 @@ export class coreApplication {
      * <-IMsg (ILogger-derived) implementation->
      */
     iloggerLevel(){
-        return this._config ? this.config().core.logLevel.toUpperCase() : ILogger.defaults.level;
+        const _config = this.ICoreApi.config();
+        return _config ? _config.logLevel() : ILogger.defaults.level;
     }
 
     /*
@@ -156,11 +157,11 @@ export class coreApplication {
      * <-IMsg implementation->
      */
     imsgConsoleLevel( level ){
+        const _config = this.ICoreApi.config();
         if( level && typeof level === 'string' && level.length ){
-            this.config().core.consoleLevel = level.toUpperCase();
+            _config.consoleLevel( level );
         }
-        const _level = this._config ? this.config().core.consoleLevel.toUpperCase() : IMsg.defaults.level;
-        return _level;
+        return _config ? _config.consoleLevel() : IMsg.defaults.level;
     }
 
     /*
@@ -176,27 +177,8 @@ export class coreApplication {
      * <-IRunnable implementation->
      */
     static irunnableCopyrightText(){
-        let _text = coreApplication.const.displayName+' v '+this._package.getVersion();
+        let _text = coreApplication.const.displayName+' v '+this.ICoreApi.package().getVersion();
         _text += '\nCopyright (@) 2020,2021,2022 TheDreamTeam&Consorts (and may the force be with us;))';
         return _text;
-    }
-
-    /**
-     * Getter/Setter
-     * @param {Object} options the command-line option values
-     * @returns {Object} the filled application configuration
-     */
-    config( options ){
-        if( options ){
-            this._config = new coreConfig( options );
-        }
-        return this._config.filledConfig();
-    }
-
-    /**
-     * @returns {PackageJson} the package of the application module
-     */
-    package(){
-        return this._package;
     }
 }

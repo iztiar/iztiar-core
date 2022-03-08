@@ -40,9 +40,9 @@ export class IPluginManager {
      */
     enabled( app, installed ){
         let result = [];
-        const thisFullName = app.package().getFullName();
-        const thisShortName = app.package().getName();
-        const appPlugins = app.config().plugins;
+        const thisFullName = app.ICoreApi.package().getFullName();
+        const thisShortName = app.ICoreApi.package().getName();
+        const appPlugins = app.ICoreApi.config().plugins();
         // filter the found installed plugins to select those which are configured to provide a service
         installed.every(( pck ) => {
             const group = pck.getIztiar();
@@ -75,8 +75,8 @@ export class IPluginManager {
      * [-public API-]
      */
     installed( app ){
-        const parentDir = path.dirname( app.package().getDir());
-        //const pckName = app.package().getName();
+        const parentDir = path.dirname( app.ICoreApi.package().getDir());
+        //const pckName = app.ICoreApi.package().getName();
         //  new RegExp( '^(?!'+pckName+'$)' )
         const regex = [
             new RegExp( '^[^\.]' ),

@@ -15,8 +15,8 @@
  *  - consoleLevel {string} the console verbosity, may be overriden in the command-line
  * 
  *  Application runtime configuration, available from getAppFilledConfig()
- *  - logLevel {string} the log level (from configuration+command-line)
- *  - consoleLevel {string} the console verbosity (from configuration+command-line)
+ *  - logLevel {uppercase.string} the log level (from configuration+command-line)
+ *  - consoleLevel {uppercase.string} the console verbosity (from configuration+command-line)
  *  - storageDir {string} the full pathname of the storage directory (from command-line)
  *  - configDir {string}
  *  - logDir {string}
@@ -94,42 +94,72 @@ export class coreConfig {
         const _configFname = path.join( options.storageDir, coreConfig._c.configDir, coreApplication.const.commonName+'.json' );
         this._json = utils.jsonReadFileSync( _configFname );
 
+        const _fillupConfig = function( opts, json ){
+            let filled = { ...json };
+            filled.core = filled.core || {};
+            filled.plugins = filled.plugins || [];
+            const _jsonCore = json && json.core ? json.core : {};
+            const _jsonPlugins = json && json.plugins ? json.plugins : {};
+            // core: console level
+            if( !_jsonCore.consoleLevel || opts.consoleLevel !== coreConfig.getDefaultConsoleLevel()){
+                filled.core.consoleLevel = opts.consoleLevel;
+            }
+            filled.core.consoleLevel = filled.core.consoleLevel.toUpperCase();
+            // core: log level
+            if( !_jsonCore.logLevel || opts.logLevel !== coreConfig.getDefaultLogLevel()){
+                filled.core.logLevel = opts.logLevel;
+            }
+            filled.core.logLevel = filled.core.logLevel.toUpperCase();
+            // core: storage dir
+            filled.core.storageDir = coreConfig.storageDir();
+            // core: config dir
+            filled.core.configDir = path.join( coreConfig.storageDir(), coreConfig._c.configDir );
+            // core: log dir
+            filled.core.logDir = path.join( coreConfig.storageDir(), coreConfig._c.logDir );
+            // core: run dir
+            filled.core.runDir = path.join( coreConfig.storageDir(), coreConfig._c.runDir );
+            // plugin objects
+            //  we can only take a glance here the key we know: module, enabled
+            //  see docs/Architecture.md
+            //console.log( filled );
+            return filled;
+        };
+        this._filled = _fillupConfig( this._options, this._json );
+
         return this;
     }
 
     /**
-     * @param {Object} options the command-line option values
-     * @returns {Object} the filled application configuration
+     * Getter/Setter
+     * @param {String} level the desired console verbosity level
+     * @returns {uppercase-String} the configured console level label
      */
-    filledConfig(){
-        if( !this._filled ){
-            this._filled = { ...this._json };
-            this._filled.core = this._filled.core || {};
-            this._filled.plugins = this._filled.plugins || [];
-            const _jsonCore = this._json && this._json.core ? this._json.core : {};
-            const _jsonPlugins = this._json && this._json.plugins ? this._json.plugins : {};
-            // core: console level
-            if( !_jsonCore.consoleLevel || this._options.consoleLevel !== coreConfig.getDefaultConsoleLevel()){
-                this._filled.core.consoleLevel = this._options.consoleLevel;
-            }
-            // core: log level
-            if( !_jsonCore.logLevel || this._options.logLevel !== coreConfig.getDefaultLogLevel()){
-                this._filled.core.logLevel = this._options.logLevel;
-            }
-            this._filled.core.logLevel = this._filled.core.logLevel.toLowerCase();
-            // core: storage dir
-            this._filled.core.storageDir = coreConfig.storageDir();
-            // core: config dir
-            this._filled.core.configDir = path.join( coreConfig.storageDir(), coreConfig._c.configDir );
-            // core: log dir
-            this._filled.core.logDir = path.join( coreConfig.storageDir(), coreConfig._c.logDir );
-            // core: run dir
-            this._filled.core.runDir = path.join( coreConfig.storageDir(), coreConfig._c.runDir );
-            // plugin objects
-            //  we can only take a glance here the key we know: id, name, enabled
-            //  see docs/Architecture.md
-            //console.log( this._filled );
+    consoleLevel( level ){
+        if( level && typeof level === 'string' && level.length ){
+            this._filled.core.consoleLevel = level.toUpperCase();
         }
-        return this._filled;
+        return this._filled.core.consoleLevel;
+    }
+
+    /**
+     * @returns {String} the log directory full pathname
+     */
+    logDir(){
+        return this._filled.core.logDir;
+    }
+
+    /**
+     * @returns {uppercase-String} the configured log level label
+     */
+    logLevel(){
+        return this._filled.core.logLevel;
+    }
+
+    /**
+     * @returns {Object} the object which describes the configured plugins in the configuration file
+     *  Is expected to be an Object keyed by service names.
+     */
+    plugins(){
+        return this._filled.plugins;
     }
 }
