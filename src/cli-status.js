@@ -25,7 +25,7 @@ export function cliStatus( app, name, options={} ){
 
     IMsg.out( 'Getting the status of \''+name+'\' service' );
 
-    const service = app.IPluginManager.byName( app, name );
+    const service = app.IPluginManager.byName( app.ICoreApi, name );
     let _promise = Promise.resolve( true );
 
     if( service ){

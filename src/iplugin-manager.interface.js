@@ -16,13 +16,13 @@ export class IPluginManager {
        *** *************************************************************************************** */
 
     /**
-     * @param {coreApplication} app 
+     * @param {ICoreApi} api
      * @param {String} name the name of the instance of the plugin
      * @returns {coreService|null} the named service
      */
-    byName( app, name ){
+    byName( api, name ){
         let found = null;
-        const services = this.enabled( app, this.installed( app ));
+        const services = this.enabled( api, this.installed( api ));
         services.every(( s ) => {
             if( s.name() === name ){
                 found = s;
@@ -33,16 +33,16 @@ export class IPluginManager {
     }
 
     /**
-     * @param {coreApplication} app
+     * @param {ICoreApi} api
      * @param {PackageJson[]} installed the installed Iztiar modules
      * @returns {coreService[]} the array of enabled services which target this one
      * [-public API-]
      */
-    enabled( app, installed ){
+    enabled( api, installed ){
         let result = [];
-        const thisFullName = app.ICoreApi.package().getFullName();
-        const thisShortName = app.ICoreApi.package().getName();
-        const appPlugins = app.ICoreApi.config().plugins();
+        const thisFullName = api.package().getFullName();
+        const thisShortName = api.package().getName();
+        const appPlugins = api.config().plugins();
         // filter the found installed plugins to select those which are configured to provide a service
         installed.every(( pck ) => {
             const group = pck.getIztiar();
@@ -70,12 +70,12 @@ export class IPluginManager {
     }
 
     /**
-     * @param {coreApplication} app
+     * @param {ICoreApi} api
      * @returns {PackageJson[]} the array of installed modules of our Iztiar family
      * [-public API-]
      */
-    installed( app ){
-        const parentDir = path.dirname( app.ICoreApi.package().getDir());
+    installed( api ){
+        const parentDir = path.dirname( api.package().getDir());
         //const pckName = app.ICoreApi.package().getName();
         //  new RegExp( '^(?!'+pckName+'$)' )
         const regex = [

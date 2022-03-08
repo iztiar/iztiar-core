@@ -36,7 +36,7 @@ export function cliListEnabled( app, options={} ){
     
     const _promise = cliListInstalled( app, { consoleLevel:'QUIET' })
         .then(( res ) => {
-            const services = app.IPluginManager.enabled( app, res );
+            const services = app.IPluginManager.enabled( app.ICoreApi, res );
             let sceDisplay = [];
             services.every(( s ) => {
                 const conf = s.config();

@@ -23,7 +23,7 @@ export function cliStop( app, name, options={} ){
 
     IMsg.out( 'Stopping \''+name+'\' service' );
 
-    const service = app.IPluginManager.byName( app, name );
+    const service = app.IPluginManager.byName( app.ICoreApi, name );
     let _promise = Promise.resolve( true );
     if( service ){
         _promise = _promise
