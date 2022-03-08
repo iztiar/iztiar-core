@@ -3,7 +3,7 @@
  */
 import path from 'path';
 
-import { coreApplication, coreService, PackageJson, utils } from './imports.js';
+import { coreApplication, coreService, PackageJson, utils } from './index.js';
 
 export class IPluginManager {
 

@@ -4,7 +4,7 @@
 import fs from 'fs';
 import path from 'path';
 
-import { IMsg } from './imports.js';
+import { IMsg } from './index.js';
 
 export const utils = {
     /**

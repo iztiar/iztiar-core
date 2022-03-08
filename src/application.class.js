@@ -6,7 +6,7 @@ import path from 'path';
 
 import {
     ICmdline, IForkable, ILogger, IMsg, IPluginManager, IRunnable, coreConfig, Interface, PackageJson
-} from './imports.js';
+} from './index.js';
 
 export class coreApplication {
 

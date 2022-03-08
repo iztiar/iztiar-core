@@ -44,7 +44,7 @@
 import chalk from 'chalk';
 import pino from 'pino';
 
-import { IForkable, LogLevel, utils } from './imports.js';
+import { IForkable, LogLevel, utils } from './index.js';
 
 export class ILogger {
 

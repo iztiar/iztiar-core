@@ -14,7 +14,7 @@
  * 
  *  Returns a Promise resolved with the array of the corresponding Plugin objects.
  */
-import { IMsg, coreApplication } from './imports.js';
+import { IMsg, coreApplication } from './index.js';
 
 import { cliListInstalled } from './cli-list-installed.js';
 

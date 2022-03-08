@@ -5,7 +5,7 @@
  * 
  *  Returns a Promise which eventually resolves with the service status.
  */
-import { IMsg, coreApplication } from './imports.js';
+import { IMsg, coreApplication } from './index.js';
 
 /**
  * Start the named service

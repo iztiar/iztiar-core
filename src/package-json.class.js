@@ -3,7 +3,7 @@
  */
 import path from 'path';
 
-import { utils } from './imports.js';
+import { utils } from './index.js';
 
 export class PackageJson {
 

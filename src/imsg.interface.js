@@ -5,7 +5,7 @@
  *  See ILogger interface for a full description of console and log levels.
  *  See also ILogger interface for a rationale about the '_instance' static data.
  */
-import { IForkable, ILogger } from './imports.js';
+import { IForkable, ILogger } from './index.js';
 
 export class IMsg extends ILogger {
 

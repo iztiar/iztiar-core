@@ -9,7 +9,7 @@
  *  - IZTIAR_ENV
  *  - IZTIAR_LOGLEVEL
  */
-import { coreApplication } from './imports.js';
+import { coreApplication } from './index.js';
 
 const app = new coreApplication( 'iztiar' );
 //console.log( app );

@@ -26,7 +26,7 @@
  */
 import path from 'path';
 
-import { ILogger, IMsg, coreApplication, utils } from './imports.js';
+import { ILogger, IMsg, coreApplication, utils } from './index.js';
 
 export class coreConfig {
 

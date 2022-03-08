@@ -5,7 +5,7 @@
  */
 import chalk from 'chalk';
 
-import { IForkable, IMsg } from './imports.js';
+import { IForkable, IMsg } from './index.js';
 
 import { cliStart } from './cli-start.js';
 import { cliStatus } from './cli-status.js';

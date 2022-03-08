@@ -1,7 +1,3 @@
-/*
- * imports.js
- */
-
 // interfaces
 export * from './icmdline.interface.js';
 export * from './iforkable.interface.js';

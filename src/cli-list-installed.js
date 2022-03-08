@@ -5,7 +5,7 @@
  *  Returns a Promise resolved with the array of the corresponding PackageJson objects.
  */
 import { ILogger } from './ilogger.interface.js';
-import { IMsg, coreApplication } from './imports.js';
+import { IMsg, coreApplication } from './index.js';
 
 /**
  * 
