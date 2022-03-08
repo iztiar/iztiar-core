@@ -55,6 +55,17 @@ The _plugins_ group is a group:
     - whose key is a unique (inside of this environment on this host) identifier
     - whose value is itself a group, with following keys:
 
-        - module: the name of the corresponding (obviously installed) module
-        - enabled: whether the service is enabled or not, defaults to true
+        - module:
+            - mandatory
+            - the name of the corresponding (obviously installed) module
+            - the special value 'core' is accepted as coreController is integrated inside of iztiar-core itself
+        - class:
+            - optional for an external module
+            - mandatory if special module 'core' is to be used
+            - the class name of the instance to run
+            - the usage is to let the module determines which type of service to run, so it is up to it to make this key mandatory or not in its own case
+        - enabled:
+            - optional
+            - whether the service is enabled or not
+            - defaults to true
         - plus other keys which describe the configuration of this instance of the plugin.

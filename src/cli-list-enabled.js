@@ -14,7 +14,7 @@
  * 
  *  Returns a Promise resolved with the array of the corresponding Plugin objects.
  */
-import { IMsg, coreApplication } from './index.js';
+import { ILogger, IMsg, coreApplication } from './index.js';
 
 import { cliListInstalled } from './cli-list-installed.js';
 
@@ -27,7 +27,7 @@ import { cliListInstalled } from './cli-list-installed.js';
  */
 export function cliListEnabled( app, options={} ){
 
-    const _origLevel = IMsg.consoleLevel();
+    const _origLevel = app.IMsg.consoleLevel();
     const _consoleLevel = Object.keys( options ).includes( 'consoleLevel' ) ? options.consoleLevel : _origLevel;
     app.setConsoleLevel( _consoleLevel );
 
@@ -54,9 +54,11 @@ export function cliListEnabled( app, options={} ){
                 return true;
             });
             if( sceDisplay.length ){
-                IMsg.tabular( sceDisplay, { prefix:'  ' });
+                app.IMsg.tabular( sceDisplay, { prefix:'  ' });
             }
-            IMsg.out( 'Found '+sceDisplay.length+' enabled plugin(s) targeting \''+app.package().getFullName()+'\'' );
+            const _msg = 'Found '+sceDisplay.length+' enabled plugin(s) targeting \''+app.package().getFullName()+'\'';
+            IMsg.out( _msg );
+            ILogger.info( _msg );
 
             app.setConsoleLevel( _origLevel );
             return Promise.resolve( services );
