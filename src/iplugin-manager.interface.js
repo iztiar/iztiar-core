@@ -43,6 +43,7 @@ export class IPluginManager {
         const thisFullName = app.package().getFullName();
         const thisShortName = app.package().getName();
         const appPlugins = app.config().plugins;
+        // filter the found installed plugins to select those which are configured to provide a service
         installed.every(( pck ) => {
             const group = pck.getIztiar();
             if( group.target === thisFullName || group.target === thisShortName ){
@@ -54,6 +55,14 @@ export class IPluginManager {
                     }
                     return true;
                 });
+            }
+            return true;
+        });
+        // among the configured services, also select those which are provided by the core itself
+        Object.keys( appPlugins ).every(( id ) => {
+            const enabled = appPlugins[id].enabled || true;
+            if( enabled && appPlugins[id].module === 'core' ){
+                result.push( new coreService( id, appPlugins[id] ));
             }
             return true;
         });

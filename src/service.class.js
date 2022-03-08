@@ -19,6 +19,13 @@ export class coreService {
     _defaultFn = null;
     _defaultResult = null;
 
+    /**
+     * Constructor
+     * @param {String} name the service name
+     * @param {Object} config the part of the application configuration file which describes this service
+     * @param {PackageJson|null} pck the providing module, null for the core itself
+     * @returns 
+     */
     constructor( name, config, pck ){
         this._name = name;
         this._config = config;

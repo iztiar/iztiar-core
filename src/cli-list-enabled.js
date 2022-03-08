@@ -31,25 +31,25 @@ export function cliListEnabled( app, options={} ){
     const _consoleLevel = Object.keys( options ).includes( 'consoleLevel' ) ? options.consoleLevel : _origLevel;
     if( _consoleLevel !== _origLevel ) app.IMsg.consoleLevel( _consoleLevel );
 
-    IMsg.out( 'Listing enabled Iztiar plugins for this module' );
+    IMsg.out( 'Listing enabled Iztiar services for this module' );
     IMsg.verbose( 'An Iztiar module is identified by its name; its target is qualified from package.json \'iztiar\' group' );
     
     const _promise = cliListInstalled( app, { consoleLevel:'QUIET' })
         .then(( res ) => {
             const services = app.IPluginManager.enabled( app, res );
             let sceDisplay = [];
-            services.every(( p ) => {
-                const conf = p.config();
+            services.every(( s ) => {
+                const conf = s.config();
                 const enabled = conf.enabled || true;   // is always true here
-                const pck = p.package();
-                const group = pck.getIztiar();
+                const pck = s.package();
+                const group = pck ? pck.getIztiar() : null;
                 sceDisplay.push({
-                    name: p.name(),
-                    module: pck.getFullName(),
-                    version: pck.getVersion(),
-                    description: pck.getDescription(),
+                    name: s.name(),
+                    module: pck ? pck.getFullName() : 'core',
+                    version: pck ? pck.getVersion() : '',
+                    description: pck ? pck.getDescription() : '',
                     enabled: enabled ? 'true':'false',
-                    target: group.target
+                    target: group ? group.target : ''
                 });
                 return true;
             });
