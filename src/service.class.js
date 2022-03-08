@@ -8,7 +8,7 @@
  */
 import path from 'path';
 
-import { IMsg, utils } from './index.js';
+import { IMsg, coreController, utils } from './index.js';
 
 export class coreService {
 
@@ -22,7 +22,7 @@ export class coreService {
 
     // from service
     _defaultFn = null;
-    _defaultResult = null;
+    _iServiceable = null;
 
     /**
      * Constructor
@@ -44,8 +44,8 @@ export class coreService {
 
     /**
      * dynamically load and initialize the default function of the plugin
-     * @param {ICoreApi} api an instance of the ICopeApi interface
-     * @returns {Promise} which resolves to the default function
+     * @param {ICoreApi} api an instance of the ICoreApi interface
+     * @returns {Promise} which resolves to the IServiceable which must be returned by the default function
      */
     initialize( api ){
         this._api = api;
@@ -54,11 +54,21 @@ export class coreService {
             const main = path.join( this.package().getDir(), this.package().getMain());
             return import( main ).then(( res ) => {
                 this._defaultFn = res.default;
-                this._defaultResult = this._defaultFn( app, this );
-                return Promise.resolve( this._defaultFn );
+                if( typeof this._defaultFn === 'function' ){
+                    return Promise.resolve( this._iServiceable = this._defaultFn( api, this ));
+                } else {
+                    return Promise.reject( 'coreService.initialize() \''+this.name()+'\' doesn\' export a default function' );
+                }
             });
+        } else if( this.config().module === 'core' ){
+            switch( this.config().class ){
+                case 'coreController':
+                    return Promise.resolve( this._iServiceable = new coreController( api, this ).IServiceable );
+                default:
+                    return Promise.reject( 'coreService.initialize() unknown class \''+this.config().class+'\'' );
+            }
         } else {
-            return Promise.resolve( true )
+            return Promise.reject( 'coreService.initialize() unknown module \''+this.config().module+'\'' );
         }
     }
 
@@ -75,17 +85,16 @@ export class coreService {
      * @throws {Error}
      */
     start(){
-        if( !this._defaultResult ){
+        if( !this._iServiceable ){
             throw new Error( 'dynamically loaded plugin initialization didn\'t provide anything' );
         }
-        if( !this._defaultResult.start || typeof this._defaultResult.start !== 'function' ){
+        if( !this._iServiceable.start || typeof this._iServiceable.start !== 'function' ){
             throw new Error( 'dynamically loaded plugin doesn\'t provide start() command' );
         }
-        this._defaultResult.start( this._defaultResult );
+        this._iServiceable.start( this._iServiceable );
     }
 
     /**
-     * @param {coreConfig} appConfig the filled application configuration
      * @param {Object} options
      *  consoleLevel {String}
      * @returns {Promise} which eventually resolves to an Object
@@ -98,7 +107,9 @@ export class coreService {
      *  status: JSON object       full status returned by the service
      * @throws {Error}
      */
-    status( appConfig, options={} ){
+    status( options={} ){
+        const self = this;
+
         // the returned object which will resolve the promise
         let result = {
             reasons: [],
@@ -113,14 +124,10 @@ export class coreService {
             },
             status:{}
         };
-        // the returned promise
-        let promise = Promise.resolve( true );
-
-        IMsg.out( 'Examining \''+this.name()+'\' service' );
 
         //  using promises here happens to be rather conterproductive as the functions are already mainly used inside of Promises
         const _cinfo = function(){
-            if( IMsg.consoleLevel() >= Iztiar.c.verbose.INFO ){ console.log( ...arguments )};
+            IMsg.info( '  ', ...arguments );
         }
         const _cerr = function(){
             result.reasons.push( ...arguments );
@@ -130,8 +137,9 @@ export class coreService {
         // ask the service for its pids to be checked, resolving with result
         const _pidsListPromise = function(){
             return new Promise(( resolve, reject ) => {
-                if( this._defaultResult.expectedPids && typeof this._defaultResult.expectedPids === 'function' ){
-                    this._defaultResult.expectedPids().then(( res ) => {
+                if( self._iServiceable.expectedPids && typeof self._iServiceable.expectedPids === 'function' ){
+                    self._iServiceable.expectedPids().then(( res ) => {
+                        _cinfo( 'Expected PIDs', res, '('+res.length+')' );
                         result.pids.requested = [ ...res ];
                         resolve( result );
                     });
@@ -149,7 +157,7 @@ export class coreService {
                         if( res ){
                             result.pids.alive.push( pid );
                             const _local = { user:res[0].user, time:res[0].time, elapsed:res[0].elapsed };
-                            _cinfo( '  pid='+pid+' is alive', _local );
+                            _cinfo( 'pid='+pid+' is alive', _local );
                             resolve( true );
                         } else {
                             _cerr( 'pid='+pid+' is dead' );
@@ -162,13 +170,14 @@ export class coreService {
         // ask the service for its ports to be checked, resolving with result
         const _portsListPromise = function(){
             return new Promise(( resolve, reject ) => {
-                if( this._defaultResult.expectedPorts && typeof this._defaultResult.expectedPorts === 'function' ){
-                    this._defaultResult.expectedPorts().then(( res ) => {
-                            checkResult.ports.requested = [ ...res ];
-                            resolve( checkResult );
+                if( self._iServiceable.expectedPorts && typeof self._iServiceable.expectedPorts === 'function' ){
+                    self._iServiceable.expectedPorts().then(( res ) => {
+                            _cinfo( 'Expected opened ports', res, '('+res.length+')' );
+                            result.ports.requested = [ ...res ];
+                            resolve( result );
                         });
                 } else {
-                    resolve( checkResult );
+                    resolve( result );
                 }
             });
         };
@@ -180,7 +189,7 @@ export class coreService {
                     .then(( res ) => {
                         if( res ){
                             result.ports.alive.push( port );
-                            _cinfo( '  port='+port+' answers', res );
+                            _cinfo( 'port='+port+' answers', res );
                             resolve( true );
                         } else {
                             _cerr( 'port='+port+' doesn\'t answer to ping' );
@@ -231,6 +240,7 @@ export class coreService {
                                     resolve( true );
                                 }
                                 */
+                                _cinfo( 'statusOf answers', res );
                             } else {
                                 _cerr( 'statusOf request rejected' );
                                 resolve( false );
@@ -243,77 +253,25 @@ export class coreService {
             }
         }
 
-    }
-
-    /**
-     * @param {string} name the name of the service controller
-     * @param {JSON|null} json the content of the JSON runfile
-     * @param {boolean} withConsole whether display the actions to the console, or run in batch mode (no display, default)
-     * @returns {Promise} a promise which will eventually resolves with an Object as {}
-     * Note:
-     *  Most of the done checks are asynchronous, and are so implemented as Promises.
-     *  Because we want to be able to use this same function to display the global status to the console,
-     *  we have to take care of sequentializing the displays of messages, running checks, and their results.
-     *  As a consequence, all actions are implemented as Promises, and dynamically chained here.
-     */
-     static checkServiceWithJson( name, json, withConsole=false ){
-        msg.debug( 'coreForkable.checkServiceWithJson()', 'name='+name );
-        const _origLevel = msg.consoleLevel();
-        if( !withConsole ){
-            msg.consoleLevel( 0 );
-        }
-        const verbose = _origLevel >= Iztiar.c.verbose.VERBOSE;
-        //console.log( 'origLevel='+_origLevel, 'Iztiar.c.verbose.VERBOSE='+Iztiar.c.verbose.VERBOSE, 'verbose='+verbose );
-
-
-        // if name is invalid, just stop here
-        if( name === 'ALL' ){
-            _cerr( coreError.e.NAME_ALL_INVALID );
-            _checkResult.startable = false;
-            _promise = _promise.then(() => { return Promise.resolve( _checkResult )});
-
-        // the runfile content is empty or is not present: the only error case where the service is startable
-        } else if( !json || !Object.keys( json ).length ){
-            _cerr( coreError.e.RUNFILE_NOTFOUNDOREMPTY );
-            _checkResult.startable = true;
-            _promise = _promise.then(() => { return Promise.resolve( _checkResult )});
-
-        // else there is some things to check...
-        } else {
-            _checkResult.startable = false;
-            const _processes = coreRunfile.processesFromJson( json );
-            //msg.out( _processes );
-            // get { errs: [], procs: { forkable: { name, pid, port }}} or error_message_string in processes.errs array
-            _processes.errs.every(( m ) => { _cerr( m )});
-            const _runProcs = _processes.procs;
-
-            // just display the title for each forkable
-            const _displayPromise = function( forkable ){
-                return new Promise(( resolve, reject ) => {
-                    msg.out( ' '+chalk.blue( forkable ), _runProcs[forkable] );
-                    resolve( true );
-                });
-            };
-
-            // local functions defined here to have access to _runProcs variable
-
-            // let chain and check
-            for( const _forkable in _runProcs ){
-                //msg.out( _forkable );
-                _promise = _promise
-                    .then(() => { return _displayPromise( _forkable )})
-                    .then(() => { return _pidPromise( _forkable, _runProcs[_forkable].pid )})
-                    .then(() => { return _portPromise( _forkable, _runProcs[_forkable].port )})
-                    .then(() => { return _statusPromise( _forkable, _runProcs[_forkable].port )});
-            }
-        }
-
-        _promise = _promise.then(() => {
-            msg.consoleLevel( _origLevel );
-            return Promise.resolve( _checkResult )
+        // let chain and check
+        let promise = Promise.resolve( true );
+        promise = promise.then(() => { return _pidsListPromise() });
+        promise = promise.then(() => {
+            result.pids.requested.every(( pid ) => {
+                promise = promise.then(() => { return _pidAlivePromise( pid )});
+                return true;
+            });
         });
-
-        return _promise;
+        promise = promise.then(() => { return _portsListPromise() });
+        promise = promise.then(() => {
+            result.ports.requested.every(( port ) => {
+                promise = promise.then(() => { return _portPingPromise( port )});
+                promise = promise.then(() => { return _portStatusPromise( port )});
+                return true;
+            });
+        });
+        promise = promise.then(() => { return Promise.resolve( result )});
+        return promise;
     }
 
     /**
@@ -321,12 +279,12 @@ export class coreService {
      * @throws {Error}
      */
     stop(){
-        if( !this._defaultResult ){
+        if( !this._iServiceable ){
             throw new Error( 'dynamically loaded plugin initialization didn\'t provide anything' );
         }
-        if( !this._defaultResult.stop || typeof this._defaultResult.stop !== 'function' ){
+        if( !this._iServiceable.stop || typeof this._iServiceable.stop !== 'function' ){
             throw new Error( 'dynamically loaded plugin doesn\'t provide stop() command' );
         }
-        this._defaultResult.stop();
+        this._iServiceable.stop();
     }
 }

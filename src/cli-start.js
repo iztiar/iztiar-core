@@ -21,7 +21,7 @@ export function cliStart( app, name, options={} ){
     const _consoleLevel = Object.keys( options ).includes( 'consoleLevel' ) ? options.consoleLevel : _origLevel;
     if( _consoleLevel !== _origLevel ) app.IMsg.consoleLevel( _consoleLevel );
 
-    IMsg.out( 'Starting '+name+' service' );
+    IMsg.out( 'Starting \''+name+'\' service' );
 
     const service = app.IPluginManager.byName( app, name );
     let _promise = Promise.resolve( true );

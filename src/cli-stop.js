@@ -21,7 +21,7 @@ export function cliStop( app, name, options={} ){
     const _consoleLevel = Object.keys( options ).includes( 'consoleLevel' ) ? options.consoleLevel : _origLevel;
     if( _consoleLevel !== _origLevel ) app.IMsg.consoleLevel( _consoleLevel );
 
-    IMsg.out( 'Stopping '+name+' service' );
+    IMsg.out( 'Stopping \''+name+'\' service' );
 
     const service = app.IPluginManager.byName( app, name );
     let _promise = Promise.resolve( true );

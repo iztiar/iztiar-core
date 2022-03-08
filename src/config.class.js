@@ -162,4 +162,11 @@ export class coreConfig {
     plugins(){
         return this._filled.plugins;
     }
+
+    /**
+     * @returns {String} the run directory full pathname
+     */
+    runDir(){
+        return this._filled.core.runDir;
+    }
 }

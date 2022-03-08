@@ -78,24 +78,29 @@ export class IRunnable {
         //console.log( 'IRunnable.run() action='+action );
         let promise = null;
         process.exitCode = 0;
-        switch( action ){
-            case 'start':
-                promise = cliStart( app, app.ICmdline.getOptions().service );
-                break;
-            case 'status':
-                promise = cliStatus( app, app.ICmdline.getOptions().service );
-                break;
-            case 'stop':
-                promise = cliStop( app, app.ICmdline.getOptions().service );
-                break;
-            case 'list-enabled':
-                promise = cliListEnabled( app );
-                break;
-            case 'list-installed':
-                promise = cliListInstalled( app );
-                break;
-            default:
-                break;
+        try {
+            switch( action ){
+                case 'start':
+                    promise = cliStart( app, app.ICmdline.getOptions().service );
+                    break;
+                case 'status':
+                    promise = cliStatus( app, app.ICmdline.getOptions().service );
+                    break;
+                case 'stop':
+                    promise = cliStop( app, app.ICmdline.getOptions().service );
+                    break;
+                case 'list-enabled':
+                    promise = cliListEnabled( app );
+                    break;
+                case 'list-installed':
+                    promise = cliListInstalled( app );
+                    break;
+                default:
+                    break;
+            }
+        } catch( e ){
+            process.exitCode += 1;
+            throw e;
         }
         // Waiting here for the Promise returned by the action be settled, either resolved or rejected.
         // We are prepared to managed both success and failure, but do not modify in either cases the exit code of the process.
