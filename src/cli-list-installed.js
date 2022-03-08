@@ -4,6 +4,7 @@
  *  Display the list of installed plugins, along with their associated target module.
  *  Returns a Promise resolved with the array of the corresponding PackageJson objects.
  */
+import { ILogger } from './ilogger.interface.js';
 import { IMsg, coreApplication } from './imports.js';
 
 /**
@@ -15,7 +16,7 @@ import { IMsg, coreApplication } from './imports.js';
  */
 export function cliListInstalled( app, options={} ){
 
-    const _origLevel = IMsg.consoleLevel();
+    const _origLevel = app.IMsg.consoleLevel();
     const _consoleLevel = Object.keys( options ).includes( 'consoleLevel' ) ? options.consoleLevel : _origLevel;
     app.setConsoleLevel( _consoleLevel );
 
@@ -36,9 +37,11 @@ export function cliListInstalled( app, options={} ){
         return true;
     });
     if( pckDisplay.length ){
-        IMsg.tabular( pckDisplay, { prefix:'  ' });
+        app.IMsg.tabular( pckDisplay, { prefix:'  ' });
     }
-    IMsg.out( 'Found '+pckDisplay.length+' installed module(s) targeting '+coreApplication.const.displayName+' family' );
+    const _msg = 'Found '+pckDisplay.length+' installed module(s) targeting '+coreApplication.const.displayName+' family';
+    IMsg.out( _msg );
+    ILogger.info( _msg );
 
     app.setConsoleLevel( _origLevel );
 

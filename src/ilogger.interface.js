@@ -36,6 +36,10 @@
  *                                                                                          5    verbose()
  *    KERN_DEBUG         debug()                                                 debug()    6    debug()
  *                      trace()     -> ignored here, assimilated to debug()
+ * 
+ * Note: we really need to define debug(), verbose(), out() and so on as static functions to prevent us to
+ *  pass an instance of IMsg (resp. ILogger) all around the code. We do not really need a singleton here, but
+ *  we need to have here the allocated instance.
  */
 import chalk from 'chalk';
 import pino from 'pino';
@@ -44,10 +48,7 @@ import { IForkable, LogLevel, utils } from './imports.js';
 
 export class ILogger {
 
-    static _singleton = null;
-    static _logOptions = null;
-    static _logFname = null;
-    static _logger = null;
+    static _instance = null;
 
     static defaults = {
         fname: '/dev/null',
@@ -55,6 +56,9 @@ export class ILogger {
     };
 
     static const = null;
+
+    _logOptions = null;
+    _logger = null;
 
     // injects an 'origin' prefix at the start of logged messages
     static _emitter(){
@@ -70,13 +74,13 @@ export class ILogger {
         //console.log( 'ILogger.log() app-configured log filename', ILogger._singleton._logFname());
         //console.log( arguments );
 
-        if( ILogger._logger ){
+        if( ILogger._instance._logger ){
             // check that the level is allowed for the current transport
             //  may be overriden with IZTIAR_DEBUG
-            if( !ILogger._logger.isLevelEnabled( _logLevel.label()) && process.env.IZTIAR_DEBUG && process.env.IZTIAR_DEBUG.includes( 'logLevel' )){
+            if( !ILogger._instance._logger.isLevelEnabled( _logLevel.label()) && process.env.IZTIAR_DEBUG && process.env.IZTIAR_DEBUG.includes( 'logLevel' )){
                 console.log(( _logLevel.color())( ILogger._emitter(), '(not allowed log level)', ...arguments ));
             } else {
-                ILogger._logger[_logLevel.label()]([ ILogger._emitter(), ...arguments ]);
+                ILogger._instance._logger[_logLevel.label()]([ ILogger._emitter(), ...arguments ]);
                 //_logger[_lower]( color( [ _emitter(), ...arguments ]));
             }
         // before any logger be instanciated, one can still log the main CLI process to the console
@@ -86,9 +90,6 @@ export class ILogger {
     }
 
     constructor(){
-        if( ILogger._singleton ){
-            return ILogger._singleton;
-        }
         if( !ILogger.const ){
             ILogger.const = {
                 QUIET: new LogLevel( 0, 'quiet' ),
@@ -100,8 +101,8 @@ export class ILogger {
                 DEBUG: new LogLevel( 60, 'debug', chalk.blue )
             };
         }
-        ILogger._singleton = this;
-        return ILogger._singleton;
+        ILogger._instance = this;
+        return this;
     }
     
     /* *** ***************************************************************************************
@@ -169,17 +170,13 @@ export class ILogger {
      * @throws {Error}
      * [-public API-]
      */
-    static startup(){
-        if( !ILogger._singleton ){
-            throw new Error( 'ILogger.startup() called before ILogger instanciation' );
-        }
-        ILogger._logOptions = {
-            name: ILogger._singleton._logAppname(),
-            level: ILogger.const[ILogger._singleton._logLevel()].label()
+    startup(){
+        this._logOptions = {
+            name: this._logAppname(),
+            level: ILogger.const[this._logLevel()].label()
         };
-        ILogger._logFname = ILogger._singleton._logFname();
-        utils.makeFnameDirExists( ILogger._logFname );
+        utils.makeFnameDirExists( this._logFname());
         //console.log( ILogger );
-        ILogger._logger = pino( ILogger._logOptions, pino.destination( ILogger._logFname ));
+        this._logger = pino( this._logOptions, pino.destination( this._logFname()));
     }
 }

@@ -74,6 +74,7 @@ export class IRunnable {
      */
     run( app ){
         const action = app.ICmdline.getAction();
+        app.IMsg.startup( action );
         //console.log( 'IRunnable.run() action='+action );
         let promise = null;
         process.exitCode = 0;

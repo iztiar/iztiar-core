@@ -13,6 +13,7 @@ export class PackageJson {
     /**
      * Constructor
      * @param {String} dir the directory where we want find a package.json
+     * @returns {PackageJson}
      */
     constructor( dir ){
         this._dir = dir;

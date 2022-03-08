@@ -73,12 +73,11 @@ export const utils = {
 
     /**
      * synchronously read a JSON file
+     * @param {String} fname the full pathname of the file to be read
      * @returns {JSON|null} the object (may be empty) or null if ENOENT error
      * @throws {coreError}, unless ENOENT which is sent to coreLogger
-     * Note:
-     *  As this function is called very early in the program, it cannot makes use of msg() helpers.
      */
-    jsonReadFileSync: function( fname ){
+    jsonReadFileSync: function( fname, options={} ){
         IMsg.debug( 'utils.jsonReadFileSync()', 'fname='+fname );
         let _json = null;
         try {
