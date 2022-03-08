@@ -2,6 +2,7 @@
  * IPluginManager interface
  */
 import path from 'path';
+import { IMsg } from './imsg.interface.js';
 
 import { coreApplication, coreService, PackageJson, utils } from './index.js';
 
@@ -38,6 +39,7 @@ export class IPluginManager {
      * @returns {coreService[]} the array of enabled services which target this one
      * [-public API-]
      */
+    /*
     enabled( api, installed ){
         let result = [];
         const thisFullName = api.package().getFullName();
@@ -68,13 +70,52 @@ export class IPluginManager {
         });
         return result;
     }
+    */
 
     /**
      * @param {ICoreApi} api
-     * @returns {PackageJson[]} the array of installed modules of our Iztiar family
+     * @returns {coreService[]} the array of enabled services which target this one
      * [-public API-]
      */
-    installed( api ){
+    getEnabled( api ){
+        let result = [];
+        const appPlugins = api.config().plugins();
+        const thisFullName = api.package().getFullName();
+        const thisShortName = api.package().getName();
+        let _found = [];
+        // examine the configured services to select a) installed modules b) core services
+        Object.keys( appPlugins ).every(( id ) => {
+            const enabled = appPlugins[id].enabled || true;
+            if( enabled ){
+                if( appPlugins[id].module === 'core' ){
+                    result.push( new coreService( id, appPlugins[id] ));
+                } else if( _found.includes( appPlugins[id].module )){
+                    result.push( new coreService( id, appPlugins[id] ));
+                } else {
+                    const pck = this.getPackage( api, appPlugins[id].module );
+                    if( pck ){
+                        const group = pck.getIztiar() || {};
+                        const target = group.target || null;
+                        if( target ){
+                            if( target == thisFullName || target === thisShortName ){
+                                result.push( new coreService( id, appPlugins[id], pck ));
+                                _found.push( appPlugins[id].module );
+                            }
+                        }
+                    }
+                }
+            }
+            return true;
+        });
+        return result;
+    }
+
+    /**
+     * @param {ICoreApi} api
+     * @returns {PackageJson[]} the array of installed modules of our Iztiar family (including this one)
+     * [-public API-]
+     */
+    getInstalled( api ){
         const parentDir = path.dirname( api.package().getDir());
         //const pckName = app.ICoreApi.package().getName();
         //  new RegExp( '^(?!'+pckName+'$)' )
@@ -88,5 +129,23 @@ export class IPluginManager {
             return true;
         });
         return result;
+    }
+
+    /**
+     * @param {ICoreApi} api
+     * @param {String} name
+     * @returns {PackageJson|null} the PackageJson instance for the (installed) module
+     * [-public API-]
+     */
+    getPackage( api, name ){
+        let pck = null;
+        const _words = name.split( '/' );
+        const _short = _words.length > 1 ? _words[1] : _words[0];
+        const dir = path.join( path.dirname( api.package().getDir()), _short );
+        const fname = path.join( dir, 'package.json' );
+        if( utils.fileExistsSync( fname )){
+            pck = new PackageJson( dir );
+        }
+        return pck;
     }
 }

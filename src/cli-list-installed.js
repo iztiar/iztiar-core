@@ -11,7 +11,7 @@ import { ILogger, IMsg, coreApplication } from './index.js';
  * @param {coreApplication} app the application
  * @param {Object} options 
  *  consoleLevel: defaulting to NORMAL
- * @returns 
+ * @returns {Promise} which resolves to an array of the PackageJson objects for the installed Iztiar modules
  */
 export function cliListInstalled( app, options={} ){
 
@@ -22,7 +22,7 @@ export function cliListInstalled( app, options={} ){
     IMsg.out( 'Listing installed Iztiar modules' );
     IMsg.verbose( 'An Iztiar module is identified by its name; its target is qualified from package.json \'iztiar\' group' );
     
-    const pckInstalled = app.IPluginManager.installed( app.ICoreApi );
+    const pckInstalled = app.IPluginManager.getInstalled( app.ICoreApi );
 
     let pckDisplay = [];
     pckInstalled.every(( pck ) => {

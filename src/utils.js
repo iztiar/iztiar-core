@@ -55,6 +55,16 @@ export const utils = {
     },
 
     /**
+     * @param {String} fname the full pathname to be tested
+     * @returns {Boolean}
+     */
+    fileExistsSync: function( fname ){
+        const exists = fs.existsSync( fname );
+        IMsg.debug( 'utils.fileExistsSync()', 'fname='+fname, exists ? 'exists':'doesn\' exist' );
+        return fs.existsSync( fname );
+    },
+
+    /**
      * @param {integer} pid the PID of the process to check
      * @returns {Promise} which will will resolves with [{ pid, user, time, etime }], or false
      */

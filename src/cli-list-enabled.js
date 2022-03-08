@@ -23,7 +23,7 @@ import { cliListInstalled } from './cli-list-installed.js';
  * @param {coreApplication} app the application
  * @param {Object} options 
  *  consoleLevel: defaulting to NORMAL
- * @returns 
+ * @returns {Promise} which resolves to an array of coreService enabled services
  */
 export function cliListEnabled( app, options={} ){
 
@@ -34,35 +34,31 @@ export function cliListEnabled( app, options={} ){
     IMsg.out( 'Listing enabled Iztiar services for this module' );
     IMsg.verbose( 'An Iztiar module is identified by its name; its target is qualified from package.json \'iztiar\' group' );
     
-    const _promise = cliListInstalled( app, { consoleLevel:'QUIET' })
-        .then(( res ) => {
-            const services = app.IPluginManager.enabled( app.ICoreApi, res );
-            let sceDisplay = [];
-            services.every(( s ) => {
-                const conf = s.config();
-                const enabled = conf.enabled || true;   // is always true here
-                const pck = s.package();
-                const group = pck ? pck.getIztiar() : null;
-                sceDisplay.push({
-                    name: s.name(),
-                    module: pck ? pck.getFullName() : 'core',
-                    version: pck ? pck.getVersion() : '',
-                    description: pck ? pck.getDescription() : '',
-                    enabled: enabled ? 'true':'false',
-                    target: group ? group.target : ''
-                });
-                return true;
-            });
-            if( sceDisplay.length ){
-                app.IMsg.tabular( sceDisplay, { prefix:'  ' });
-            }
-            const _msg = 'Found '+sceDisplay.length+' enabled plugin(s) targeting \''+app.ICoreApi.package().getFullName()+'\'';
-            IMsg.out( _msg );
-            ILogger.info( _msg );
+    const services = app.IPluginManager.getEnabled( app.ICoreApi );
 
-            if( _consoleLevel !== _origLevel ) app.IMsg.consoleLevel( _origLevel );
-            return Promise.resolve( services );
+    let sceDisplay = [];
+    services.every(( s ) => {
+        const conf = s.config();
+        const enabled = conf.enabled || true;   // is always true here
+        const pck = s.package();
+        const group = pck ? pck.getIztiar() : null;
+        sceDisplay.push({
+            name: s.name(),
+            module: pck ? pck.getFullName() : 'core',
+            version: pck ? pck.getVersion() : '',
+            description: pck ? pck.getDescription() : '',
+            enabled: enabled ? 'true':'false',
+            target: group ? group.target : ''
         });
+        return true;
+    });
+    if( sceDisplay.length ){
+        app.IMsg.tabular( sceDisplay, { prefix:'  ' });
+    }
+    const _msg = 'Found '+sceDisplay.length+' enabled plugin(s) targeting \''+app.ICoreApi.package().getFullName()+'\'';
+    IMsg.out( _msg );
+    ILogger.info( _msg );
 
-    return _promise;
+    if( _consoleLevel !== _origLevel ) app.IMsg.consoleLevel( _origLevel );
+    return Promise.resolve( services );
 }
