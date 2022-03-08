@@ -155,10 +155,12 @@ export class coreApplication {
      * @returns {String} the current console level (defaulting to 'NORMAL')
      * <-IMsg implementation->
      */
-    imsgConsoleLevel(){
-        const level = this._config ? this.config().core.consoleLevel.toUpperCase() : IMsg.defaults.level;
-        //console.log( 'coreApplication.imsgConsoleLevel()', level );
-        return level;
+    imsgConsoleLevel( level ){
+        if( level && typeof level === 'string' && level.length ){
+            this.config().core.consoleLevel = level.toUpperCase();
+        }
+        const _level = this._config ? this.config().core.consoleLevel.toUpperCase() : IMsg.defaults.level;
+        return _level;
     }
 
     /*
@@ -196,15 +198,5 @@ export class coreApplication {
      */
     package(){
         return this._package;
-    }
-
-    /**
-     * @param {*} level the desired console level
-     */
-    setConsoleLevel( level ){
-        if( level && typeof level === 'string' && level.length && this._config ){
-            //console.log( 'setting consoleLevel to', level );
-            this.config().core.consoleLevel = level.toUpperCase();
-        }
     }
 }

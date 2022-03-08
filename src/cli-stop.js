@@ -19,7 +19,7 @@ export function cliStop( app, name, options={} ){
 
     const _origLevel = IMsg.consoleLevel();
     const _consoleLevel = Object.keys( options ).includes( 'consoleLevel' ) ? options.consoleLevel : _origLevel;
-    app.setConsoleLevel( _consoleLevel );
+    if( _consoleLevel !== _origLevel ) app.IMsg.consoleLevel( _consoleLevel );
 
     IMsg.out( 'Stopping '+name+' service' );
 

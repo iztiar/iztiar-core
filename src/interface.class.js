@@ -33,15 +33,15 @@ export class Interface {
         Object.keys( mapFns ).every(( k ) => {
             if( ifaceInstance.constructor[k] ){
                 //console.log( k,'is a static function' );
-                ifaceInstance.constructor[k] = () => {
-                    return mapFns[k].apply( instance, ...arguments );
+                ifaceInstance.constructor[k] = function(){
+                    return mapFns[k].apply( instance, arguments );
                 }
             } else {
                 //console.log( k,'is an instance method' );
-                ifaceInstance[k] = () => {
+                ifaceInstance[k] = function(){
                     //console.log( name, k );
-                    //console.log( arguments );
-                    return mapFns[k].apply( instance, ...arguments );
+                    //console.log( ...arguments );
+                    return mapFns[k].apply( instance, arguments );
                 }
             }
             return true;

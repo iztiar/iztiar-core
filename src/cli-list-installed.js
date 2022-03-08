@@ -17,7 +17,7 @@ export function cliListInstalled( app, options={} ){
 
     const _origLevel = app.IMsg.consoleLevel();
     const _consoleLevel = Object.keys( options ).includes( 'consoleLevel' ) ? options.consoleLevel : _origLevel;
-    app.setConsoleLevel( _consoleLevel );
+    if( _consoleLevel !== _origLevel ) app.IMsg.consoleLevel( _consoleLevel );
 
     IMsg.out( 'Listing installed Iztiar modules' );
     IMsg.verbose( 'An Iztiar module is identified by its name; its target is qualified from package.json \'iztiar\' group' );
@@ -42,7 +42,7 @@ export function cliListInstalled( app, options={} ){
     IMsg.out( _msg );
     ILogger.info( _msg );
 
-    app.setConsoleLevel( _origLevel );
+    if( _consoleLevel !== _origLevel ) app.IMsg.consoleLevel( _origLevel );
 
     return Promise.resolve( pckInstalled );
 }
