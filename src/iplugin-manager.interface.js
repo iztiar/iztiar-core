@@ -23,7 +23,7 @@ export class IPluginManager {
      */
     byName( api, name ){
         let found = null;
-        const services = this.enabled( api, this.installed( api ));
+        const services = this.getEnabled( api );
         services.every(( s ) => {
             if( s.name() === name ){
                 found = s;
@@ -35,45 +35,6 @@ export class IPluginManager {
 
     /**
      * @param {ICoreApi} api
-     * @param {PackageJson[]} installed the installed Iztiar modules
-     * @returns {coreService[]} the array of enabled services which target this one
-     * [-public API-]
-     */
-    /*
-    enabled( api, installed ){
-        let result = [];
-        const thisFullName = api.package().getFullName();
-        const thisShortName = api.package().getName();
-        const appPlugins = api.config().plugins();
-        // filter the found installed plugins to select those which are configured to provide a service
-        installed.every(( pck ) => {
-            const group = pck.getIztiar();
-            if( group.target === thisFullName || group.target === thisShortName ){
-                let _found = [];
-                Object.keys( appPlugins ).every(( id ) => {
-                    const enabled = appPlugins[id].enabled || true;
-                    if( enabled && ( appPlugins[id].module === pck.getFullName() || appPlugins[id].module === pck.getName())){
-                        result.push( new coreService( id, appPlugins[id], pck ));
-                    }
-                    return true;
-                });
-            }
-            return true;
-        });
-        // among the configured services, also select those which are provided by the core itself
-        Object.keys( appPlugins ).every(( id ) => {
-            const enabled = appPlugins[id].enabled || true;
-            if( enabled && appPlugins[id].module === 'core' ){
-                result.push( new coreService( id, appPlugins[id] ));
-            }
-            return true;
-        });
-        return result;
-    }
-    */
-
-    /**
-     * @param {ICoreApi} api
      * @returns {coreService[]} the array of enabled services which target this one
      * [-public API-]
      */
@@ -81,7 +42,7 @@ export class IPluginManager {
         let result = [];
         const appPlugins = api.config().plugins();
         const thisFullName = api.package().getFullName();
-        const thisShortName = api.package().getName();
+        const thisShortName = api.package().getShortName();
         let _found = [];
         // examine the configured services to select a) installed modules b) core services
         Object.keys( appPlugins ).every(( id ) => {
@@ -117,7 +78,7 @@ export class IPluginManager {
      */
     getInstalled( api ){
         const parentDir = path.dirname( api.package().getDir());
-        //const pckName = app.ICoreApi.package().getName();
+        //const pckName = app.ICoreApi.package().getShortName();
         //  new RegExp( '^(?!'+pckName+'$)' )
         const regex = [
             new RegExp( '^[^\.]' ),

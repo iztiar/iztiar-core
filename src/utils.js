@@ -182,5 +182,47 @@ export const utils = {
                 reject( e.message );
             }
         });
+    },
+
+    /**
+     * @param {*} result the result to be used as final resolution value
+     * @param {Promise} promiseFn the test Promise, which eventually resolves to true (condition is met) or false (timed out)
+     * @param {*} promiseParms an object to be passed to promiseFn as arguments
+     * @param {integer} timeout the timeout (ms) to be waited for the promiseFn be resolved
+     * @returns {Promise} a resolved promise, with result value
+     */
+    waitFor: function( result, promiseFn, promiseParms, timeout ){
+        IMsg.debug( 'utils.waitFor() timeout='+timeout );
+        let _end = Date.now()+timeout;
+        return new Promise(( outResolve, reject ) => {
+            const _outerTest = function(){
+                return new Promise(( inResolve, reject ) => {
+                    const _innerTest = function(){
+                        promiseFn( promiseParms )
+                            .then(( res ) => {
+                                if( res ){
+                                    IMsg.debug( 'utils.waitFor() resolves to true' );
+                                    inResolve( true );
+                                } else if( Date.now() > _end ){
+                                    IMsg.debug( 'utils.waitFor() timed out, resolves to false' );
+                                    inResolve( false );
+                                } else {
+                                    setTimeout( _innerTest, 10 );
+                                }
+                            })
+                            .catch(( e ) => {
+                                    IMsg.error( 'utils.waitFor().catch()', e.name, e.message );
+                                    inResolve( true );
+                            });
+                    };
+                    _innerTest();
+                })
+            };
+            _outerTest()
+                .then(( res ) => {
+                    result.waitFor = res;
+                    outResolve( result );
+                });
+        });
     }
 }

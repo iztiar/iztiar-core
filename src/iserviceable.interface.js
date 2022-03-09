@@ -26,27 +26,35 @@ export class IServiceable {
     }
 
     /**
-     * @returns {Object}
+     * @returns {Boolean} true if the process must be forked (and the main application will take care of that)
+     * [-implementation Api-]
+     */
+    isForkable(){
+        return true;
+    }
+
+    /**
+     * @returns {Promise}
      * [-implementation Api-]
      */
     start(){
-
+        return Promise.resolve( true );
     }
 
     /**
-     * @returns {Object}
+     * @returns {Promise}
      * [-implementation Api-]
      */
     status(){
-
+        return Promise.resolve( true );
     }
 
     /**
-     * @returns {Object}
+     * @returns {Promise}
      * [-implementation Api-]
      */
     stop(){
-
+        return Promise.resolve( true );
     }
 
     /* *** ***************************************************************************************

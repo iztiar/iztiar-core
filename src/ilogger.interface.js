@@ -44,7 +44,7 @@
 import chalk from 'chalk';
 import pino from 'pino';
 
-import { IForkable, LogLevel, utils } from './index.js';
+import { coreForkable, LogLevel, utils } from './index.js';
 
 export class ILogger {
 
@@ -62,7 +62,7 @@ export class ILogger {
 
     // injects an 'origin' prefix at the start of logged messages
     static _emitter(){
-        return IForkable.processQualifier() || 'main';
+        return coreForkable.forkedProcess() || 'main';
     }
 
     static _log(){
@@ -84,7 +84,7 @@ export class ILogger {
                 //_logger[_lower]( color( [ _emitter(), ...arguments ]));
             }
         // before any logger be instanciated, one can still log the main CLI process to the console
-        } else if( !IForkable.processQualifier() && process.env.IZTIAR_DEBUG && process.env.IZTIAR_DEBUG.includes( 'preCore' )){
+        } else if( !coreForkable.forkedProcess() && process.env.IZTIAR_DEBUG && process.env.IZTIAR_DEBUG.includes( 'preCore' )){
             console.log(( _logLevel.color())( ILogger._emitter(), ...arguments ));
         }
     }
@@ -163,6 +163,13 @@ export class ILogger {
      */
     static debug(){
         ILogger._log( ILogger.const.DEBUG, ...arguments );
+    }
+
+    /**
+     * @returns {String} the log filename
+     */
+    static logFname(){
+        return ILogger._instance._logFname();
     }
 
     /**

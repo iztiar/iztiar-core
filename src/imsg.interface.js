@@ -5,7 +5,7 @@
  *  See ILogger interface for a full description of console and log levels.
  *  See also ILogger interface for a rationale about the '_instance' static data.
  */
-import { IForkable, ILogger } from './index.js';
+import { ILogger, coreForkable } from './index.js';
 
 export class IMsg extends ILogger {
 
@@ -56,7 +56,7 @@ export class IMsg extends ILogger {
         //console.log( 'message console level', _consoleLevel );
         //console.log( 'app requested console level', ILogger.const[IMsg._singleton._consoleLevel()] );
 
-        if( !IForkable.processQualifier() && ILogger.const[IMsg._instance._consoleLevel()].level() >= _consoleLevel.level()){
+        if( !coreForkable.forkedProcess() && ILogger.const[IMsg._instance._consoleLevel()].level() >= _consoleLevel.level()){
             if( color ){
                 console.log( color( ..._args ));
             } else {

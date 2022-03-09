@@ -14,7 +14,7 @@ import { IMsg } from './index.js';
  * @param {coreApplication} app the application
  * @param {String} name the service name to be started
  * @param {Object} options 
- *  consoleLevel: defaulting to NORMAL
+ *  consoleLevel {String} defaulting to current level
  * @returns {Promise} which resolves to the service status
  */
 export function cliStatus( app, name, options={} ){
@@ -49,8 +49,8 @@ export function cliStatus( app, name, options={} ){
                 } else {
                     IMsg.out( chalk.green( 'Service \''+name+'\' is confirmed up and running' ));
                 }
-                if( _consoleLevel !== _origLevel ) app.IMsg.consoleLevel( _origLevel );
 
+                if( _consoleLevel !== _origLevel ) app.IMsg.consoleLevel( _origLevel );
                 return Promise.resolve( res );
             })
     }

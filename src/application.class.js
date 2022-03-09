@@ -4,9 +4,7 @@
 import { appendFile } from 'fs';
 import path from 'path';
 
-import {
-    ICmdline, ICoreApi, IForkable, ILogger, IMsg, IPluginManager, IRunnable, coreConfig, Interface, PackageJson
-} from './index.js';
+import { ICmdline, ICoreApi, ILogger, IMsg, IPluginManager, IRunnable, coreConfig, Interface, PackageJson } from './index.js';
 
 export class coreApplication {
 
@@ -15,8 +13,7 @@ export class coreApplication {
     static const = {
         commonName: 'iztiar',
         displayName: 'Iztiar',
-        copyrightColor: 'yellowBright',
-        forkable: 'iztiar-bc05bf55-4313-49d7-ab9d-106c93c335eb'
+        copyrightColor: 'yellowBright'
     };
 
     /**
@@ -36,10 +33,6 @@ export class coreApplication {
         });
 
         Interface.add( this, ICoreApi );
-
-        Interface.add( this, IForkable, {
-            _forkedVar: coreApplication.iforkableForkedVar
-        });
 
         Interface.add( this, IMsg, {
             _consoleLevel: this.imsgConsoleLevel,
@@ -117,7 +110,7 @@ export class coreApplication {
 
     /*
      * the environment variable name which, if set, holds the name/content/qualifier of the forked process
-     * <-IForkable implementation->
+     * <-coreForkable implementation->
      */
     static iforkableForkedVar(){
         //console.log( 'coreApplication.iforkableForkedVar()' );

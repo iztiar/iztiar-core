@@ -38,6 +38,10 @@ export class coreService {
         return this;
     }
 
+    api(){
+        return this._api;
+    }
+
     config(){
         return this._config;
     }
@@ -72,6 +76,12 @@ export class coreService {
         }
     }
 
+    isForkable(){
+        const _forkable = this._iServiceable.isForkable();
+        IMsg.debug( 'coreService.isForkable()', 'name='+this.name(), 'forkable='+_forkable );
+        return _forkable;
+    }
+
     name(){
         return this._name;
     }
@@ -81,17 +91,27 @@ export class coreService {
     }
 
     /**
-     * @returns {Promise} which resolves to the service status
+     * @returns {Promise} which resolves to the startup result
      * @throws {Error}
+     * Note:
+     *  In order to start any service, one should first check that it doesn't already run, actually try yo start it,
+     *  and then check that it gracefully runs.
+     *  This function ONLY takes care of the actual startup.
+     *  It is up to the caller to begin with a first check, and end with a later check.
+     * Note:
+     *  If the service says it is forkable, then the main application takes care of forking a new process
+     *  before trying to start the service. We may so execute here in a child forked process
      */
     start(){
-        if( !this._iServiceable ){
-            throw new Error( 'dynamically loaded plugin initialization didn\'t provide anything' );
+        let promise = Promise.resolve( true )
+
+        if( this._iServiceable && this._iServiceable.start && typeof this._iServiceable.start === 'function' ){
+            promise = promise.then(() => { return this._iServiceable.start(); });
         }
-        if( !this._iServiceable.start || typeof this._iServiceable.start !== 'function' ){
-            throw new Error( 'dynamically loaded plugin doesn\'t provide start() command' );
-        }
-        this._iServiceable.start( this._iServiceable );
+        promise = promise
+            .then(( res ) => { return Promise.resolve( res )});
+
+        return promise;
     }
 
     /**
@@ -270,21 +290,32 @@ export class coreService {
                 return true;
             });
         });
+        // after our own cheks, ask the service itself
+        if( this._iServiceable && this._iServiceable.status && typeof this._iServiceable.status === 'function' ){
+            promise = promise.then(() => { return this._iServiceable.status( this.api(), result ) });
+        }
         promise = promise.then(() => { return Promise.resolve( result )});
         return promise;
     }
 
     /**
-     * @returns {Promise} which resolves to the service status
+     * @returns {Promise} which resolves to the stop result
      * @throws {Error}
+     * Note:
+     *  In order to stop any service, one should first check that it is actually running, actually try yo stop it,
+     *  and then check that it no more runs and is gracefully stopped.
+     *  This function ONLY takes care of the actual stop.
+     *  It is up to the caller to begin with a first check, and end with a later check.
      */
     stop(){
-        if( !this._iServiceable ){
-            throw new Error( 'dynamically loaded plugin initialization didn\'t provide anything' );
+        let promise = Promise.resolve( true )
+
+        if( this._iServiceable && this._iServiceable.stop && typeof this._iServiceable.stop === 'function' ){
+            promise = promise.then(() => { return this._iServiceable.stop( this.api()) });
         }
-        if( !this._iServiceable.stop || typeof this._iServiceable.stop !== 'function' ){
-            throw new Error( 'dynamically loaded plugin doesn\'t provide stop() command' );
-        }
-        this._iServiceable.stop();
+        promise = promise
+            .then(( res ) => { return Promise.resolve( res )});
+
+        return promise;
     }
 }

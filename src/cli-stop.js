@@ -12,7 +12,7 @@ import { IMsg } from './index.js';
  * @param {coreApplication} app the application
  * @param {String} name the service name to be started
  * @param {Object} options 
- *  consoleLevel: defaulting to NORMAL
+ *  consoleLevel {String} defaulting to current level
  * @returns {Promise} which resolves to the service status
  */
 export function cliStop( app, name, options={} ){
@@ -29,6 +29,10 @@ export function cliStop( app, name, options={} ){
         _promise = _promise
             .then(() => { return service.initialize( app.ICoreApi ); })
             .then(( res ) => { return service.stop(); })
+            .then(( res ) => {
+                if( _consoleLevel !== _origLevel ) app.IMsg.consoleLevel( _origLevel );
+                return Promise.resolve( res );
+            });
     }
 
     return _promise;

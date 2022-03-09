@@ -5,7 +5,7 @@
  */
 import chalk from 'chalk';
 
-import { IForkable, IMsg } from './index.js';
+import { IMsg, coreForkable } from './index.js';
 
 import { cliStart } from './cli-start.js';
 import { cliStatus } from './cli-status.js';
@@ -56,7 +56,7 @@ export class IRunnable {
      * [-public API-]
      */
     displayCopyright(){
-        if( !IForkable.processQualifier()){
+        if( !coreForkable.forkedProcess()){
             const _color = IRunnable._copyrightColor();
             const _text = IRunnable._copyrightText();
             if( _color && _text ){
