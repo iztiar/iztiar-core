@@ -10,6 +10,15 @@ export class IServiceable {
        *** *************************************************************************************** */
 
     /**
+     * @returns {String} the type of the service, not an identifier, rather a qualifier
+     *  For example, the implementation class name is a good choice
+     * [-implementation Api-]
+     */
+    class(){
+        return this.constructor && this.constructor.name ? this.constructor.name : '';
+    }
+
+    /**
      * @returns {Promise} which resolves to an array of the PIDs of running processes (if apply)
      * [-implementation Api-]
      */
@@ -31,6 +40,12 @@ export class IServiceable {
      */
     isForkable(){
         return true;
+    }
+
+    /**
+     * [-implementation Api-]
+     */
+    onStartupConfirmed( data ){
     }
 
     /**

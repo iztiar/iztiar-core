@@ -1,6 +1,7 @@
 /*
  * utils.js
  */
+import deepEqual from 'deepequal';
 import fs from 'fs';
 import net from 'net';
 import path from 'path';
@@ -109,6 +110,19 @@ export const utils = {
     },
 
     /**
+     * https://stackoverflow.com/questions/14636536/how-to-check-if-a-variable-is-an-integer-in-javascript
+     * @param {*} value the value to test
+     * @returns {true|false}
+     */
+    isInt: function( value ){
+        if( isNaN( value )){
+            return false;
+        }
+        var x = parseFloat( value );
+        return( x | 0 ) === x;
+    },
+
+    /**
      * synchronously read a JSON file
      * @param {String} fname the full pathname of the file to be read
      * @returns {JSON|null} the object (may be empty) or null if ENOENT error
@@ -127,6 +141,69 @@ export const utils = {
             _json = null;
         }
         return _json;
+    },
+
+    /**
+     * synchronously remove a key from JSON file
+     * @param {string} fname the full pathname of the file
+     * @param {string} key the first-level key to be removed
+     * @param {Boolean} deleteEmpty whether to delete the empty file
+     * @returns {JSON} the new JSON content
+     * Note:
+     *  When removing the last key, we rather unlink the file to not leave an empty file in the run dir.
+     */
+    jsonRemoveKeySync: function( fname, key, deleteEmpty=true ){
+        IMsg.debug( 'utils.jsonRemoveKeySync()', 'fname='+fname, 'key='+key, 'deleteEmpty='+deleteEmpty );
+        let _json = utils.jsonReadFileSync( fname ) || {};
+        const _orig = { ..._json };
+        delete _json[key];
+        if( deleteEmpty && ( !_json || !Object.keys( _json ).length )){
+            utils.unlink( fname );
+            _json = null;
+        } else {
+            utils.jsonWriteFileSync( fname, _json, _orig );
+        }
+        return _json;
+    },
+
+    /**
+     * synchronously writes the given non-null object into path
+     *  if the orig object is provided (not null not undefined), then it is compared with the found file
+     *  to make sure if has not been updated since the program has read the file
+     * @param {string} fname the full pathname of the file
+     * @param {Object} obj the data to be written, expected JSON
+     * @param {Object} orig the original data read from this file, to be compared with data which will be read in the disk
+     *  ti make sure there has been no modifications of the file by another process
+     * @returns {Object} the written data
+     * @throws {Error}
+     */
+    jsonWriteFileSync: function( fname, obj, orig ){
+        IMsg.debug( 'utils.jsonWriteFileSync()', 'fname='+fname, obj, orig );
+        let e = utils.makeFnameDirExists( fname );
+        if( e ){
+            IMsg.error( 'utils.jsonWriteFileSync().makeFnameDirExists()', e.name, e.message );
+            throw new Error( e );
+        }
+        // if an original object is provided, then try to make sure the current file is unchanged
+        if( orig ){
+            const current = utils.jsonReadFileSync( fname ) || {};
+            if( !deepEqual( orig, current )){
+                const _msg = 'utils.jsonWriteFileSync() fname '+fname+' has changed on the disk, refusing the update';
+                IMsg.error( _msg );
+                IMsg.debug( orig );
+                IMsg.debug( current );
+                throw new Error( _msg );
+            }
+        }
+        // at last actually writes the content
+        //  hoping for no race conditions between these two blocks of code
+        try {
+            fs.writeFileSync( fname, JSON.stringify( obj ));
+        } catch( e ){
+            IMsg.error( 'utils.jsonWriteFileSync().writeFileSync()', e.name, e.message );
+            throw new Error( e );
+        }
+        return obj;
     },
 
     /**
@@ -182,6 +259,21 @@ export const utils = {
                 reject( e.message );
             }
         });
+    },
+
+    /**
+     * Delete a file from the filesystem
+     * @param {string} fname the full pathname of the file to delete
+     * @throws {Error}
+     */
+    unlink: function( fname ){
+        IMsg.debug( 'utils.unlink()', 'fname='+fname );
+        try {
+            fs.unlinkSync( fname );
+        } catch( e ){
+            IMsg.error( 'utils.unlink().catch()', e.name, e.message );
+            throw new Error( e );
+        }
     },
 
     /**

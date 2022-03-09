@@ -8,7 +8,7 @@
  */
 import path from 'path';
 
-import { IMsg, coreController, utils } from './index.js';
+import { IMsg, IServiceable, coreController, utils } from './index.js';
 
 export class coreService {
 
@@ -17,11 +17,10 @@ export class coreService {
     _config = null;
     _package = null;
 
-    // initialization
+    // provided by initialization() to the plugin
     _api = null;
 
-    // from service
-    _defaultFn = null;
+    // got from initoalization() from the plugin
     _iServiceable = null;
 
     /**
@@ -42,6 +41,10 @@ export class coreService {
         return this._api;
     }
 
+    class(){
+        return this.config().class || ( this._iServiceable ? this._iServiceable.class() : '(undefined class)' );
+    }
+
     config(){
         return this._config;
     }
@@ -50,36 +53,77 @@ export class coreService {
      * dynamically load and initialize the default function of the plugin
      * @param {ICoreApi} api an instance of the ICoreApi interface
      * @returns {Promise} which resolves to the IServiceable which must be returned by the default function
+     * @throws {Error} if IServiceable is not set
      */
     initialize( api ){
         this._api = api;
-        const pck = this.package();
+        const self = this;
+        const pck = self.package();
+        let _promise = Promise.resolve( true );
+
+        // external package to be dynamically imported
+        // the package must define a default export which must be a function which must return a IServiceable instance
         if( pck ){
-            const main = path.join( this.package().getDir(), this.package().getMain());
-            return import( main ).then(( res ) => {
-                this._defaultFn = res.default;
-                if( typeof this._defaultFn === 'function' ){
-                    return Promise.resolve( this._iServiceable = this._defaultFn( api, this ));
-                } else {
-                    return Promise.reject( 'coreService.initialize() \''+this.name()+'\' doesn\' export a default function' );
-                }
-            });
-        } else if( this.config().module === 'core' ){
-            switch( this.config().class ){
-                case 'coreController':
-                    return Promise.resolve( this._iServiceable = new coreController( api, this ).IServiceable );
-                default:
-                    return Promise.reject( 'coreService.initialize() unknown class \''+this.config().class+'\'' );
+            const _importPromise = function(){
+                return new Promise(( resolve, reject ) => {
+                    const main = path.join( pck.getDir(), pck.getMain());
+                    import( main ).then(( res ) => {
+                        if( typeof res.default === 'function' ){
+                            return resolve( self._iServiceable = res.default( api, self ));
+                        } else {
+                            return reject( 'coreService.initialize() \''+this.name()+'\' doesn\' export a default function' );
+                        }
+                    });
+                });
             }
+            _promise = _promise.then(() => { return _importPromise(); });
+
+        // the service is expected to be provided by core
+        } else if( self.config().module === 'core' ){
+            const _class = self.config().class;
+            if( _class === 'coreController' ){
+                //console.log( new coreController( api, self ));
+                _promise = _promise.then(() => {
+                    return Promise.resolve( self._iServiceable = new coreController( api, self ).IServiceable );
+                });
+            } else {
+                _promise = _promise.then(() => {
+                    return Promise.reject( 'coreService.initialize() unknown class \''+self.config().class+'\'' );
+                });
+            }
+        // or we don't know where to get the service from
         } else {
-            return Promise.reject( 'coreService.initialize() unknown module \''+this.config().module+'\'' );
+            _promise = _promise.then(() => {
+                return Promise.reject( 'coreService.initialize() unknown module \''+self.config().module+'\'' );
+            });
         }
+        // at the end, either we have rejected the promise, ot it must be resolved with a IServiceable
+        _promise = _promise.then(( success ) => {
+            if( success && success instanceof IServiceable ){
+                return Promise.resolve( success );
+            } else {
+                return Promise.reject( 'IServiceable expected, '+success+' received: rejected' );
+            }
+        });
+        return _promise;
     }
 
     isForkable(){
         const _forkable = this._iServiceable.isForkable();
         IMsg.debug( 'coreService.isForkable()', 'name='+this.name(), 'forkable='+_forkable );
         return _forkable;
+    }
+
+    /**
+     * @returns {IServiceable} the instance of the interface provided by the service
+     *  May be null before initialization
+     */
+    iServiceable(){
+        return this._iServiceable;
+    }
+
+    module(){
+        return this.config().module;
     }
 
     name(){

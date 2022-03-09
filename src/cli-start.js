@@ -36,13 +36,44 @@ export function cliStart( app, name, options={} ){
             let ipcStartupReceived = false;
             let result = {};
 
+            // + (main) MYNAME coreController successfully startup, listening on port 24001
+            // + (MYNAME coreController) MYNAME-managed coreBroker successfully startup, listening on port 24002 (message bus on port 24003)
+            // + (MYNAME coreController) ANOTHER (MYNAME-managed) coreController successfully startup, listening on port 24001
+            // + (MYNAME coreController) ANOTHER-managed coreBroker successfully startup, listening on port 24001 (message bus on port 24003)
+            const _ipcToConsole = function( messageData ){
+                const _name = Object.keys( messageData )[0];
+                const _class = messageData[_name].class || '(undefined class)';
+
+                let _msg = '(';
+                if( messageData[_name].event === 'startup' ){
+                    _msg += 'main';
+                //} else {
+                //    _msg += _name+' coreController';
+                }
+                _msg += ') ';
+
+                if( messageData[_name].event === 'startup' ){
+                    _msg += _name+' '+_class;
+                //} else if( _forkable === Iztiar.c.forkable.BROKER ){
+                //    _msg += messageData[_forkable].manager+'-managed '+_forkable;
+                //} else {
+                //    _msg += _name+' ('+service.name()+'-managed) '+_forkable;
+                }
+
+                _msg += ' successfully startup, listening on port '+messageData[_name].ports.join( ',' );
+
+                //if( _forkable === Iztiar.c.forkable.BROKER ){
+                //    _msg += ' (message bus on port ' + messageData[_forkable].messaging.port + ')';
+                //}
+
+                IMsg.out( ' + '+_msg );
+            };
+
             const _ipcCallback = function( child, message ){
-                console.log( '_ipcCallback()', message );
+                IMsg.debug( '_ipcCallback()', message );
+                _ipcToConsole( message );
+                service.iServiceable().onStartupConfirmed( message );
                 ipcStartupReceived = true;
-                //_ipcToConsole( serviceName, messageData );
-                //coreForkable.startupOnIPCMessage( child, messageData );
-                //console.log( 'about to increment ipcCount to', 1+_ipcCount );
-                //_ipcCount += 1;
             };
     
             // resolves to the child process or to the startup result
@@ -57,7 +88,7 @@ export function cliStart( app, name, options={} ){
                 });
             };
 
-            // wait for the having received the IPC message
+            // wait until having received the IPC message
             const _waitIpc = function(){
                 return new Promise(( resolve, reject ) => {
                     resolve( ipcStartupReceived );

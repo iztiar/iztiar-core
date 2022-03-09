@@ -23,6 +23,7 @@
   "dependencies": {
     "chalk": "^5.0.0",
     "commander": "^9.0.0",
+    "deepequal": "0.0.1",
     "es6-interfaces": "^1.0.4",
     "pidusage": "^3.0.0",
     "pino": "^7.8.0",

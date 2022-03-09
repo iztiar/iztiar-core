@@ -67,11 +67,10 @@ export class coreController extends coreForkable {
 
     // the communication TCP server
     _tcpServer = null;
-    _tcpPort = null;
-    _startResolve = null;
+    _tcpPort = 0;
 
     // when stopping, the port to which forward the received messages
-    _forwardPort = null;
+    _forwardPort = 0;
 
     /**
      * @param {ICoreApi} api 
@@ -87,6 +86,7 @@ export class coreController extends coreForkable {
         Interface.add( this, IServiceable, {
             expectedPids: this.iserviceableExpectedPids,
             expectedPorts: this.iserviceableExpectedPorts,
+            onStartupConfirmed: this.iserviceableOnStartupConfirmed,
             start: this.iserviceableStart
         });
 
@@ -130,6 +130,16 @@ export class coreController extends coreForkable {
      */
     iserviceableExpectedPorts(){
         return Promise.resolve( IRunFile.ports( this.api().config(), this.service().name()));
+    }
+
+    /*
+     * Take advantage of this event to create the runfile
+     * @param {Object} data the data transmitted via IPC on startup: here the full status
+     * [-implementation Api-]
+     */
+    iserviceableOnStartupConfirmed( data ){
+        const name = Object.keys( data )[0];
+        IRunFile.set( this.api().config(), name, data );
     }
 
     /*
@@ -192,7 +202,6 @@ export class coreController extends coreForkable {
                             self.advertiseParent( self._tcpPort, _msg, status );
                         });
                 });
-                self._startResolve = resolve;
             });
         };
         return _listenPromise();
@@ -201,8 +210,17 @@ export class coreController extends coreForkable {
     /**
      * @returns {Promise} which resolves to a status Object
      * Note:
-     *  Status is sent first to the parent when advertising it of the good startup,
-     *  and then as the answer to each 'iz.status' received command.
+     *  The object returned by this function (aka the 'status' object) is used not only as the answer
+     *  to any 'iz.status' TCP request, but also:
+     *  - at startup, when advertising the main process, to display the startup message on the console
+     *  - after startup, to write into the IRunFile.
+     *  A minimum of structure is so required:
+     *  a)  this is a one-key-top-level object, where the key is the service name
+     *  b)  minimal content is:
+     *      - class: the class/type of the provided service
+     *      - pids: an array of running pids
+     *      - ports: an array of opened TCP ports
+     *      - status: the running status of the service
      */
     getStatus(){
         const self = this;
@@ -211,9 +229,10 @@ export class coreController extends coreForkable {
             return new Promise(( resolve, reject ) => {
                 status[self.service().name()] = {
                     // this process
-                    mdule: 'core',
+                    module: 'core',
                     class: self.constructor.name,
-                    pid: process.pid,
+                    pids: [ process.pid ],
+                    ports: [ self._tcpPort ],
                     listenPort: self._tcpPort,
                     forwardPort: self._forwardPort,
                     status: self.runningStatus(),
@@ -229,6 +248,9 @@ export class coreController extends coreForkable {
                     storageDir: coreConfig.storageDir(),
                     version: self.api().package().getVersion()
                 };
+                if( self._forwardPort ){
+                    status[self.service().name()].ports.push( self._forwardPort );
+                }
                 resolve( status );
             });
         };
@@ -249,5 +271,51 @@ export class coreController extends coreForkable {
         return Promise.resolve( true )
             .then(() => { return _firstPromise(); })
             .then(() => { return _pidPromise(); });
+    }
+
+    /**
+     * terminate the server
+     * Does its best to advertise the main process of what it will do
+     * (but be conscious that it will also close the connection rather soon)
+     * @param {string[]|null} words the parameters transmitted after the 'iz.stop' command
+     * @param {Callback|null} cb a (e,res) form callback called when all is terminated
+     */
+    terminate( words, cb ){
+        IMsg.debug( 'coreController.terminate() entering' );
+        const self = this;
+        const _name = this.service().name();
+        this._forwardPort = words && words[0] && utils.isInt( words[0] ) ? words[0] : 0;
+
+        // remove our key from JSON runfile as soon as we become Stopping..
+        this.runningStatus( coreForkable.s.STOPPING );
+        IRunFile.remove( this.api().config(), _name );
+
+        // closing the TCP server
+        //  in order the TCP server be closeable, the current connection has to be ended itself
+        //  which is done by calling cb()
+
+        let _promise = Promise.resolve( true );
+
+        if( self._tcpServer ){
+            const _closeServer = function(){
+                return new Promise(( resolve, reject ) => {
+                    if( cb && typeof cb === 'function' ){ 
+                        cb({ name:_name, class:self.constructor.name, pid:process.pid, port:this._tcpPort });
+                    }
+                    self._tcpServer.close(() => {
+                        IMsg.debug( 'coreController.terminate() this._tcpServer is closed' );
+                        resolve( true );
+                    });
+                });
+            };
+            _promise = _promise
+                .then(() => { return _closeServer(); })
+                .then(() => {
+                    IMsg.info( _name+' coreController terminating with code '+process.exitCode );
+                    //process.exit();
+                });
+        } else {
+            IMsg.warn( 'this._tcpServer is not set!' );
+        }
     }
 }

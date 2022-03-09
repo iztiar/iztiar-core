@@ -110,7 +110,7 @@ export class coreForkable {
             try {
                 let _msg = { ...data };
                 //console.log( 'data', data );
-                _msg.event = 'startup';
+                _msg[_procName].event = 'startup';
                 _msg[_procName].status = this.runningStatus( coreForkable.s.RUNNING );
                 _msg[_procName].helloMessage = message;
                 //console.log( '_msg', _msg );
