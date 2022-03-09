@@ -1,0 +1,24 @@
+{
+    "checkStatus" : {
+        "type": "schema",
+        "comment": "the minimal content of the object to be provided by the IServicable to check if a service is up and running",
+        "content": {
+            "startable": {
+                "type": "boolean",
+                "comment": "whether the service is startable without any other intervention"
+            },
+            "reasons": {
+                "type": "string[]",
+                "comment": "if the service is running, then list of the detected errors, must be empty if startable"
+            },
+            "pids": {
+                "type": "integer[]",
+                "comment": "list of pids which must been checked to be alive, must be empty if startable"
+            },
+            "port": {
+                "type": "integer[]",
+                "comment": "list of TCP ports which must been checked to be pingable, must be empty if startable"
+            }
+        }
+    }
+}

@@ -1,0 +1,39 @@
+{
+    "runStatus" : {
+        "type": "schema",
+        "comment": "the minimal content of the object to be provided by the IServicable to publish its running status",
+        "content": {
+            "name": {
+                "type": "string",
+                "comment": "the name of the service",
+                "content": {
+                    "module": {
+                        "type": "string",
+                        "comment": "the name of the module which provides the service, or 'core'"
+                    },
+                    "class": {
+                        "type": "string",
+                        "comment": "the name of the class or type or something inside the module, which qualifies the service type"
+                    },
+                    "pids": {
+                        "type": "integer[]",
+                        "comment": "list of running pids"
+                    },
+                    "port": {
+                        "type": "integer[]",
+                        "comment": "list of opened TCP ports"
+                    },
+                    "status": {
+                        "type": "string",
+                        "comment": "the current status of the service",
+                        "enum": [
+                            "starting",
+                            "running",
+                            "stopping"
+                        ]
+                    }
+                }
+            }
+        }
+    }
+}
