@@ -194,6 +194,7 @@ export class coreService {
 
         // first ask the IServiceable to provide its own status check (must conform to check-status.schema.json)
         const _serviceablePromise = function(){
+            //console.log( self._iServiceable );
             return self._iServiceable.getCheckStatus()
                 .then(( res ) => {
                     result = { ...res };
@@ -278,10 +279,11 @@ export class coreService {
                                     _errs += 1;
                                     _cerr( 'statusOf answers with pids='+_answeredPids.join(',')+' while pids='+result.alive.pids.join(',')+' was expected' );
                                 }
-                                //check the answered class
-                                if( _answeredClass !== self.class()){
+                                //check the answered class (if apply)
+                                const _class = self.class();
+                                if( _class && _answeredClass !== _class ){
                                     _errs += 1;
-                                    _cerr( 'statusOf answers with '+_answeredClass+' class while '+self.class()+' was expected' );
+                                    _cerr( 'statusOf answers with '+_answeredClass+' class while '+_class+' was expected' );
                                 }
                                 // resolve depending of errs count
                                 if( _errs ){
