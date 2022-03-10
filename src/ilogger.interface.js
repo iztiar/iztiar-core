@@ -96,9 +96,9 @@ export class ILogger {
                 ERROR: new LogLevel( 10, 'error', chalk.red ),
                 WARN: new LogLevel( 20, 'warn', chalk.yellow ),
                 NORMAL: new LogLevel( 30, 'normal' ),
-                INFO: new LogLevel( 40, 'info', chalk.green ),
-                VERBOSE: new LogLevel( 50, 'verbose', chalk.cyan ),
-                DEBUG: new LogLevel( 60, 'debug', chalk.blue )
+                INFO: new LogLevel( 40, 'info', chalk.hex( '#00ffff' )),
+                VERBOSE: new LogLevel( 50, 'verbose', chalk.hex( '#3399ff' )),
+                DEBUG: new LogLevel( 60, 'debug', chalk.hex( '#0000ff' ))
             };
         }
         ILogger._instance = this;

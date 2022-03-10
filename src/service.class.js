@@ -6,6 +6,7 @@
  *  - is configured and not disabled in the main application configuration file
  *  - is installed.
  */
+import chalk from 'chalk';
 import path from 'path';
 
 import { IMsg, IServiceable, coreController, utils } from './index.js';
@@ -56,6 +57,7 @@ export class coreService {
      * @throws {Error} if IServiceable is not set
      */
     initialize( api ){
+        IMsg.verbose( 'coreService.initialize()', 'name='+this._name );
         this._api = api;
         const self = this;
         const pck = self.package();
@@ -116,7 +118,7 @@ export class coreService {
 
     /**
      * @returns {IServiceable} the instance of the interface provided by the service
-     *  May be null before initialization
+     *  Null before initialization
      */
     iServiceable(){
         return this._iServiceable;
@@ -147,6 +149,7 @@ export class coreService {
      *  before trying to start the service. We may so execute here in a child forked process
      */
     start(){
+        IMsg.verbose( 'coreService.start()', 'name='+this._name );
         let promise = Promise.resolve( true )
 
         if( this._iServiceable && this._iServiceable.start && typeof this._iServiceable.start === 'function' ){
@@ -160,66 +163,56 @@ export class coreService {
 
     /**
      * @param {Object} options
-     *  consoleLevel {String}
+     *  -
      * @returns {Promise} which eventually resolves to an Object
+     *  // the check-status.schema.json content
      *  reasons: []               array of error messages (one per found error), length=0 means that service is full ok, up and running
      *  startable: true|false     whether the service could be started, i.e. only if the runfile is empty or not present
-     *  pids.requested: []        array of requested pids
-     *  pids.alive: []            array of alive pids
-     *  ports.requested: []       array of requested TCP ports number
-     *  ports.alive: []           array of alive ports
+     *  pids: []                  array of requested pids
+     *  ports: []                 array of requested TCP ports number
+     *  // other content from this function
+     *  alive.pids: []            array of alive pids
+     *  alive.ports: []           array of alive ports
      *  status: JSON object       full status returned by the service
      * @throws {Error}
      */
     status( options={} ){
+        IMsg.verbose( 'coreService.status()', 'name='+this._name );
         const self = this;
 
         // the returned object which will resolve the promise
-        let result = {
-            reasons: [],
-            startable: true,
-            pids: {
-                requested: [],
-                alive: []
-            },
-            ports: {
-                requested: [],
-                alive: []
-            },
-            status:{}
-        };
+        let result = {};
 
-        //  using promises here happens to be rather conterproductive as the functions are already mainly used inside of Promises
+        // using promises here happens to be rather conterproductive as the functions are already mainly used inside of Promises
         const _cinfo = function(){
-            IMsg.info( '  ', ...arguments );
+            IMsg.info( ...arguments );
         }
         const _cerr = function(){
             result.reasons.push( ...arguments );
-            Object.values( arguments ).every(( m ) => { IMsg.error( '  '+m )});
+            IMsg.info( ...arguments );
         }
 
-        // ask the service for its pids to be checked, resolving with result
-        const _pidsListPromise = function(){
-            return new Promise(( resolve, reject ) => {
-                if( self._iServiceable.expectedPids && typeof self._iServiceable.expectedPids === 'function' ){
-                    self._iServiceable.expectedPids().then(( res ) => {
-                        _cinfo( 'Expected PIDs', res, '('+res.length+')' );
-                        result.pids.requested = [ ...res ];
-                        resolve( result );
-                    });
-                } else {
-                    resolve( result );
-                }
-            });
-        };
+        // first ask the IServiceable to provide its own status check (must conform to check-status.schema.json)
+        const _serviceablePromise = function(){
+            return self._iServiceable.getCheckStatus()
+                .then(( res ) => {
+                    result = { ...res };
+                    result.alive = {
+                        pids: [],
+                        ports: []
+                    };
+                    return Promise.resolve( result );
+                });
+        }
 
         // check if this pid is alive, resolving with true|false
         const _pidAlivePromise = function( pid ){
+            IMsg.verbose( 'coreService.status()._pidAlivePromise()', 'pid='+pid );
             return new Promise(( resolve, reject ) => {
                 utils.isAlivePid( pid )
                     .then(( res ) => {
                         if( res ){
-                            result.pids.alive.push( pid );
+                            result.alive.pids.push( pid );
                             const _local = { user:res[0].user, time:res[0].time, elapsed:res[0].elapsed };
                             _cinfo( 'pid='+pid+' is alive', _local );
                             resolve( true );
@@ -231,28 +224,14 @@ export class coreService {
             });
         };
 
-        // ask the service for its ports to be checked, resolving with result
-        const _portsListPromise = function(){
-            return new Promise(( resolve, reject ) => {
-                if( self._iServiceable.expectedPorts && typeof self._iServiceable.expectedPorts === 'function' ){
-                    self._iServiceable.expectedPorts().then(( res ) => {
-                            _cinfo( 'Expected opened ports', res, '('+res.length+')' );
-                            result.ports.requested = [ ...res ];
-                            resolve( result );
-                        });
-                } else {
-                    resolve( result );
-                }
-            });
-        };
-
         // ping this port, resolving with true|false
         const _portPingPromise = function( port ){
+            IMsg.verbose( 'coreService.status()._portPingPromise()', 'port='+port );
             return new Promise(( resolve, reject ) => {
                 utils.isAlivePort( port )
                     .then(( res ) => {
                         if( res ){
-                            result.ports.alive.push( port );
+                            result.alive.ports.push( port );
                             _cinfo( 'port='+port+' answers', res );
                             resolve( true );
                         } else {
@@ -264,47 +243,55 @@ export class coreService {
         };
 
         // request the service for its status, resolving with the status or false
+        //  the returned status is expected to be conform to run-status.schema.json
         const _portStatusPromise = function( port ){
-            if( !result.ports.alive.includes( port )){
-                IMsg.warn( 'status not requested as port didn\'t answered to previous ping' );
+            if( !result.alive.ports.includes( port )){
+                _cinfo( 'status not requested as port didn\'t answered to previous ping' );
                 return Promise.resolve( false );
             } else {
                 return new Promise(( resolve, reject ) => {
                     utils.tcpRequest( port, 'iz.status' )
                         .then(( res ) => {
                             let _answeredName = null;
-                            let _answeredPid = 0;
-                            let _answeredManager = null;
+                            let _answeredPids = [];
+                            let _answeredClass = null;
                             let _errs = 0;
                             if( res ){
-                                /*
-                                _answeredName = Object.keys( res )[0];
-                                _answeredPid = res[_answeredName].pid;
-                                _answeredManager = res[_answeredName].manager;
-                                if( _answeredName !== forkable ){
+                                _answeredName = Object.keys( res.answer )[0];
+                                _answeredPids = [ ...res.answer[_answeredName].pids ];
+                                _answeredClass = res.answer[_answeredName].class;
+                                // check the answered service name
+                                if( _answeredName !== self.name()){
                                     _errs += 1;
-                                    _cerr( 'statusOf answers from '+_answeredName+' while '+forkable+' was expected' );
+                                    _cerr( 'statusOf answers from '+_answeredName+' while '+self.name()+' was expected' );
                                 }
-                                if( _answeredName === Iztiar.c.forkable.BROKER && _answeredManager !== name ){
+                                // at least one of provided pids must be in the alive.pids list
+                                let _count = 0;
+                                _answeredPids.every(( p ) => {
+                                    if( result.alive.pids.includes( p )){
+                                        _count += 1;
+                                        return false;
+                                    }
+                                    return true;
+                                });
+                                if( !_count ){
                                     _errs += 1;
-                                    _cerr( 'statusOf answers with \''+_answeredManager+'\' manager while \''+name+'\' was expected' );
+                                    _cerr( 'statusOf answers with pids='+_answeredPids.join(',')+' while pids='+result.alive.pids.join(',')+' was expected' );
                                 }
-                                if( _answeredPid !== _runProcs[forkable].pid ){
+                                //check the answered class
+                                if( _answeredClass !== self.class()){
                                     _errs += 1;
-                                    _cerr( 'statusOf answers from pid='+_answeredPid+' while pid='+_runProcs[forkable].pid+' was expected' );
+                                    _cerr( 'statusOf answers with '+_answeredClass+' class while '+self.class()+' was expected' );
                                 }
+                                // resolve depending of errs count
                                 if( _errs ){
                                     resolve( false );
                                 } else {
-                                    _checkResult.status[forkable] = res[_answeredName];
-                                    //console.log( res[_answeredName] );
-                                    const _child = Object.keys( res )[0];
-                                    const _local = { forkable:_answeredName, pid:res[_answeredName].pid, manager:_answeredManager };
-                                    _cinfo( '  statusOf answers', verbose ? res[_answeredName] : _local );
+                                    result.status = res.answer;
+                                    const _local = { service:_answeredName, pids:_answeredPids, class:_answeredClass };
+                                    _cinfo( 'statusOf answers', _local );
                                     resolve( true );
                                 }
-                                */
-                                _cinfo( 'statusOf answers', res );
                             } else {
                                 _cerr( 'statusOf request rejected' );
                                 resolve( false );
@@ -319,24 +306,25 @@ export class coreService {
 
         // let chain and check
         let promise = Promise.resolve( true );
-        promise = promise.then(() => { return _pidsListPromise() });
+        promise = promise.then(() => { return _serviceablePromise() });
         promise = promise.then(() => {
-            result.pids.requested.every(( pid ) => {
-                promise = promise.then(() => { return _pidAlivePromise( pid )});
+            let subProms = Promise.resolve( true );
+            result.pids.every(( pid ) => {
+                IMsg.debug( 'coreService.status() has to check for pid='+pid );
+                subProms = subProms.then(() => { return _pidAlivePromise( pid )});
                 return true;
             });
-        });
-        promise = promise.then(() => { return _portsListPromise() });
-        promise = promise.then(() => {
-            result.ports.requested.every(( port ) => {
-                promise = promise.then(() => { return _portPingPromise( port )});
-                promise = promise.then(() => { return _portStatusPromise( port )});
+            result.ports.every(( port ) => {
+                IMsg.debug( 'coreService.status() has to check for port='+port );
+                subProms = subProms.then(() => { return _portPingPromise( port )});
+                subProms = subProms.then(() => { return _portStatusPromise( port )});
                 return true;
             });
+            return subProms;
         });
         // after our own cheks, ask the service itself
         if( this._iServiceable && this._iServiceable.status && typeof this._iServiceable.status === 'function' ){
-            promise = promise.then(() => { return this._iServiceable.status( this.api(), result ) });
+            promise = promise.then(() => { return this._iServiceable.status(); });
         }
         promise = promise.then(() => { return Promise.resolve( result )});
         return promise;
@@ -346,7 +334,7 @@ export class coreService {
      * @returns {Promise} which resolves to the stop result
      * @throws {Error}
      * Note:
-     *  In order to stop any service, one should first check that it is actually running, actually try yo stop it,
+     *  In order to stop any service, one should first check that it is actually running, before actually try to stop it,
      *  and then check that it no more runs and is gracefully stopped.
      *  This function ONLY takes care of the actual stop.
      *  It is up to the caller to begin with a first check, and end with a later check.
@@ -355,7 +343,7 @@ export class coreService {
         let promise = Promise.resolve( true )
 
         if( this._iServiceable && this._iServiceable.stop && typeof this._iServiceable.stop === 'function' ){
-            promise = promise.then(() => { return this._iServiceable.stop( this.api()) });
+            promise = promise.then(() => { return this._iServiceable.stop(); });
         }
         promise = promise
             .then(( res ) => { return Promise.resolve( res )});

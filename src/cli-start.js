@@ -5,7 +5,9 @@
  * 
  *  Returns a Promise which eventually resolves with the service status.
  */
-import { IMsg, coreForkable, utils } from './index.js';
+import chalk from 'chalk';
+
+import { IMsg, IServiceable, coreForkable, utils } from './index.js';
 
 /**
  * Start the named service
@@ -36,37 +38,87 @@ export function cliStart( app, name, options={} ){
             let ipcStartupReceived = false;
             let result = {};
 
+            // service.Initialize() must resolve with a IServiceable instance
+            const _checkInitialize = function( res ){
+                return new Promise(( resolve, reject ) => {
+                    if( res && res instanceof IServiceable ){
+                        result.iServiceable = { ...res };
+                    } else {
+                        result.iServiceable = null;
+                    }
+                    resolve( result );
+                });
+            };
+
+            // coreService.status() promise resolves as { reasons, startable, pids, ports, status }
+            //  we are only interested here to the 'startable' attribute which is only true if the JSON runfile is empty or not present
+            const _checkStatus = function( res, expected ){
+                if( res.iServiceable && ( !res.status || res.status.startable )){
+                    const _name = service.name();
+                    return service.status()
+                        .then(( status ) => {
+                            return new Promise(( resolve, reject ) => {
+                                if( expected ){
+                                    if( status.startable ){
+                                        IMsg.error( 'Unable to start the service' );
+                                    } else {
+                                        IMsg.out( chalk.green( 'Service(s) \''+_name+'\' successfully started' ));
+                                    }
+                                } else {
+                                    if( status.startable ){
+                                        IMsg.info( 'Service is not already running, is startable (fine)' );
+                                    } else if( status.reasons.length === 0 ){
+                                        IMsg.out( chalk.green( 'Service \''+_name+'\' is already running (fine). Gracefully exiting.' ));
+                                    } else {
+                                        IMsg.warn( 'Service is said running, but exhibits', status.reasons.length,'error message(s), is not startable' );
+                                        status.reasons.every(( m ) => {
+                                            IMsg.warn( ' '+m );
+                                            return true;
+                                        })
+                                    }
+                                }
+                                res.status = { ...status };
+                                resolve( res );
+                            });
+                        });
+                } else {
+                    return Promise.resolve( res );
+                }
+            };
+
+            // resolves to the child process or to the startup result
+            const _forkOrStart = function( res ){
+                if( res.iServiceable && res.status.startable ){
+                    return new Promise(( resolve, reject ) => {
+                        if( service.isForkable()){
+                            res.child = coreForkable.fork( service.name(), _ipcCallback, _args );
+                            resolve( res );
+                        } else {
+                            service.start().then(() => { return Promise.resolve( res ); });
+                        }
+                    });
+                } else {
+                    return Promise.resolve( res );
+                }
+            };
+
             // + (main) MYNAME coreController successfully startup, listening on port 24001
             // + (MYNAME coreController) MYNAME-managed coreBroker successfully startup, listening on port 24002 (message bus on port 24003)
             // + (MYNAME coreController) ANOTHER (MYNAME-managed) coreController successfully startup, listening on port 24001
             // + (MYNAME coreController) ANOTHER-managed coreBroker successfully startup, listening on port 24001 (message bus on port 24003)
             const _ipcToConsole = function( messageData ){
                 const _name = Object.keys( messageData )[0];
-                const _class = messageData[_name].class || '(undefined class)';
-
-                let _msg = '(';
-                if( messageData[_name].event === 'startup' ){
-                    _msg += 'main';
-                //} else {
-                //    _msg += _name+' coreController';
+                const _runStatus = messageData[_name];
+                let _msg = '';
+                if( _runStatus.event === 'startup' ){
+                    _msg += '(main)';
+                    _msg += ' \''+_name+'\'';
+                    _msg += ' '+( _runStatus.class || '(undefined class)' );
+                    _msg += ' successfully startup, listening on port '+_runStatus.ports.join( ',' );
+                } else {
+                    _msg += 'unmanaged received event \''+_runStatus.event+'\'';
                 }
-                _msg += ') ';
-
-                if( messageData[_name].event === 'startup' ){
-                    _msg += _name+' '+_class;
-                //} else if( _forkable === Iztiar.c.forkable.BROKER ){
-                //    _msg += messageData[_forkable].manager+'-managed '+_forkable;
-                //} else {
-                //    _msg += _name+' ('+service.name()+'-managed) '+_forkable;
-                }
-
-                _msg += ' successfully startup, listening on port '+messageData[_name].ports.join( ',' );
-
-                //if( _forkable === Iztiar.c.forkable.BROKER ){
-                //    _msg += ' (message bus on port ' + messageData[_forkable].messaging.port + ')';
-                //}
-
-                IMsg.out( ' + '+_msg );
+                IMsg.info( _msg );
             };
 
             const _ipcCallback = function( child, message ){
@@ -75,44 +127,46 @@ export function cliStart( app, name, options={} ){
                 service.iServiceable().onStartupConfirmed( message );
                 ipcStartupReceived = true;
             };
-    
-            // resolves to the child process or to the startup result
-            const _forkOrStart = function(){
-                return new Promise(( resolve, reject ) => {
-                    if( service.isForkable()){
-                        return resolve( coreForkable.fork( service.name(), _ipcCallback, _args ));
-                    } else {
-                        return resolve( service.start());
-
-                    }
-                });
-            };
 
             // wait until having received the IPC message
-            const _waitIpc = function(){
-                return new Promise(( resolve, reject ) => {
-                    resolve( ipcStartupReceived );
-                });
+            const _waitIpc = function( res ){
+                if( res.iServiceable && res.status.startable ){
+                    return new Promise(( resolve, reject ) => {
+                        resolve( ipcStartupReceived );
+                    });
+                } else {
+                    return Promise.resolve( true );
+                }
+            }
+
+            // emit a warning if we didn't have received the IPC startup message
+            const _checkTimeout = function( res ){
+                if( res.iServiceable && res.status.startable ){
+                    if( !res.waitFor ){
+                        IMsg.warn( 'Timeout expired before the reception of the startup IPC message' );
+                    }
+                }
+                return Promise.resolve( res );
             }
 
             _promise = _promise
-                .then(() => { return service.status(); })
-                // analyze service status at the beginning
-                .then(() => { return _forkOrStart(); })
-                .then(() => { return utils.waitFor( result, _waitIpc, null, 5*1000 )})
-                .then(() => { return service.status(); })
-                // analyze service status at the end
-                .then(( res ) => {
+                .then(( res ) => { return _checkInitialize( res ); })
+                .then(() => { return _checkStatus( result, false ); })
+                .then(() => { return _forkOrStart( result ); })
+                .then(() => { return utils.waitFor( result, _waitIpc, result, 5*1000 ); })
+                .then(() => { return _checkTimeout( result ); })
+                .then(() => { return _checkStatus( result, true ); })
+                .then(() => {
                     if( _consoleLevel !== _origLevel ) app.IMsg.consoleLevel( _origLevel );
-                    return Promise.resolve( res );
+                    return Promise.resolve( result );
                 });
 
         } else {
             _promise = _promise
                 .then(() => { return service.start(); })
-                .then(( res ) => {
+                .then(() => {
                     if( _consoleLevel !== _origLevel ) app.IMsg.consoleLevel( _origLevel );
-                    return Promise.resolve( res );
+                    return Promise.resolve( result );
                 });
         }
     }

@@ -1,7 +1,5 @@
 /*
  * cli-status.js
- *
- *  Returns the status of the named service.
  * 
  *  Returns a Promise which eventually resolves with the service status.
  */
@@ -34,17 +32,13 @@ export function cliStatus( app, name, options={} ){
             .then(( res ) => { return service.status(); })
             .then(( res ) => {
 
-                if( res.reasons.length  ){
-                    IMsg.warn( '\''+name+'\' service exhibits', res.reasons.length, 'error message(s)' );
+                if( res.startable ){
+                    IMsg.out( 'Service doesn\'t run, is startable' );
+                
+                } else if( res.reasons.length  ){
+                    IMsg.warn( '\''+name+'\' service is said running, but exhibits', res.reasons.length, 'error message(s)' );
                     IMsg.warn( ' You may want use --force-stop option to remove the falsy \''+name+'\' from your run directory' );
                     process.exitCode += 1;
-
-                } else if( !res.pids.requested.length && !res.ports.requested.length ){
-                    let _msg = 'Service \''+name+'\' doesn\'t run';
-                    if( res.startable ){
-                        _msg += ', is startable (fine)';
-                    }
-                    IMsg.out( _msg );
 
                 } else {
                     IMsg.out( chalk.green( 'Service \''+name+'\' is confirmed up and running' ));

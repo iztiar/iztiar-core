@@ -1,7 +1,7 @@
 {
     "runStatus" : {
         "type": "schema",
-        "comment": "the minimal content of the object to be provided by the IServicable to publish its running status",
+        "comment": "the minimal content of the object to be provided by the IServiceable to publish its running status",
         "content": {
             "name": {
                 "type": "string",
@@ -19,7 +19,7 @@
                         "type": "integer[]",
                         "comment": "list of running pids"
                     },
-                    "port": {
+                    "ports": {
                         "type": "integer[]",
                         "comment": "list of opened TCP ports"
                     },

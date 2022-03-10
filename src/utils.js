@@ -77,11 +77,11 @@ export const utils = {
                     IMsg.debug( 'utils.isAlivePid()', 'pid='+pid, 'resolved with res', res );
                     resolve( res.length === 1 ? res : false );
                 }, ( rej ) => {
-                    IMsg.debug( 'utils.isAlivePid()', 'pid='+pid, 'rejected, resolving falsy' );
+                    IMsg.debug( 'utils.isAlivePid()', 'pid='+pid, 'rejected by ps, resolving falsy' );
                     resolve( false );
                 })
                 .catch(( e ) => {
-                    IMsg.error( 'utils.isAlivePid()', 'pid='+pid, 'resolving falsy', e.name, e.message );
+                    IMsg.error( 'utils.isAlivePid()', 'pid='+pid, 'catched exception', e.name, e.message, 'resolving falsy' );
                     resolve( false );
                 });
         });
@@ -128,17 +128,18 @@ export const utils = {
      * @returns {JSON|null} the object (may be empty) or null if ENOENT error
      * @throws {coreError}, unless ENOENT which is sent to coreLogger
      */
-    jsonReadFileSync: function( fname, options={} ){
+     jsonReadFileSync: function( fname, options={} ){
         IMsg.debug( 'utils.jsonReadFileSync()', 'fname='+fname );
         let _json = null;
         try {
             _json = JSON.parse( fs.readFileSync( fname, { encoding: 'utf8' }));
         } catch( e ){
-            if( e.code !== 'ENOENT' ){
-                throw new Error( e );
+            if( e.code === 'ENOENT' ){
+                IMsg.debug( 'utils.jsonReadFileSync()', fname+': file not found or not readable' );
+                _json = null;
+            } else {
+                throw e;
             }
-            IMsg.debug( 'utils.jsonReadFileSync()', fname+': file not found or not readable' );
-            _json = null;
         }
         return _json;
     },
@@ -241,8 +242,8 @@ export const utils = {
                 client.on( 'data', ( data ) => {
                     const _bufferStr = new Buffer.from( data ).toString();
                     const _json = JSON.parse( _bufferStr );
-                    // only the client knows when it has to end the answer channel
-                    //client.end();
+                    // doesn't keep the connection opened as this function is a one-shot
+                    client.end();
                     IMsg.debug( 'utils.tcpRequest() resolves with', _json );
                     resolve( _json );
                 });
@@ -251,7 +252,7 @@ export const utils = {
                     reject( e.code );
                 });
                 client.on( 'end', ( m ) => {
-                    IMsg.info( 'utils.tcpRequest().on(\'end\')', m );
+                    IMsg.verbose( 'utils.tcpRequest().on(\'end\'): connection ended by the server', m );
                     resolve( true );
                 });
             } catch( e ){
@@ -271,8 +272,11 @@ export const utils = {
         try {
             fs.unlinkSync( fname );
         } catch( e ){
-            IMsg.error( 'utils.unlink().catch()', e.name, e.message );
-            throw new Error( e );
+            if( e.code === 'ENOENT' ){
+                IMsg.debug( 'utils.unlink()', fname+': file doesn\'t exist' );
+            } else {
+                throw e;
+            }
         }
     },
 

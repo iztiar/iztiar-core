@@ -77,6 +77,21 @@ export class coreForkable {
         return _var ? process.env[_var] : null;
     }
 
+    /**
+     * @returns {String} the current timestamp as 'yyyy-mm-dd hh:mi:ss.sss'
+     */
+    static now(){
+        const date = new Date( Date.now());
+        const year = ( '0000'+date.getFullYear()).slice( -4 );
+        const month = ( '00'+date.getMonth()).slice( -2 );
+        const day = ( '00'+date.getDay()).slice( -2 );
+        const hours = ( '00'+date.getHours()).slice( -2 );
+        const mins = ( '00'+date.getMinutes()).slice( -2 );
+        const secs = ( '00'+date.getSeconds()).slice( -2 );
+        const millis = ( '000'+date.getMilliseconds()).slice( -3 );
+        return year+'-'+month+'-'+day+' '+hours+':'+mins+':'+secs+'.'+millis;
+    }
+
     // construction
     _api = null;
     _service = null;
@@ -153,32 +168,34 @@ export class coreForkable {
     }
 
     /**
-     * Execute a command received on the TCP communication port
-     * @param {string} cmd the received command, maybe with space-delimited parameters
+     * Identifies the command received on the TCP communication port
+     * @param {string} cmd the received string command, maybe with space-delimited parameters
      * @param {Object} refs the commands known by the derived class (typically coreController)
-     * @param {Callback} cb the callback to be called to send the answer
-     *  cb will be called with ( result:Object ) arg.
+     * @returns {Object}
+     *  command the identified command
+     *  args    the arguments found after the command in the input string
+     *  object  the object found in 'refs'
      * @throws {Error}
      */
-    execute( cmd, refs, cb ){
+    findExecuter( cmd, refs, cb ){
         //msg.debug( 'cmd', cmd );
         //msg.debug( 'refs', refs );
         //msg.debug( 'refs.keys', Object.keys( refs ));
         if( !cmd || typeof cmd !== 'string' || !cmd.length ){
-            throw new Error( 'coreForkable.execute() unset command' );
+            throw new Error( 'coreForkable.findExecuter() unset command' );
         }
         const _words = cmd.split( ' ' );
         //msg.debug( 'words', _words );
         if( !Object.keys( refs ).includes( _words[0] )){
-            throw new Error( 'coreForkable.execute() unknown command '+_words[0] );
+            throw new Error( 'coreForkable.findExecuter() unknown command '+_words[0] );
         }
-        const _ocmd = refs[_words[0]];
+        const _cmd = _words[0];
+        const _ocmd = refs[_cmd];
         if( !_ocmd || !_ocmd.fn || typeof _ocmd.fn !== 'function' ){
-            throw new Error( 'coreForkable.execute() command not (or not enough) defined '+_words[0] );
+            throw new Error( 'coreForkable.findExecuter() command not (or not enough) defined \''+_cmd+'\'' );
         }
         _words.splice( 0, 1 );
-        _ocmd.fn( this, _words, cb );
-        return _ocmd;
+        return { command:_cmd, args:_words, object:_ocmd };
     }
 
     /**

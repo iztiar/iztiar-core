@@ -18,33 +18,13 @@ export class IRunFile {
     /* *** ***************************************************************************************
        *** The implementation API, i.e; the functions the implementation may want to implement ***
        *** *************************************************************************************** */
-    
-    /**
-     * @param {coreConfig} appConfig the filled application configuration
-     * @param {string} name the name of the service
-     * @returns {Integer[]} the list, maybe empty, of running pids
-     */
-    static pids( appConfig, name ){
-        const _json = IRunFile.jsonByName( appConfig, name );
-        let _pids = [];
-        if( _json && _json.name ){
-            _pids = _json[_json.name].pids || [];
-        }
-        return _pids;
-    }
 
     /**
-     * @param {coreConfig} appConfig the filled application configuration
-     * @param {string} name the name of the service
-     * @returns {Integer[]} the list, maybe empty, of opened ports
+     * @returns {String} the full pathname of the run directory
+     * [-implementation Api-]
      */
-    static ports( appConfig, name ){
-        const _json = IRunFile.jsonByName( appConfig, name );
-        let _ports = [];
-        if( _json && _json.name ){
-            _ports = _json[_json.name].ports || [];
-        }
-        return _ports;
+    runDir(){
+        return null;
     }
 
     /* *** ***************************************************************************************
@@ -52,14 +32,13 @@ export class IRunFile {
        *** *************************************************************************************** */
 
     /**
-     * @param {coreConfig} appConfig the filled application configuration
      * @param {string} name the name of the service
      * @returns {Object} the content of the run file, or null
      * @throws {Error}
      */
-    static jsonByName( appConfig, name ){
-        const _fname = IRunFile.runFile( appConfig, name );
-        return IRunFile.jsonByFilename( _fname );
+    jsonByName( name ){
+        const _fname = this.runFile( name );
+        return this.jsonByFilename( _fname );
     }
 
     /**
@@ -67,7 +46,7 @@ export class IRunFile {
      * @returns {Object} the content of the run file, or null
      * @throws {Error}
      */
-    static jsonByFilename( fname ){
+    jsonByFilename( fname ){
         const _json = utils.jsonReadFileSync( fname );
         if( _json && Object.keys( _json ).length ){
             // one key at level 1: service name
@@ -82,32 +61,29 @@ export class IRunFile {
     /**
      * Remove a service and its content from a JSON runfile
      * This mainly occurs when the server is being shutting down
-     * @param {coreConfig} appConfig the filled application configuration
      * @param {string} name the name of the service
      * @returns {JSON|null} the new JSON content after this deletion
      * @throws Error (but not ENOENT, this being already handled)
      */
-    static remove( appConfig, name ){
+    remove( name ){
         IMsg.debug( 'IRunFile.remove()', 'name='+name );
-        return utils.jsonRemoveKeySync( IRunFile.runFile( appConfig, name ), name );
+        return utils.jsonRemoveKeySync( this.runFile( name ), name );
     }
 
     /**
-     * @param {coreConfig} appConfig the filled application configuration
      * @param {string} name the name of the controller service
      * @returns {string} the full pathname of the JSON run file for this controller service
      * @throws {Error} if name is empty, null or undefined
      */
-    static runFile( appConfig, name ){
+    runFile( name ){
         if( !name || typeof name !== 'string' || !name.length ){
             throw new Error( 'IRunFile.runFile() name is unset' );
         }
-        return path.join( appConfig.runDir(), name+'.json' )
+        return path.join( this.runDir(), name+'.json' )
     }
 
     /**
      * Set the content of a forkable in the JSON runfile
-     * @param {coreConfig} appConfig the filled application configuration
      * @param {string} name the name of the service
      * @param {Object} data the minimal object (aka data interface) to set
      *  pids {Integer[]} list of running pids
@@ -115,11 +91,11 @@ export class IRunFile {
      * @returns {Object} the updated JSON content
      * @throws Error (but not ENOENT, this being already handled)
      */
-    static set( appConfig, name, data ){
+    set( name, data ){
         IMsg.debug( 'IRunFile.set()', 'name='+name, 'data='+data );
         let _written = null;
-        const _fname = IRunFile.runFile( appConfig, name );
-        const _orig = IRunFile.jsonByFilename( _fname );
+        const _fname = this.runFile( name );
+        const _orig = this.jsonByFilename( _fname );
         _written = utils.jsonWriteFileSync( _fname, data, _orig );
         return _written;
     }
