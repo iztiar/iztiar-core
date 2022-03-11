@@ -158,6 +158,9 @@ export class IMsg extends ILogger {
     static debug(){
         IMsg._staticLog( ILogger.const.DEBUG, '(debug)', ...arguments );
     }
+    debug(){
+        this._imsgLog( ILogger.const.DEBUG, '(debug)', ...arguments );
+    }
 
     /**
      * Getter/Setter

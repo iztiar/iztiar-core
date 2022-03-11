@@ -28,7 +28,8 @@
                     },
                     "messagingPort": {
                         "type": "integer",
-                        "comment": 24003
+                        "comment": "Messaging port number",
+                        "default": 24003
                     }
                 }
             }

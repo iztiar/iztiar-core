@@ -63,20 +63,38 @@ export class coreService {
         api.service( self );
 
         // import all what this @iztiar/iztiar-core exports
-        const _corePromise = function( corePackage ){
-            const _coreExports = path.join( corePackage.getDir(), corePackage.getMain());
+        const _corePromise = function( _corePackage ){
+            const _coreExports = path.join( _corePackage.getDir(), _corePackage.getMain());
             return import( _coreExports );
         };
 
-        // build a full Api
-        const _apiPromise = function( coreExports ){
+        // build a full Api from the previous full import from core
+        const _apiPromise = function( _coreExports ){
             return new Promise(( resolve, reject ) => {
-                api.exports( coreExports );
+                api.exports( _coreExports );
                 //console.log( new api.exports.coreForkable() );
                 resolve( api );
             });
         };
 
+        // import the external plugin
+        const _importPromise = function( _featPackage ){
+            const _main = path.join( _featPackage.getDir(), _featPackage.getMain());
+            return import( _main );
+        };
+
+        // initialize the imported external plugin
+        const _initImported = function( _importedFeat ){
+            if( typeof _importedFeat.default === 'function' ){
+                self._iServiceable = _importedFeat.default( api );
+                console.log( self._iServiceable );
+                return self._iServiceable;
+            } else {
+                return Promise.reject( 'coreService.initialize() \''+self.name()+'\' doesn\'t export a default function' );
+            }
+        };
+
+        // chain all that together
         let _promise = Promise.resolve( true )
             .then(() => { return _corePromise( app.package()); })
             .then(( coreExports ) => { return _apiPromise( coreExports ); });
@@ -84,19 +102,8 @@ export class coreService {
         // external package to be dynamically imported
         // the package must define a default export which must be a function which must return a IServiceable instance
         if( pck ){
-            const _importPromise = function( api ){
-                return new Promise(( resolve, reject ) => {
-                    const main = path.join( pck.getDir(), pck.getMain());
-                    import( main ).then(( res ) => {
-                        if( typeof res.default === 'function' ){
-                            return resolve( self._iServiceable = res.default( api ));
-                        } else {
-                            return reject( 'coreService.initialize() \''+this.name()+'\' doesn\'t export a default function' );
-                        }
-                    });
-                });
-            }
-            _promise = _promise.then(( api ) => { return _importPromise( api ); });
+            _promise = _promise.then(() => { return _importPromise( pck ); });
+            _promise = _promise.then(( res ) => { return _initImported( res ); });
 
         // the service is expected to be provided by core
         } else if( self.config().module === 'core' ){
@@ -129,6 +136,7 @@ export class coreService {
                 return Promise.reject( 'IServiceable expected, '+success+' received: rejected' );
             }
         });
+
         return _promise;
     }
 
@@ -201,6 +209,8 @@ export class coreService {
     status( options={} ){
         IMsg.verbose( 'coreService.status()', 'name='+this._name );
         const self = this;
+        //console.log( this );
+        //console.log( this._iServiceable );
 
         // the returned object which will resolve the promise
         let result = {};
@@ -216,7 +226,9 @@ export class coreService {
 
         // first ask the IServiceable to provide its own status check (must conform to check-status.schema.json)
         const _serviceablePromise = function(){
-            //console.log( self._iServiceable );
+            console.log( self._iServiceable );
+            console.log( self._iServiceable.getCheckStatus );
+            console.log( typeof self._iServiceable.getCheckStatus );
             return self._iServiceable.getCheckStatus()
                 .then(( res ) => {
                     result = { ...res };

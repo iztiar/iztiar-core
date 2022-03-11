@@ -223,9 +223,9 @@ export class coreController {
             IMsg.debug( 'coreController::iserviceableStart() incoming connection' );
 
             // refuse all connections if the server is not 'running'
-            if( this.runningStatus() !== this.api().exports().coreForkable.s.RUNNING ){
+            if( self.runningStatus() !== self.api().exports().coreForkable.s.RUNNING ){
                 const _answer = 'temporarily refusing connections';
-                const _res = { answer:_answer, reason:this.runningStatus(), timestamp:self.api().exports().utils.now()};
+                const _res = { answer:_answer, reason:self.runningStatus(), timestamp:self.api().exports().utils.now()};
                 c.write( JSON.stringify( _res )+'\r\n' );
                 IMsg.info( 'server answers to new incoming connection with', _res );
                 c.end();
@@ -236,21 +236,21 @@ export class coreController {
                 const _bufferStr = new Buffer.from( data ).toString().replace( '\r\n', '' );
                 IMsg.info( 'server receives \''+_bufferStr+'\' request' );
                 const _words = _bufferStr.split( ' ' );
-                if( _words[0] === this.api().exports().coreForkable.c.stop.command ){
-                    if( this._forwardPort ){
-                        self.api().exports().utils.tcpRequest( this._forwardPort, _bufferStr )
+                if( _words[0] === self.api().exports().coreForkable.c.stop.command ){
+                    if( self._forwardPort ){
+                        self.api().exports().utils.tcpRequest( self._forwardPort, _bufferStr )
                             .then(( res ) => {
                                 c.write( JSON.stringify( res ));
                                 IMsg.info( 'server answers to \''+_bufferStr+'\' with', res );
                                 c.end();
                             })
                     } else {
-                        IMsg.debug = 'coreController.iserviceableStart().on(\''+this.api().exports().coreForkable.c.stop.command+'\') forwardPort is unset';
+                        IMsg.debug = 'coreController.iserviceableStart().on(\''+self.api().exports().coreForkable.c.stop.command+'\') forwardPort is unset';
                     }
                 } else {
                     try {
-                        const _executer = this.findExecuter( _bufferStr, coreController.c );
-                        _executer.object.fn( this, _executer.command, _executer.args, ( res ) => {
+                        const _executer = self.findExecuter( _bufferStr, coreController.c );
+                        _executer.object.fn( self, _executer.command, _executer.args, ( res ) => {
                             c.write( JSON.stringify( res )+'\r\n' );
                             IMsg.info( 'server answers to \''+_bufferStr+'\' with', res );
                             if( _executer.object.endConnection ){
@@ -264,12 +264,12 @@ export class coreController {
                 }
             })
             .on( 'error', ( e ) => {
-                this.errorHandler( e );
+                self.errorHandler( e );
             });
         });
         IMsg.debug( 'coreController::iserviceableStart() tcpServer created' );
 
-        self._tcpServer.listen( self._tcpPort, '0.0.0.0', () => {
+        this._tcpServer.listen( self._tcpPort, '0.0.0.0', () => {
             let _msg = 'Hello, I am '+self.service().name()+' '+self.constructor.name;
             _msg += ', running with pid '+process.pid+ ', listening on port '+self._tcpPort;
             self.getStatus()
@@ -414,10 +414,10 @@ export class coreController {
                 });
             };
             const _closeServer = function(){
-                IMsg.debug( 'coreController.terminate() close tcpServer' );
+                IMsg.debug( 'coreController.terminate() about to close tcpServer' );
                 return new Promise(( resolve, reject ) => {
                     self._tcpServer.close(() => {
-                        IMsg.debug( 'coreController.terminate() this._tcpServer is closed' );
+                        IMsg.debug( 'coreController.terminate() tcpServer is closed' );
                         resolve( true );
                     });
                 });
