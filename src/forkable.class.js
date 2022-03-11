@@ -77,35 +77,18 @@ export class coreForkable {
         return _var ? process.env[_var] : null;
     }
 
-    /**
-     * @returns {String} the current timestamp as 'yyyy-mm-dd hh:mi:ss.sss'
-     */
-    static now(){
-        const date = new Date( Date.now());
-        const year = ( '0000'+date.getFullYear()).slice( -4 );
-        const month = ( '00'+date.getMonth()).slice( -2 );
-        const day = ( '00'+date.getDay()).slice( -2 );
-        const hours = ( '00'+date.getHours()).slice( -2 );
-        const mins = ( '00'+date.getMinutes()).slice( -2 );
-        const secs = ( '00'+date.getSeconds()).slice( -2 );
-        const millis = ( '000'+date.getMilliseconds()).slice( -3 );
-        return year+'-'+month+'-'+day+' '+hours+':'+mins+':'+secs+'.'+millis;
-    }
-
     // construction
     _api = null;
-    _service = null;
     _status = null;
 
     /**
-     * @param {ICoreApi} api 
+     * @param {ICore} api 
      * @param {coreService} service
      * @returns {coreForkable}
      */
-     constructor( api, service ){
+     constructor( api ){
         IMsg.debug( 'coreForkable instanciation' );
         this._api = api;
-        this._service = service;
         return this;
     }
 
@@ -138,7 +121,7 @@ export class coreForkable {
     }
 
     /**
-     * @returns {ICoreApi}
+     * @returns {Object} the API provided by the core at initialization time
      */
     api(){
         return this._api;
@@ -215,6 +198,6 @@ export class coreForkable {
      * @returns {coreService}
      */
     service(){
-        return this._service;
+        return this._api.service;
     }
 }

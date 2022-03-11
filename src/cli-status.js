@@ -23,12 +23,12 @@ export function cliStatus( app, name, options={} ){
 
     IMsg.out( 'Getting the status of \''+name+'\' service' );
 
-    const service = app.IPluginManager.byName( app.ICoreApi, name );
+    const service = app.IPluginManager.byName( app.ICore, name );
     let _promise = Promise.resolve( true );
 
     if( service ){
         _promise = _promise
-            .then(() => { return service.initialize( app.ICoreApi ); })
+            .then(() => { return service.initialize( app.ICore ); })
             .then(( res ) => { return service.status(); })
             .then(( res ) => {
 

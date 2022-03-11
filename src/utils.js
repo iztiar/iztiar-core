@@ -227,6 +227,21 @@ export const utils = {
     },
 
     /**
+     * @returns {String} the current timestamp as 'yyyy-mm-dd hh:mi:ss.sss'
+     */
+    now: function(){
+        const date = new Date( Date.now());
+        const year = ( '0000'+date.getFullYear()).slice( -4 );
+        const month = ( '00'+date.getMonth()).slice( -2 );
+        const day = ( '00'+date.getDay()).slice( -2 );
+        const hours = ( '00'+date.getHours()).slice( -2 );
+        const mins = ( '00'+date.getMinutes()).slice( -2 );
+        const secs = ( '00'+date.getSeconds()).slice( -2 );
+        const millis = ( '000'+date.getMilliseconds()).slice( -3 );
+        return year+'-'+month+'-'+day+' '+hours+':'+mins+':'+secs+'.'+millis;
+    },
+
+    /**
      * Sends a request to a server, expecting a single JSON as an answer.
      * @param {integer} port the TCP port to request (on locahost)
      * @param {string} command a command to send

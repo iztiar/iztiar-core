@@ -1,12 +1,11 @@
 // interfaces
 export * from './icmdline.interface.js';
-export * from './icore-api.interface.js';
+export * from './icore.interface.js';
 export * from './ilogger.interface.js';
 export * from './imsg.interface.js';
 export * from './iplugin-manager.interface.js';
 export * from './irunfile.interface.js';
 export * from './irunnable.interface.js';
-export * from './iservice-manager.interface.js';
 export * from './iserviceable.interface.js';
 
 // classes

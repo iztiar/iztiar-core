@@ -31,6 +31,7 @@ export class IServiceable {
 
     /**
      * @returns {Promise} which must resolve to an object conform to check-status.schema.json
+     *  This will be used by coreService.status() to know which pids and ports to check
      * [-implementation Api-]
      */
     getCheckStatus(){
@@ -53,6 +54,8 @@ export class IServiceable {
     }
 
     /**
+     * The service provides a daemon which has confirmed its successful startup
+     * Maybe the time for the service to take some actions (for example, create a run file)
      * [-implementation Api-]
      */
     onStartupConfirmed( data ){
@@ -60,6 +63,7 @@ export class IServiceable {
     }
 
     /**
+     * Start the service
      * @returns {Promise}
      * [-implementation Api-]
      */
@@ -69,6 +73,8 @@ export class IServiceable {
     }
 
     /**
+     * Get the status of a service
+     * Even if there is not any dameon, this default should be overriden
      * @returns {Promise} which must resolve to an object conform to run-status.schema.json
      * [-implementation Api-]
      */
@@ -86,6 +92,7 @@ export class IServiceable {
     }
 
     /**
+     * Stop the service
      * @returns {Promise}
      * [-implementation Api-]
      */

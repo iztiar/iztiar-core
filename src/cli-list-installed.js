@@ -22,7 +22,7 @@ export function cliListInstalled( app, options={} ){
     IMsg.out( 'Listing installed Iztiar modules' );
     IMsg.verbose( 'An Iztiar module is identified by its name; its target is qualified from package.json \'iztiar\' group' );
     
-    const pckInstalled = app.IPluginManager.getInstalled( app.ICoreApi );
+    const pckInstalled = app.IPluginManager.getInstalled( app.ICore );
 
     let pckDisplay = [];
     pckInstalled.every(( pck ) => {

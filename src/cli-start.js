@@ -26,11 +26,11 @@ export function cliStart( app, name, options={} ){
 
     const _args = Object.keys( options ).includes( 'args' ) ? options.args : process.argv;
 
-    const service = app.IPluginManager.byName( app.ICoreApi, name );
+    const service = app.IPluginManager.byName( app.ICore, name );
     let _promise = Promise.resolve( true );
 
     if( service ){
-        _promise = _promise.then(() => { return service.initialize( app.ICoreApi ); });
+        _promise = _promise.then(() => { return service.initialize( app.ICore ); });
 
         if( !coreForkable.forkedProcess()){
 

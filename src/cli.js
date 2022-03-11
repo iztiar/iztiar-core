@@ -16,5 +16,5 @@ const app = new coreApplication( 'iztiar' );
 
 app.IRunnable.displayCopyright();
 app.ICmdline.parseArgs();
-app.ICoreApi.config( app.ICmdline.getOptions());
+app.ICore.config( app.ICmdline.getOptions());
 app.IRunnable.run( app );

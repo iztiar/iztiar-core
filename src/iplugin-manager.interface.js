@@ -2,7 +2,6 @@
  * IPluginManager interface
  */
 import path from 'path';
-import { IMsg } from './imsg.interface.js';
 
 import { coreApplication, coreService, PackageJson, utils } from './index.js';
 
@@ -17,7 +16,7 @@ export class IPluginManager {
        *** *************************************************************************************** */
 
     /**
-     * @param {ICoreApi} api
+     * @param {ICore} api
      * @param {String} name the name of the instance of the plugin
      * @returns {coreService|null} the named service
      */
@@ -34,7 +33,7 @@ export class IPluginManager {
     }
 
     /**
-     * @param {ICoreApi} api
+     * @param {ICore} api
      * @returns {coreService[]} the array of enabled services which target this one
      * [-public API-]
      */
@@ -72,13 +71,13 @@ export class IPluginManager {
     }
 
     /**
-     * @param {ICoreApi} api
+     * @param {ICore} api
      * @returns {PackageJson[]} the array of installed modules of our Iztiar family (including this one)
      * [-public API-]
      */
     getInstalled( api ){
         const parentDir = path.dirname( api.package().getDir());
-        //const pckName = app.ICoreApi.package().getShortName();
+        //const pckName = app.ICore.package().getShortName();
         //  new RegExp( '^(?!'+pckName+'$)' )
         const regex = [
             new RegExp( '^[^\.]' ),
@@ -93,7 +92,7 @@ export class IPluginManager {
     }
 
     /**
-     * @param {ICoreApi} api
+     * @param {ICore} api
      * @param {String} name
      * @returns {PackageJson|null} the PackageJson instance for the (installed) module
      * [-public API-]

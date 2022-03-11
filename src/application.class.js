@@ -4,7 +4,7 @@
 import { appendFile } from 'fs';
 import path from 'path';
 
-import { ICmdline, ICoreApi, ILogger, IMsg, IPluginManager, IRunnable, coreConfig, Interface, PackageJson } from './index.js';
+import { ICmdline, ICore, ILogger, IMsg, IPluginManager, IRunnable, coreConfig, Interface, PackageJson } from './index.js';
 
 export class coreApplication {
 
@@ -32,7 +32,7 @@ export class coreApplication {
             _version: this.icmdlineVersion
         });
 
-        Interface.add( this, ICoreApi );
+        Interface.add( this, ICore );
 
         Interface.add( this, IMsg, {
             _consoleLevel: this.imsgConsoleLevel,
@@ -51,7 +51,7 @@ export class coreApplication {
         process.title = title;
 
         // this coreApplication class definition is stored in /src subdirectory of the module root
-        this.ICoreApi.package( new PackageJson( path.dirname( path.dirname( new URL( import.meta.url ).pathname ))));
+        this.ICore.package( new PackageJson( path.dirname( path.dirname( new URL( import.meta.url ).pathname ))));
 
         coreApplication._singleton = this;
         return coreApplication._singleton;
@@ -105,7 +105,7 @@ export class coreApplication {
      * <-ICmdline implementation->
      */
     icmdlineVersion(){
-        return this.ICoreApi.package().getVersion();
+        return this.ICore.package().getVersion();
     }
 
     /*
@@ -130,7 +130,7 @@ export class coreApplication {
      * <-IMsg (ILogger-derived) implementation->
      */
     iloggerFname(){
-        const _config = this.ICoreApi.config();
+        const _config = this.ICore.config();
         return _config ? path.join( _config.logDir(), coreApplication.const.commonName+'.log' ) : ILogger.defaults.fname;
     }
 
@@ -139,7 +139,7 @@ export class coreApplication {
      * <-IMsg (ILogger-derived) implementation->
      */
     iloggerLevel(){
-        const _config = this.ICoreApi.config();
+        const _config = this.ICore.config();
         return _config ? _config.logLevel() : ILogger.defaults.level;
     }
 
@@ -150,7 +150,7 @@ export class coreApplication {
      * <-IMsg implementation->
      */
     imsgConsoleLevel( level ){
-        const _config = this.ICoreApi.config();
+        const _config = this.ICore.config();
         if( level && typeof level === 'string' && level.length ){
             _config.consoleLevel( level );
         }
@@ -170,7 +170,7 @@ export class coreApplication {
      * <-IRunnable implementation->
      */
     static irunnableCopyrightText(){
-        let _text = coreApplication.const.displayName+' v '+this.ICoreApi.package().getVersion();
+        let _text = coreApplication.const.displayName+' v '+this.ICore.package().getVersion();
         _text += '\nCopyright (@) 2020,2021,2022 TheDreamTeam&Consorts (and may the force be with us;))';
         return _text;
     }

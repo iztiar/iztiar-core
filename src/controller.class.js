@@ -4,7 +4,7 @@
 import net from 'net';
 import pidUsage from 'pidusage';
 
-import { IRunFile, IServiceable, ILogger, IMsg, Interface, coreConfig, coreForkable, utils } from './index.js';
+import { IMsg, coreForkable } from './index.js';
 
 // cb is to be called with the result
 //  the connexion will be closed after execution of the callback - only one answer is allowed
@@ -14,7 +14,7 @@ function _izHelp( self, cmd, words, cb ){
     cb({
         command: cmd,
         arguments: words,
-        timestamp: coreForkable.now(),
+        timestamp: self.api().exports.utils.now(),
         answer: coreController.c
     });
 }
@@ -24,7 +24,7 @@ function _izPing( self, cmd, words, cb ){
     cb({
         command: cmd,
         arguments: words,
-        timestamp: coreForkable.now(),
+        timestamp: self.api().exports.utils.now(),
         answer: 'iz.ack'
     });
 }
@@ -34,7 +34,7 @@ function _izStatus( self, cmd, words, cb ){
     self.getStatus().then(( status ) => { cb({
         command: cmd,
         arguments: words,
-        timestamp: coreForkable.now(),
+        timestamp: self.api().exports.utils.now(),
         answer: status
         });
     });
@@ -91,23 +91,23 @@ export class coreController extends coreForkable {
     _tcpServer = null;
     _tcpPort = 0;
 
-    // when stopping, the port to which forward the received messages
+    // when stopping, the port to which answer and forward the received messages
     _forwardPort = 0;
 
     /**
-     * @param {ICoreApi} api 
+     * @param {ICore} api 
      * @param {coreService} service
      * @returns {coreController}
      */
-    constructor( api, service ){
-        super( api, service );
+    constructor( api ){
+        super( api );
         IMsg.debug( 'coreController instanciation' );
 
-        Interface.add( this, IRunFile, {
+        api.exports.Interface.add( this, api.exports.IRunFile, {
             runDir: this.irunfileRunDir
         });
 
-        Interface.add( this, IServiceable, {
+        api.exports.Interface.add( this, api.exports.IServiceable, {
             cleanupAfterKill: this.iserviceableCleanupAfterKill,
             getCheckStatus: this.iserviceableGetCheckStatus,
             onStartupConfirmed: this.iserviceableOnStartupConfirmed,
@@ -156,7 +156,7 @@ export class coreController extends coreForkable {
      */
     irunfileRunDir(){
         IMsg.debug( 'coreController.irunfileRunDir()' );
-        return this.api().config().runDir();
+        return this.api().core.config().runDir();
     }
 
     /*
@@ -214,7 +214,7 @@ export class coreController extends coreForkable {
             // refuse all connections if the server is not 'running'
             if( this.runningStatus() !== coreForkable.s.RUNNING ){
                 const _answer = 'temporarily refusing connections';
-                const _res = { answer:_answer, reason:this.runningStatus(), timestamp:coreForkable.now()};
+                const _res = { answer:_answer, reason:this.runningStatus(), timestamp:self.api().exports.utils.now()};
                 c.write( JSON.stringify( _res )+'\r\n' );
                 IMsg.info( 'server answers to new incoming connection with', _res );
                 c.end();
@@ -227,7 +227,7 @@ export class coreController extends coreForkable {
                 const _words = _bufferStr.split( ' ' );
                 if( _words[0] === coreForkable.c.stop.command ){
                     if( this._forwardPort ){
-                        utils.tcpRequest( this._forwardPort, _bufferStr )
+                        self.api().exports.utils.tcpRequest( this._forwardPort, _bufferStr )
                             .then(( res ) => {
                                 c.write( JSON.stringify( res ));
                                 IMsg.info( 'server answers to \''+_bufferStr+'\' with', res );
@@ -276,11 +276,11 @@ export class coreController extends coreForkable {
      */
     iserviceableStop(){
         IMsg.debug( 'coreController.iserviceableStop()' );
-        utils.tcpRequest( this._tcpPort, 'iz.stop' )
+        this.api().exports.utils.tcpRequest( this._tcpPort, 'iz.stop' )
             .then(( answer ) => {
                 IMsg.debug( 'coreController.iserviceableStop()', 'receives answer to \'iz.stop\''+answer );
             }, ( failure ) => {
-                // an error message is already sent by the called utils.tcpRequest()
+                // an error message is already sent by the called self.api().exports.utils.tcpRequest()
                 //  what more to do ??
                 //IMsg.error( 'TCP error on iz.stop command:', failure );
             });
@@ -329,10 +329,10 @@ export class coreController extends coreForkable {
                         NODE_ENV: process.env.NODE_ENV || '(undefined)'
                     },
                     // general runtime constants
-                    logfile: ILogger.logFname(),
+                    logfile: self.api().exports.ILogger.logFname(),
                     runfile: self.IRunFile.runFile( _serviceName ),
-                    storageDir: coreConfig.storageDir(),
-                    version: self.api().package().getVersion()
+                    storageDir: self.api().exports.coreConfig.storageDir(),
+                    version: self.api().core.package().getVersion()
                 };
                 status[_serviceName] = { ...status[_serviceName], ...o };
                 resolve( status );
@@ -366,7 +366,7 @@ export class coreController extends coreForkable {
      * @param {string[]|null} words the parameters transmitted after the 'iz.stop' command
      * @param {Callback|null} cb a (e,res) form callback called when all is terminated
      * Note:
-     *  Sending 'iz.stop' command calls this terminate() function, which has the side effect of.. terminating!
+     *  Receiving 'iz.stop' command calls this terminate() function, which has the side effect of.. terminating!
      *  Which sends a SIGTERM signal to this process, and so triggers the signal handler, which itself re-calls
      *  this terminate() function. So, try to prevent a double execution.
      */
@@ -378,7 +378,7 @@ export class coreController extends coreForkable {
         }
         const self = this;
         const _name = this.service().name();
-        this._forwardPort = words && words[0] && utils.isInt( words[0] ) ? words[0] : 0;
+        this._forwardPort = words && words[0] && self.api().exports.utils.isInt( words[0] ) ? words[0] : 0;
 
         // we advertise we are stopping as soon as possible
         this.runningStatus( coreForkable.s.STOPPING );
@@ -397,7 +397,7 @@ export class coreController extends coreForkable {
                         cb({
                             command: 'iz.stop',
                             arguments: words,
-                            timestamp: coreForkable.now(),
+                            timestamp: self.api().exports.utils.now(),
                             answer: { name:_name, class:self.constructor.name, pid:process.pid, port:self._tcpPort }
                         });
                         resolve( true );
