@@ -8,7 +8,7 @@
  */
 import path from 'path';
 
-import { IMsg, IServiceable, coreController, utils } from './index.js';
+import { IMsg, IServiceable, coreApi, coreController, utils } from './index.js';
 
 export class coreService {
 
@@ -44,22 +44,23 @@ export class coreService {
 
     /**
      * dynamically load and initialize the default function of the plugin
-     * @param {ICore} core an instance of the ICore interface
+     * @param {coreApplication} app the application
      *  At the time, only core package and core config are set
      *  We complete here with this service and
      * @returns {Promise} which resolves to the IServiceable which must be returned by the default function
      * @throws {Error} if IServiceable is not set
      */
-    initialize( core ){
+    initialize( app ){
         IMsg.verbose( 'coreService.initialize()', 'name='+this._name );
         const self = this;
         const pck = self.package();
 
-        let api = {
-            core: core,
-            exports: null,
-            service: self
-        };
+        // cf. core-api.schema.json
+        let api = new coreApi();
+        api.corePackage( app.package());
+        api.coreConfig( app.config());
+        api.IMsg( app.IMsg );
+        api.service( self );
 
         // import all what this @iztiar/iztiar-core exports
         const _corePromise = function( corePackage ){
@@ -70,14 +71,14 @@ export class coreService {
         // build a full Api
         const _apiPromise = function( coreExports ){
             return new Promise(( resolve, reject ) => {
-                api.exports = coreExports;
+                api.exports( coreExports );
                 //console.log( new api.exports.coreForkable() );
                 resolve( api );
             });
         };
 
         let _promise = Promise.resolve( true )
-            .then(() => { return _corePromise( core.package()); })
+            .then(() => { return _corePromise( app.package()); })
             .then(( coreExports ) => { return _apiPromise( coreExports ); });
 
         // external package to be dynamically imported
@@ -113,7 +114,7 @@ export class coreService {
                     break;
             }
 
-            // or we don't know where to get the service from
+        // or we don't know where to get the service from
         } else {
             _promise = _promise.then(() => {
                 return Promise.reject( 'coreService.initialize() unknown module \''+self.config().module+'\'' );

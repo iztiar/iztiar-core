@@ -16,8 +16,6 @@
  */
 import { ILogger, IMsg, coreApplication } from './index.js';
 
-import { cliListInstalled } from './cli-list-installed.js';
-
 /**
  * 
  * @param {coreApplication} app the application
@@ -34,7 +32,7 @@ export function cliListEnabled( app, options={} ){
     IMsg.out( 'Listing enabled Iztiar services for this module' );
     IMsg.verbose( 'An Iztiar module is identified by its name; its target is qualified from package.json \'iztiar\' group' );
     
-    const services = app.IPluginManager.getEnabled( app.ICore );
+    const services = app.IPluginManager.getEnabled( app );
 
     let sceDisplay = [];
     services.every(( s ) => {
@@ -55,7 +53,7 @@ export function cliListEnabled( app, options={} ){
     if( sceDisplay.length ){
         app.IMsg.tabular( sceDisplay, { prefix:'  ' });
     }
-    const _msg = 'Found '+sceDisplay.length+' enabled plugin(s) targeting \''+app.ICore.package().getFullName()+'\'';
+    const _msg = 'Found '+sceDisplay.length+' enabled plugin(s) targeting \''+app.package().getFullName()+'\'';
     IMsg.out( _msg );
     ILogger.info( _msg );
 

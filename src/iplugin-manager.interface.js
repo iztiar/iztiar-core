@@ -16,13 +16,13 @@ export class IPluginManager {
        *** *************************************************************************************** */
 
     /**
-     * @param {ICore} api
+     * @param {coreApplication} app
      * @param {String} name the name of the instance of the plugin
      * @returns {coreService|null} the named service
      */
-    byName( api, name ){
+    byName( app, name ){
         let found = null;
-        const services = this.getEnabled( api );
+        const services = this.getEnabled( app );
         services.every(( s ) => {
             if( s.name() === name ){
                 found = s;
@@ -33,15 +33,15 @@ export class IPluginManager {
     }
 
     /**
-     * @param {ICore} api
+     * @param {coreApplication} app
      * @returns {coreService[]} the array of enabled services which target this one
      * [-public API-]
      */
-    getEnabled( api ){
+    getEnabled( app ){
         let result = [];
-        const appPlugins = api.config().plugins();
-        const thisFullName = api.package().getFullName();
-        const thisShortName = api.package().getShortName();
+        const appPlugins = app.config().plugins();
+        const thisFullName = app.package().getFullName();
+        const thisShortName = app.package().getShortName();
         let _found = [];
         // examine the configured services to select a) installed modules b) core services
         Object.keys( appPlugins ).every(( id ) => {
@@ -52,7 +52,7 @@ export class IPluginManager {
                 } else if( _found.includes( appPlugins[id].module )){
                     result.push( new coreService( id, appPlugins[id] ));
                 } else {
-                    const pck = this.getPackage( api, appPlugins[id].module );
+                    const pck = this.getPackage( app, appPlugins[id].module );
                     if( pck ){
                         const group = pck.getIztiar() || {};
                         const target = group.target || null;
@@ -71,12 +71,12 @@ export class IPluginManager {
     }
 
     /**
-     * @param {ICore} api
+     * @param {coreApplication} app
      * @returns {PackageJson[]} the array of installed modules of our Iztiar family (including this one)
      * [-public API-]
      */
-    getInstalled( api ){
-        const parentDir = path.dirname( api.package().getDir());
+    getInstalled( app ){
+        const parentDir = path.dirname( app.package().getDir());
         //const pckName = app.ICore.package().getShortName();
         //  new RegExp( '^(?!'+pckName+'$)' )
         const regex = [
@@ -92,16 +92,16 @@ export class IPluginManager {
     }
 
     /**
-     * @param {ICore} api
+     * @param {coreApplication} app
      * @param {String} name
      * @returns {PackageJson|null} the PackageJson instance for the (installed) module
      * [-public API-]
      */
-    getPackage( api, name ){
+    getPackage( app, name ){
         let pck = null;
         const _words = name.split( '/' );
         const _short = _words.length > 1 ? _words[1] : _words[0];
-        const dir = path.join( path.dirname( api.package().getDir()), _short );
+        const dir = path.join( path.dirname( app.package().getDir()), _short );
         const fname = path.join( dir, 'package.json' );
         if( utils.fileExistsSync( fname )){
             pck = new PackageJson( dir );

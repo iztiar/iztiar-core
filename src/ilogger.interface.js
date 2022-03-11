@@ -118,7 +118,7 @@ export class ILogger {
     }
 
     /**
-     * @returns {String} the requested log level (defaulting to 'NORMAL')
+     * @returns {String} the requested log level (defaulting to 'INFO')
      * [-implementation Api-]
      */
     _logLevel(){

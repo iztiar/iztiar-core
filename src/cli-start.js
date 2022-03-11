@@ -26,11 +26,11 @@ export function cliStart( app, name, options={} ){
 
     const _args = Object.keys( options ).includes( 'args' ) ? options.args : process.argv;
 
-    const service = app.IPluginManager.byName( app.ICore, name );
+    const service = app.IPluginManager.byName( app, name );
     let _promise = Promise.resolve( true );
 
     if( service ){
-        _promise = _promise.then(() => { return service.initialize( app.ICore ); });
+        _promise = _promise.then(() => { return service.initialize( app ); });
 
         if( !coreForkable.forkedProcess()){
 
@@ -61,6 +61,7 @@ export function cliStart( app, name, options={} ){
                                 if( expected ){
                                     if( status.startable ){
                                         IMsg.error( 'Unable to start the service' );
+                                        process.exitCode += 1;
                                     } else {
                                         IMsg.out( chalk.green( 'Service(s) \''+_name+'\' successfully started' ));
                                     }

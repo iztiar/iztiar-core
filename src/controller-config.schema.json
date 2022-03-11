@@ -1,0 +1,37 @@
+{
+    "controllerConfig" : {
+        "type": "schema",
+        "comment": "the configuration of the coreController",
+        "content": {
+            "name": {
+                "type": "string",
+                "comment": "the name of the service",
+                "content": {
+                    "module": {
+                        "type": "string",
+                        "comment": "the name of the module which provides the service, or 'core'"
+                    },
+                    "class": {
+                        "type": "string",
+                        "comment": "the name of the class or type or something inside the module, which qualifies the service type",
+                        "mandatory": "coreController"
+                    },
+                    "listenPort": {
+                        "type": "integer",
+                        "comment": "TCP listening port number for internal service management",
+                        "default": 24001
+                    },
+                    "messagingHost": {
+                        "type": "string",
+                        "comment": "hostname to which the coreController may connect to read from and write to messages bus",
+                        "default": "localhost"
+                    },
+                    "messagingPort": {
+                        "type": "integer",
+                        "comment": 24003
+                    }
+                }
+            }
+        }
+    }
+}

@@ -21,13 +21,25 @@ export class IMsg extends ILogger {
     static _log(){
         //console.log( 'IMsg._log()', arguments );
 
-        // IMsg console LogLevel object
-        const _consoleLevel = arguments[0];
+        // the current console level label for the instance
+        //  may be null before configuration
+        //  else get the corresponding current console LogLevel object
+        const _level = IMsg._instance._consoleLevel();
+        if( !_level ){
+            return;
+        }
+        if( !ILogger.const[_level] ){
+            throw new Error( 'IMsg unknown console level: \''+_level+'\'' );
+        }
+        const _consoleLevel = ILogger.const[_level];
+
+        // the requested console LogLevel object for this message
+        const _messageLevel = arguments[0];
 
         // compute the ILogger log level from the console level
         //  this is a lowercase label which happens to also be the static function name
         let _logLevel;
-        switch( _consoleLevel.label()){
+        switch( _messageLevel.label()){
             case 'normal':
                 _logLevel = null;
                 break;
@@ -35,12 +47,12 @@ export class IMsg extends ILogger {
                 _logLevel = 'debug';
                 break;
             default:
-                _logLevel = _consoleLevel.label();
+                _logLevel = _messageLevel.label();
                 break;
         }
 
         // color of the console message is taken from the LogLevel objects instanciated in ILogger
-        const color = _consoleLevel.color();
+        const color = _messageLevel.color();
 
         // remove the console level from the list of arguments
         let _args = [ ...arguments ];
@@ -52,11 +64,11 @@ export class IMsg extends ILogger {
         }
 
         // log to the console if not prevented from
-        //console.log( '_singleton.consoleLevel='+_singleton._consoleLevel, '_consoleLevel='+_consoleLevel, 'Iztiar.c.verbose[_consoleLevel]='+Iztiar.c.verbose[_consoleLevel] );
-        //console.log( 'message console level', _consoleLevel );
-        //console.log( 'app requested console level', ILogger.const[IMsg._singleton._consoleLevel()] );
+        //console.log( '_singleton.consoleLevel='+_singleton._messageLevel, '_messageLevel='+_messageLevel, 'Iztiar.c.verbose[_messageLevel]='+Iztiar.c.verbose[_messageLevel] );
+        //console.log( 'message console level', _messageLevel );
+        //console.log( 'app requested console level', ILogger.const[IMsg._singleton._messageLevel()] );
 
-        if( !coreForkable.forkedProcess() && ILogger.const[IMsg._instance._consoleLevel()].level() >= _consoleLevel.level()){
+        if( !coreForkable.forkedProcess() && _consoleLevel.level() >= _messageLevel.level()){
             if( color ){
                 console.log( color( ..._args ));
             } else {

@@ -82,18 +82,19 @@ export class coreForkable {
     _status = null;
 
     /**
-     * @param {ICore} api 
+     * @param {coreApi} api the core API as described in core-api.schema.json
      * @param {coreService} service
      * @returns {coreForkable}
      */
      constructor( api ){
         IMsg.debug( 'coreForkable instanciation' );
+        //console.log( api );
         this._api = api;
         return this;
     }
 
     /**
-     * Send an IPC message to the parent when this (cbhild process) server is ready
+     * Send an IPC message to the parent when this (child process) server is ready
      * @param {integer} port the TCP port number the server is listening to
      * @param {string} message a Hello message to be written in the logfile
      * @param {*} data to be send to the parent, for example the current status of the server
@@ -121,10 +122,17 @@ export class coreForkable {
     }
 
     /**
-     * @returns {Object} the API provided by the core at initialization time
+     * @returns {coreApi} the whole core API object provided by the core at initialization time
      */
     api(){
         return this._api;
+    }
+
+    /**
+     * @returns {coreConfig} the app configuration provided by the core at initialization time
+     */
+    coreConfig(){
+        return this._api.coreConfig();
     }
 
     /**
@@ -198,6 +206,6 @@ export class coreForkable {
      * @returns {coreService}
      */
     service(){
-        return this._api.service;
+        return this._api.service();
     }
 }

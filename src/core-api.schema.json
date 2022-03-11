@@ -1,0 +1,34 @@
+{
+    "coreApi" : {
+        "type": "schema",
+        "comment": "the coreApi provided to each service at initialization time",
+        "content": {
+            "core": {
+                "type": "object",
+                "comment": "runtime data relative to the whole application",
+                "content": {
+                    "package": {
+                        "type": "PackageJson",
+                        "comment": "the package instance of the calling @iztiar/iztiar-core core module"
+                    },
+                    "config": {
+                        "type": "coreConfig",
+                        "comment": "the configuration instance filled-up from <configDir>/iztiar.json core configuration file"
+                    },
+                    "IMsg": {
+                        "type": "IMsg",
+                        "comment": "the interface instance to IMsg/ILogger"
+                    }
+                }
+            },
+            "exports": {
+                "type": "object [Module: null prototype]",
+                "comment": "the whole list of the definitions exported by the calling @iztiar/iztiar-core core module"
+            },
+            "service": {
+                "type": "coreService",
+                "comment": "the instance which describes the service from calling @iztiar/iztiar-core core module point of view"
+            }
+        }
+    }
+}

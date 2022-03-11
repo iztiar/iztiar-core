@@ -1,10 +1,9 @@
 /*
  * coreApplication singleton
  */
-import { appendFile } from 'fs';
 import path from 'path';
 
-import { ICmdline, ICore, ILogger, IMsg, IPluginManager, IRunnable, coreConfig, Interface, PackageJson } from './index.js';
+import { ICmdline, ILogger, IMsg, IPluginManager, IRunnable, coreConfig, Interface, PackageJson } from './index.js';
 
 export class coreApplication {
 
@@ -15,6 +14,12 @@ export class coreApplication {
         displayName: 'Iztiar',
         copyrightColor: 'yellowBright'
     };
+
+    // the PackageJson object which describes the '@iztiar/iztiar-core' module
+    _package = null;
+
+    // the coreConfig object which describes the filled-up application configuration file
+    _config = null;
 
     /**
      * @param title the title of the process (replacing 'node')
@@ -31,8 +36,6 @@ export class coreApplication {
             _texts: this.icmdlineTexts,
             _version: this.icmdlineVersion
         });
-
-        Interface.add( this, ICore );
 
         Interface.add( this, IMsg, {
             _consoleLevel: this.imsgConsoleLevel,
@@ -51,7 +54,7 @@ export class coreApplication {
         process.title = title;
 
         // this coreApplication class definition is stored in /src subdirectory of the module root
-        this.ICore.package( new PackageJson( path.dirname( path.dirname( new URL( import.meta.url ).pathname ))));
+        this.package( new PackageJson( path.dirname( path.dirname( new URL( import.meta.url ).pathname ))));
 
         coreApplication._singleton = this;
         return coreApplication._singleton;
@@ -105,20 +108,11 @@ export class coreApplication {
      * <-ICmdline implementation->
      */
     icmdlineVersion(){
-        return this.ICore.package().getVersion();
+        return this.package().getVersion();
     }
 
     /*
-     * the environment variable name which, if set, holds the name/content/qualifier of the forked process
-     * <-coreForkable implementation->
-     */
-    static iforkableForkedVar(){
-        //console.log( 'coreApplication.iforkableForkedVar()' );
-        return coreApplication.const.forkable;
-    }
-
-    /*
-     * the application name
+     * @returns {String} the application name
      * <-IMsg (ILogger-derived) implementation->
      */
     iloggerAppname(){
@@ -126,35 +120,32 @@ export class coreApplication {
     }
 
     /*
-     * the requested log filename
+     * @returns {String|null} the full log file pathname
      * <-IMsg (ILogger-derived) implementation->
      */
     iloggerFname(){
-        const _config = this.ICore.config();
-        return _config ? path.join( _config.logDir(), coreApplication.const.commonName+'.log' ) : ILogger.defaults.fname;
+        const config = this.config();
+        return config ? path.join( config.logDir(), coreApplication.const.commonName+'.log' ) : null;
     }
 
     /*
-     * the requested log level
+     * @returns {String|null} the current log level (defaulting to 'INFO')
      * <-IMsg (ILogger-derived) implementation->
      */
     iloggerLevel(){
-        const _config = this.ICore.config();
-        return _config ? _config.logLevel() : ILogger.defaults.level;
+        const config = this.config();
+        return config ? config.logLevel() : null;
     }
 
     /*
      * Getter/Setter
      * @param {String} level the desired console (uppercase) level
-     * @returns {String} the current console level (defaulting to 'NORMAL')
+     * @returns {String|null} the current console level (defaulting to 'NORMAL')
      * <-IMsg implementation->
      */
     imsgConsoleLevel( level ){
-        const _config = this.ICore.config();
-        if( level && typeof level === 'string' && level.length ){
-            _config.consoleLevel( level );
-        }
-        return _config ? _config.consoleLevel() : IMsg.defaults.level;
+        const config = this.config();
+        return config ? config.consoleLevel( level ) : null;
     }
 
     /*
@@ -170,8 +161,33 @@ export class coreApplication {
      * <-IRunnable implementation->
      */
     static irunnableCopyrightText(){
-        let _text = coreApplication.const.displayName+' v '+this.ICore.package().getVersion();
+        let _text = coreApplication.const.displayName+' v '+this.package().getVersion();
         _text += '\nCopyright (@) 2020,2021,2022 TheDreamTeam&Consorts (and may the force be with us;))';
         return _text;
+    }
+
+    /**
+     * Getter/Setter
+     * The setter is called as soon as command-line options have been parsed in order to get the storage directory.
+     * @param {Object} options the command-line option values
+     * @returns {coreConfig} the application configuration instance
+     */
+    config( options ){
+        if( options ){
+            this._config = new coreConfig( options );
+        }
+        return this._config;
+    }
+
+    /**
+     * Getter/Setter
+     * @param {PackageJson} pck the object which describes the '@iztoar/iztiar-core' module
+     * @returns {PackageJson} the object which describes the '@iztoar/iztiar-core' module
+     */
+    package( pck ){
+        if( pck ){
+            this._package = pck;
+        }
+        return this._package;
     }
 }

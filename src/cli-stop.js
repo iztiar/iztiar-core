@@ -152,11 +152,11 @@ export function cliStop( app, name, options={} ){
         }
     };
 
-    const service = app.IPluginManager.byName( app.ICore, name );
+    const service = app.IPluginManager.byName( app, name );
     let _promise = Promise.resolve( true );
     if( service ){
         _promise = _promise
-            .then(() => { return service.initialize( app.ICore ); })
+            .then(() => { return service.initialize( app ); })
             .then(( res ) => { return _checkInitialize( res ); })
             .then(() => { return _checkStatus( result, true ); })
             .then(() => { return _stopService(); })
