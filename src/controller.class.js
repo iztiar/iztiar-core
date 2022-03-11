@@ -4,7 +4,7 @@
 import net from 'net';
 import pidUsage from 'pidusage';
 
-import { IMsg } from './index.js';
+import { Msg } from './index.js';
 
 // cb is to be called with the result
 //  the connexion will be closed after execution of the callback - only one answer is allowed
@@ -106,7 +106,7 @@ export class coreController {
      */
     constructor( api ){
         api.exports().Interface.extends( this, api.exports().coreForkable, api );
-        IMsg.debug( 'coreController instanciation' );
+        Msg.debug( 'coreController instanciation' );
 
         //console.log( this );
         //console.log( Object.getPrototypeOf( this ));
@@ -127,29 +127,29 @@ export class coreController {
         // install signal handlers
         const self = this;
         process.on( 'SIGUSR1', () => {
-            IMsg.debug( 'USR1 signal handler' );
+            Msg.debug( 'USR1 signal handler' );
         });
 
         process.on( 'SIGUSR2', () => {
-            IMsg.debug( 'USR2 signal handler' );
+            Msg.debug( 'USR2 signal handler' );
         });
 
         process.on( 'SIGTERM', () => {
-            IMsg.debug( 'server receives SIGTERM signal' );
+            Msg.debug( 'server receives SIGTERM signal' );
             self.terminate();
         });
 
         process.on( 'SIGHUP', () => {
-            IMsg.debug( 'HUP signal handler' );
+            Msg.debug( 'HUP signal handler' );
         });
 
         process.on( 'SIGQUIT', () => {
-            IMsg.debug( 'QUIT signal handler' );
+            Msg.debug( 'QUIT signal handler' );
         });
 
         // unable to handle SIGKILL signal: Error: uv_signal_start EINVAL
         //process.on( 'SIGKILL', () => {
-        //    IMsg.debug( 'server receives KILL signal' );
+        //    Msg.debug( 'server receives KILL signal' );
         //    self.IRunFile.remove( self.name());
         //});
 
@@ -166,7 +166,7 @@ export class coreController {
      * [-implementation Api-]
      */
     irunfileRunDir(){
-        IMsg.debug( 'coreController.irunfileRunDir()' );
+        Msg.debug( 'coreController.irunfileRunDir()' );
         return this.coreConfig().runDir();
     }
 
@@ -175,7 +175,7 @@ export class coreController {
      * [-implementation Api-]
      */
     iserviceableCleanupAfterKill(){
-        IMsg.debug( 'coreController.iserviceableCleanupAfterKill()' );
+        Msg.debug( 'coreController.iserviceableCleanupAfterKill()' );
         this.IRunFile.remove( this.service().name());
     }
 
@@ -184,7 +184,7 @@ export class coreController {
      * [-implementation Api-]
      */
     iserviceableGetCheckStatus(){
-        IMsg.debug( 'coreController.iserviceableGetCheckStatus()' );
+        Msg.debug( 'coreController.iserviceableGetCheckStatus()' );
         const _name = this.service().name();
         const _json = this.IRunFile.jsonByName( _name );
         let o = { startable: false, reasons: [], pids: [], ports: [] };
@@ -195,7 +195,7 @@ export class coreController {
         } else {
             o.startable = true;
         }
-        IMsg.debug( 'coreController.iserviceableGetCheckStatus() resolves with', o );
+        Msg.debug( 'coreController.iserviceableGetCheckStatus() resolves with', o );
         return Promise.resolve( o );
     }
 
@@ -205,7 +205,7 @@ export class coreController {
      * [-implementation Api-]
      */
     iserviceableOnStartupConfirmed( data ){
-        IMsg.debug( 'coreController.iserviceableOnStartupConfirmed()' );
+        Msg.debug( 'coreController.iserviceableOnStartupConfirmed()' );
         const name = Object.keys( data )[0];
         this.IRunFile.set( name, data );
     }
@@ -215,50 +215,50 @@ export class coreController {
      * [-implementation Api-]
      */
     iserviceableStart(){
-        IMsg.verbose( 'coreController.iserviceableStart()', 'forkedProcess='+this.api().exports().coreForkable.forkedProcess());
+        Msg.verbose( 'coreController.iserviceableStart()', 'forkedProcess='+this.api().exports().coreForkable.forkedProcess());
         const self = this;
         self.runningStatus( this.api().exports().coreForkable.s.STARTING );
 
         this._tcpServer = net.createServer(( c ) => {
-            IMsg.debug( 'coreController::iserviceableStart() incoming connection' );
+            Msg.debug( 'coreController::iserviceableStart() incoming connection' );
 
             // refuse all connections if the server is not 'running'
             if( self.runningStatus() !== self.api().exports().coreForkable.s.RUNNING ){
                 const _answer = 'temporarily refusing connections';
                 const _res = { answer:_answer, reason:self.runningStatus(), timestamp:self.api().exports().utils.now()};
                 c.write( JSON.stringify( _res )+'\r\n' );
-                IMsg.info( 'server answers to new incoming connection with', _res );
+                Msg.info( 'server answers to new incoming connection with', _res );
                 c.end();
             }
             //console.log( c );
             c.on( 'data', ( data ) => {
                 //console.log( data );
                 const _bufferStr = new Buffer.from( data ).toString().replace( '\r\n', '' );
-                IMsg.info( 'server receives \''+_bufferStr+'\' request' );
+                Msg.info( 'server receives \''+_bufferStr+'\' request' );
                 const _words = _bufferStr.split( ' ' );
                 if( _words[0] === self.api().exports().coreForkable.c.stop.command ){
                     if( self._forwardPort ){
                         self.api().exports().utils.tcpRequest( self._forwardPort, _bufferStr )
                             .then(( res ) => {
                                 c.write( JSON.stringify( res ));
-                                IMsg.info( 'server answers to \''+_bufferStr+'\' with', res );
+                                Msg.info( 'server answers to \''+_bufferStr+'\' with', res );
                                 c.end();
                             })
                     } else {
-                        IMsg.debug = 'coreController.iserviceableStart().on(\''+self.api().exports().coreForkable.c.stop.command+'\') forwardPort is unset';
+                        Msg.debug = 'coreController.iserviceableStart().on(\''+self.api().exports().coreForkable.c.stop.command+'\') forwardPort is unset';
                     }
                 } else {
                     try {
                         const _executer = self.findExecuter( _bufferStr, coreController.c );
                         _executer.object.fn( self, _executer.command, _executer.args, ( res ) => {
                             c.write( JSON.stringify( res )+'\r\n' );
-                            IMsg.info( 'server answers to \''+_bufferStr+'\' with', res );
+                            Msg.info( 'server answers to \''+_bufferStr+'\' with', res );
                             if( _executer.object.endConnection ){
                                 c.end();
                             }
                         });
                     } catch( e ){
-                        IMsg.error( 'coreController.iserviceableStart().execute()', e.name, e.message );
+                        Msg.error( 'coreController.iserviceableStart().execute()', e.name, e.message );
                         c.end();
                     }
                 }
@@ -267,7 +267,7 @@ export class coreController {
                 self.errorHandler( e );
             });
         });
-        IMsg.debug( 'coreController::iserviceableStart() tcpServer created' );
+        Msg.debug( 'coreController::iserviceableStart() tcpServer created' );
 
         this._tcpServer.listen( self._tcpPort, '0.0.0.0', () => {
             let _msg = 'Hello, I am '+self.service().name()+' '+self.constructor.name;
@@ -286,14 +286,14 @@ export class coreController {
      * [-implementation Api-]
      */
     iserviceableStop(){
-        IMsg.debug( 'coreController.iserviceableStop()' );
+        Msg.debug( 'coreController.iserviceableStop()' );
         this.api().exports().utils.tcpRequest( this._tcpPort, 'iz.stop' )
             .then(( answer ) => {
-                IMsg.debug( 'coreController.iserviceableStop()', 'receives answer to \'iz.stop\''+answer );
+                Msg.debug( 'coreController.iserviceableStop()', 'receives answer to \'iz.stop\''+answer );
             }, ( failure ) => {
                 // an error message is already sent by the called self.api().exports().utils.tcpRequest()
                 //  what more to do ??
-                //IMsg.error( 'TCP error on iz.stop command:', failure );
+                //Msg.error( 'TCP error on iz.stop command:', failure );
             });
     }
 
@@ -307,7 +307,7 @@ export class coreController {
      *  A minimum of structure is so required, described in run-status.schema.json.
      */
     getStatus(){
-        IMsg.debug( 'coreController.getStatus()' );
+        Msg.debug( 'coreController.getStatus()' );
         const self = this;
         const _serviceName = this.service().name();
         let status = {};
@@ -336,7 +336,7 @@ export class coreController {
                         NODE_ENV: process.env.NODE_ENV || '(undefined)'
                     },
                     // general runtime constants
-                    logfile: self.api().IMsg().logFname(),
+                    logfile: self.api().exports().Logger.logFname(),
                     runfile: self.IRunFile.runFile( _serviceName ),
                     storageDir: self.api().exports().coreConfig.storageDir(),
                     version: self.api().corePackage().getVersion()
@@ -378,9 +378,9 @@ export class coreController {
      *  this terminate() function. So, try to prevent a double execution.
      */
     terminate( words=[], cb=null ){
-        IMsg.debug( 'coreController.terminate()' );
+        Msg.debug( 'coreController.terminate()' );
         if( this.runningStatus() === this.api().exports().coreForkable.s.STOPPING ){
-            IMsg.debug( 'coreController.terminate() returning as already stopping' );
+            Msg.debug( 'coreController.terminate() returning as already stopping' );
             return;
         }
         const self = this;
@@ -398,7 +398,7 @@ export class coreController {
 
         if( self._tcpServer ){
             const _sendCallback = function(){
-                IMsg.debug( 'coreController.terminate() callback-answers to the request' );
+                Msg.debug( 'coreController.terminate() callback-answers to the request' );
                 return new Promise(( resolve, reject ) => {
                     if( cb && typeof cb === 'function' ){ 
                         cb({
@@ -414,10 +414,10 @@ export class coreController {
                 });
             };
             const _closeServer = function(){
-                IMsg.debug( 'coreController.terminate() about to close tcpServer' );
+                Msg.debug( 'coreController.terminate() about to close tcpServer' );
                 return new Promise(( resolve, reject ) => {
                     self._tcpServer.close(() => {
-                        IMsg.debug( 'coreController.terminate() tcpServer is closed' );
+                        Msg.debug( 'coreController.terminate() tcpServer is closed' );
                         resolve( true );
                     });
                 });
@@ -429,12 +429,12 @@ export class coreController {
                     // we auto-remove from runfile as late as possible
                     //  (rationale: no more runfile implies that the service is no more testable and expected to be startable)
                     this.IRunFile.remove( _name );
-                    IMsg.info( _name+' coreController terminating with code '+process.exitCode );
+                    Msg.info( _name+' coreController terminating with code '+process.exitCode );
                     return Promise.resolve( true );
                     //process.exit();
                 });
         } else {
-            IMsg.warn( 'this.tcpServer is not set!' );
+            Msg.warn( 'this.tcpServer is not set!' );
         }
 
         return _promise;

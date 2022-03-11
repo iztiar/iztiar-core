@@ -14,7 +14,7 @@
  * 
  *  Returns a Promise resolved with the array of the corresponding Plugin objects.
  */
-import { IMsg, coreApplication } from './index.js';
+import { coreApplication, Logger, Msg } from './index.js';
 
 /**
  * 
@@ -25,12 +25,12 @@ import { IMsg, coreApplication } from './index.js';
  */
 export function cliListEnabled( app, options={} ){
 
-    const _origLevel = app.IMsg.consoleLevel();
+    const _origLevel = Msg.consoleLevel();
     const _consoleLevel = Object.keys( options ).includes( 'consoleLevel' ) ? options.consoleLevel : _origLevel;
-    if( _consoleLevel !== _origLevel ) app.IMsg.consoleLevel( _consoleLevel );
+    if( _consoleLevel !== _origLevel ) Msg.consoleLevel( _consoleLevel );
 
-    IMsg.out( 'Listing enabled Iztiar services for this module' );
-    IMsg.verbose( 'An Iztiar module is identified by its name; its target is qualified from package.json \'iztiar\' group' );
+    Msg.out( 'Listing enabled Iztiar services for this module' );
+    Msg.verbose( 'An Iztiar module is identified by its name; its target is qualified from package.json \'iztiar\' group' );
     
     const services = app.IPluginManager.getEnabled( app );
 
@@ -51,12 +51,12 @@ export function cliListEnabled( app, options={} ){
         return true;
     });
     if( sceDisplay.length ){
-        app.IMsg.tabular( sceDisplay, { prefix:'  ' });
+        Msg.tabular( sceDisplay, { prefix:'  ' });
     }
     const _msg = 'Found '+sceDisplay.length+' enabled plugin(s) targeting \''+app.package().getFullName()+'\'';
-    IMsg.out( _msg );
-    app.IMsg.logInfo( _msg );
+    Msg.out( _msg );
+    Logger.info( _msg );
 
-    if( _consoleLevel !== _origLevel ) app.IMsg.consoleLevel( _origLevel );
+    if( _consoleLevel !== _origLevel ) Msg.consoleLevel( _origLevel );
     return Promise.resolve( services );
 }

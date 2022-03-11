@@ -8,7 +8,7 @@
  */
 import path from 'path';
 
-import { IMsg, IServiceable, coreApi, coreController, utils } from './index.js';
+import { IServiceable, coreApi, coreController, Msg, utils } from './index.js';
 
 export class coreService {
 
@@ -51,7 +51,7 @@ export class coreService {
      * @throws {Error} if IServiceable is not set
      */
     initialize( app ){
-        IMsg.verbose( 'coreService.initialize()', 'name='+this._name );
+        Msg.verbose( 'coreService.initialize()', 'name='+this._name );
         const self = this;
         const pck = self.package();
 
@@ -59,7 +59,7 @@ export class coreService {
         let api = new coreApi();
         api.corePackage( app.package());
         api.coreConfig( app.config());
-        api.IMsg( app.IMsg );
+        api.Msg( Msg );
         api.service( self );
 
         // import all what this @iztiar/iztiar-core exports
@@ -87,7 +87,7 @@ export class coreService {
         const _initImported = function( _importedFeat ){
             if( typeof _importedFeat.default === 'function' ){
                 self._iServiceable = _importedFeat.default( api );
-                console.log( self._iServiceable );
+                //console.log( self._iServiceable );
                 return self._iServiceable;
             } else {
                 return Promise.reject( 'coreService.initialize() \''+self.name()+'\' doesn\'t export a default function' );
@@ -142,7 +142,7 @@ export class coreService {
 
     isForkable(){
         const _forkable = this._iServiceable.isForkable();
-        IMsg.debug( 'coreService.isForkable()', 'name='+this.name(), 'forkable='+_forkable );
+        Msg.debug( 'coreService.isForkable()', 'name='+this.name(), 'forkable='+_forkable );
         return _forkable;
     }
 
@@ -179,7 +179,7 @@ export class coreService {
      *  before trying to start the service. We may so execute here in a child forked process
      */
     start(){
-        IMsg.verbose( 'coreService.start()', 'name='+this._name );
+        Msg.verbose( 'coreService.start()', 'name='+this._name );
         let promise = Promise.resolve( true )
 
         if( this._iServiceable && this._iServiceable.start && typeof this._iServiceable.start === 'function' ){
@@ -207,7 +207,7 @@ export class coreService {
      * @throws {Error}
      */
     status( options={} ){
-        IMsg.verbose( 'coreService.status()', 'name='+this._name );
+        Msg.verbose( 'coreService.status()', 'name='+this._name );
         const self = this;
         //console.log( this );
         //console.log( this._iServiceable );
@@ -217,18 +217,18 @@ export class coreService {
 
         // using promises here happens to be rather conterproductive as the functions are already mainly used inside of Promises
         const _cinfo = function(){
-            IMsg.info( ...arguments );
+            Msg.info( ...arguments );
         }
         const _cerr = function(){
             result.reasons.push( ...arguments );
-            IMsg.info( ...arguments );
+            Msg.info( ...arguments );
         }
 
         // first ask the IServiceable to provide its own status check (must conform to check-status.schema.json)
         const _serviceablePromise = function(){
-            console.log( self._iServiceable );
-            console.log( self._iServiceable.getCheckStatus );
-            console.log( typeof self._iServiceable.getCheckStatus );
+            //console.log( self._iServiceable );
+            //console.log( self._iServiceable.getCheckStatus );
+            //console.log( typeof self._iServiceable.getCheckStatus );
             return self._iServiceable.getCheckStatus()
                 .then(( res ) => {
                     result = { ...res };
@@ -242,7 +242,7 @@ export class coreService {
 
         // check if this pid is alive, resolving with true|false
         const _pidAlivePromise = function( pid ){
-            IMsg.verbose( 'coreService.status()._pidAlivePromise()', 'pid='+pid );
+            Msg.verbose( 'coreService.status()._pidAlivePromise()', 'pid='+pid );
             return new Promise(( resolve, reject ) => {
                 utils.isAlivePid( pid )
                     .then(( res ) => {
@@ -261,7 +261,7 @@ export class coreService {
 
         // ping this port, resolving with true|false
         const _portPingPromise = function( port ){
-            IMsg.verbose( 'coreService.status()._portPingPromise()', 'port='+port );
+            Msg.verbose( 'coreService.status()._portPingPromise()', 'port='+port );
             return new Promise(( resolve, reject ) => {
                 utils.isAlivePort( port )
                     .then(( res ) => {
@@ -346,12 +346,12 @@ export class coreService {
         promise = promise.then(() => {
             let subProms = Promise.resolve( true );
             result.pids.every(( pid ) => {
-                IMsg.debug( 'coreService.status() has to check for pid='+pid );
+                Msg.debug( 'coreService.status() has to check for pid='+pid );
                 subProms = subProms.then(() => { return _pidAlivePromise( pid )});
                 return true;
             });
             result.ports.every(( port ) => {
-                IMsg.debug( 'coreService.status() has to check for port='+port );
+                Msg.debug( 'coreService.status() has to check for port='+port );
                 subProms = subProms.then(() => { return _portPingPromise( port )});
                 subProms = subProms.then(() => { return _portStatusPromise( port )});
                 return true;

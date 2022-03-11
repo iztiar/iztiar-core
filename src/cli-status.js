@@ -5,7 +5,7 @@
  */
 import chalk from 'chalk';
 
-import { IMsg } from './index.js';
+import { Msg } from './index.js';
 
 /**
  * Get the status of the named service
@@ -17,11 +17,11 @@ import { IMsg } from './index.js';
  */
 export function cliStatus( app, name, options={} ){
 
-    const _origLevel = app.IMsg.consoleLevel();
+    const _origLevel = Msg.consoleLevel();
     const _consoleLevel = Object.keys( options ).includes( 'consoleLevel' ) ? options.consoleLevel : _origLevel;
-    if( _consoleLevel !== _origLevel ) app.IMsg.consoleLevel( _consoleLevel );
+    if( _consoleLevel !== _origLevel ) Msg.consoleLevel( _consoleLevel );
 
-    IMsg.out( 'Getting the status of \''+name+'\' service' );
+    Msg.out( 'Getting the status of \''+name+'\' service' );
 
     const service = app.IPluginManager.byName( app, name );
     let _promise = Promise.resolve( true );
@@ -33,18 +33,18 @@ export function cliStatus( app, name, options={} ){
             .then(( res ) => {
 
                 if( res.startable ){
-                    IMsg.out( 'Service doesn\'t run, is startable' );
+                    Msg.out( 'Service doesn\'t run, is startable' );
                 
                 } else if( res.reasons.length  ){
-                    IMsg.warn( '\''+name+'\' service is said running, but exhibits', res.reasons.length, 'error message(s)' );
-                    IMsg.warn( ' You may want use --force-stop option to remove the falsy \''+name+'\' from your run directory' );
+                    Msg.warn( '\''+name+'\' service is said running, but exhibits', res.reasons.length, 'error message(s)' );
+                    Msg.warn( ' You may want use --force-stop option to remove the falsy \''+name+'\' from your run directory' );
                     process.exitCode += 1;
 
                 } else {
-                    IMsg.out( chalk.green( 'Service \''+name+'\' is confirmed up and running' ));
+                    Msg.out( chalk.green( 'Service \''+name+'\' is confirmed up and running' ));
                 }
 
-                if( _consoleLevel !== _origLevel ) app.IMsg.consoleLevel( _origLevel );
+                if( _consoleLevel !== _origLevel ) Msg.consoleLevel( _origLevel );
                 return Promise.resolve( res );
             })
     }

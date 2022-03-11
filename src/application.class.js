@@ -3,7 +3,7 @@
  */
 import path from 'path';
 
-import { ICmdline, ILogger, IMsg, IPluginManager, IRunnable, coreConfig, Interface, PackageJson } from './index.js';
+import { ICmdline, IPluginManager, IRunnable, coreConfig, Interface, Msg, PackageJson } from './index.js';
 
 export class coreApplication {
 
@@ -22,26 +22,22 @@ export class coreApplication {
     _config = null;
 
     /**
-     * @param title the title of the process (replacing 'node')
+     * @returns {coreApplication} singleton
      */
-     constructor( title ){
+     constructor(){
         if( coreApplication._singleton ){
             return coreApplication._singleton;
         }
         //console.log( 'coreApplication instanciation' );
+
+        // need to build LogLevel's const very early!
+        Msg.init();
 
         Interface.add( this, ICmdline, {
             _commands: this.icmdlineCommands,
             _options: this.icmdlineOptions,
             _texts: this.icmdlineTexts,
             _version: this.icmdlineVersion
-        });
-
-        Interface.add( this, IMsg, {
-            _consoleLevel: this.imsgConsoleLevel,
-            _logAppname: this.iloggerAppname,
-            _logFname: this.iloggerFname,
-            _logLevel: this.iloggerLevel
         });
 
         Interface.add( this, IPluginManager );
@@ -51,7 +47,7 @@ export class coreApplication {
             _copyrightText: coreApplication.irunnableCopyrightText
         });
 
-        process.title = title;
+        process.title = coreApplication.const.commonName;
 
         // this coreApplication class definition is stored in /src subdirectory of the module root
         this.package( new PackageJson( path.dirname( path.dirname( new URL( import.meta.url ).pathname ))));
@@ -112,43 +108,6 @@ export class coreApplication {
     }
 
     /*
-     * @returns {String} the application name
-     * <-IMsg (ILogger-derived) implementation->
-     */
-    iloggerAppname(){
-        return coreApplication.const.commonName;
-    }
-
-    /*
-     * @returns {String|null} the full log file pathname
-     * <-IMsg (ILogger-derived) implementation->
-     */
-    iloggerFname(){
-        const config = this.config();
-        return config ? path.join( config.logDir(), coreApplication.const.commonName+'.log' ) : null;
-    }
-
-    /*
-     * @returns {String|null} the current log level (defaulting to 'INFO')
-     * <-IMsg (ILogger-derived) implementation->
-     */
-    iloggerLevel(){
-        const config = this.config();
-        return config ? config.logLevel() : null;
-    }
-
-    /*
-     * Getter/Setter
-     * @param {String} level the desired console (uppercase) level
-     * @returns {String|null} the current console level (defaulting to 'NORMAL')
-     * <-IMsg implementation->
-     */
-    imsgConsoleLevel( level ){
-        const config = this.config();
-        return config ? config.consoleLevel( level ) : null;
-    }
-
-    /*
      * @returns {string} the color of the copyright message
      * <-IRunnable implementation->
      */
@@ -164,6 +123,13 @@ export class coreApplication {
         let _text = coreApplication.const.displayName+' v '+this.package().getVersion();
         _text += '\nCopyright (@) 2020,2021,2022 TheDreamTeam&Consorts (and may the force be with us;))';
         return _text;
+    }
+
+    /**
+     * @returns {String} the common name of the application
+     */
+    commonName(){
+        return coreApplication.const.commonName;
     }
 
     /**

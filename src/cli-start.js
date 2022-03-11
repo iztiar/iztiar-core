@@ -7,7 +7,7 @@
  */
 import chalk from 'chalk';
 
-import { IMsg, IServiceable, coreForkable, utils } from './index.js';
+import { IServiceable, coreForkable, Msg, utils } from './index.js';
 
 /**
  * Start the named service
@@ -20,9 +20,9 @@ import { IMsg, IServiceable, coreForkable, utils } from './index.js';
  */
 export function cliStart( app, name, options={} ){
 
-    const _origLevel = app.IMsg.consoleLevel();
+    const _origLevel = Msg.consoleLevel();
     const _consoleLevel = Object.keys( options ).includes( 'consoleLevel' ) ? options.consoleLevel : _origLevel;
-    if( _consoleLevel !== _origLevel ) app.IMsg.consoleLevel( _consoleLevel );
+    if( _consoleLevel !== _origLevel ) Msg.consoleLevel( _consoleLevel );
 
     const _args = Object.keys( options ).includes( 'args' ) ? options.args : process.argv;
 
@@ -34,7 +34,7 @@ export function cliStart( app, name, options={} ){
 
         if( !coreForkable.forkedProcess()){
 
-            IMsg.out( 'Starting \''+name+'\' service' );
+            Msg.out( 'Starting \''+name+'\' service' );
             let ipcStartupReceived = false;
             let result = {};
 
@@ -60,20 +60,20 @@ export function cliStart( app, name, options={} ){
                             return new Promise(( resolve, reject ) => {
                                 if( expected ){
                                     if( status.startable ){
-                                        IMsg.error( 'Unable to start the service' );
+                                        Msg.error( 'Unable to start the service' );
                                         process.exitCode += 1;
                                     } else {
-                                        IMsg.out( chalk.green( 'Service(s) \''+_name+'\' successfully started' ));
+                                        Msg.out( chalk.green( 'Service(s) \''+_name+'\' successfully started' ));
                                     }
                                 } else {
                                     if( status.startable ){
-                                        IMsg.info( 'Service is not already running, is startable (fine)' );
+                                        Msg.info( 'Service is not already running, is startable (fine)' );
                                     } else if( status.reasons.length === 0 ){
-                                        IMsg.out( chalk.green( 'Service \''+_name+'\' is already running (fine). Gracefully exiting.' ));
+                                        Msg.out( chalk.green( 'Service \''+_name+'\' is already running (fine). Gracefully exiting.' ));
                                     } else {
-                                        IMsg.warn( 'Service is said running, but exhibits', status.reasons.length,'error message(s), is not startable' );
+                                        Msg.warn( 'Service is said running, but exhibits', status.reasons.length,'error message(s), is not startable' );
                                         status.reasons.every(( m ) => {
-                                            IMsg.warn( ' '+m );
+                                            Msg.warn( ' '+m );
                                             return true;
                                         })
                                     }
@@ -119,11 +119,11 @@ export function cliStart( app, name, options={} ){
                 } else {
                     _msg += 'unmanaged received event \''+_runStatus.event+'\'';
                 }
-                IMsg.info( _msg );
+                Msg.info( _msg );
             };
 
             const _ipcCallback = function( child, message ){
-                IMsg.debug( '_ipcCallback()', message );
+                Msg.debug( '_ipcCallback()', message );
                 _ipcToConsole( message );
                 service.iServiceable().onStartupConfirmed( message );
                 ipcStartupReceived = true;
@@ -144,7 +144,7 @@ export function cliStart( app, name, options={} ){
             const _checkTimeout = function( res ){
                 if( res.iServiceable && res.status.startable ){
                     if( !res.waitFor ){
-                        IMsg.warn( 'Timeout expired before the reception of the startup IPC message' );
+                        Msg.warn( 'Timeout expired before the reception of the startup IPC message' );
                     }
                 }
                 return Promise.resolve( res );
@@ -158,7 +158,7 @@ export function cliStart( app, name, options={} ){
                 .then(() => { return _checkTimeout( result ); })
                 .then(() => { return _checkStatus( result, true ); })
                 .then(() => {
-                    if( _consoleLevel !== _origLevel ) app.IMsg.consoleLevel( _origLevel );
+                    if( _consoleLevel !== _origLevel ) Msg.consoleLevel( _origLevel );
                     return Promise.resolve( result );
                 });
 
@@ -166,7 +166,7 @@ export function cliStart( app, name, options={} ){
             _promise = _promise
                 .then(() => { return service.start(); })
                 .then(() => {
-                    if( _consoleLevel !== _origLevel ) app.IMsg.consoleLevel( _origLevel );
+                    if( _consoleLevel !== _origLevel ) Msg.consoleLevel( _origLevel );
                     return Promise.resolve( result );
                 });
         }

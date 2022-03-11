@@ -7,7 +7,7 @@ import net from 'net';
 import path from 'path';
 import ps from 'ps';
 
-import { IMsg } from './index.js';
+import { Msg } from './index.js';
 
 export const utils = {
     /**
@@ -20,7 +20,7 @@ export const utils = {
      * @throws {Error}
      */
     dirScanSync: function( dir, options={} ){
-        IMsg.debug( 'utils.dirScanSync()', 'dir='+dir );
+        Msg.debug( 'utils.dirScanSync()', 'dir='+dir );
         if( !dir || typeof dir !== 'string' || !dir.length || dir === '/' || dir.startsWith( '/dev' )){
             throw new Error( 'utils.dirScanSync(): dir='+dir+': invalid start directory' );
         }
@@ -51,7 +51,7 @@ export const utils = {
             _matchedEntries.push( path.join( dir, ent.name ));
             return true;
         });
-        IMsg.debug( 'found ', _matchedEntries, '(count='+_matchedEntries.length+')' );
+        Msg.debug( 'found ', _matchedEntries, '(count='+_matchedEntries.length+')' );
         return _matchedEntries;
     },
 
@@ -61,7 +61,7 @@ export const utils = {
      */
     fileExistsSync: function( fname ){
         const exists = fs.existsSync( fname );
-        IMsg.debug( 'utils.fileExistsSync()', 'fname='+fname, exists ? 'exists':'doesn\' exist' );
+        Msg.debug( 'utils.fileExistsSync()', 'fname='+fname, exists ? 'exists':'doesn\' exist' );
         return fs.existsSync( fname );
     },
 
@@ -70,18 +70,18 @@ export const utils = {
      * @returns {Promise} which will will resolves with [{ pid, user, time, etime }], or false
      */
     isAlivePid: function( pid ){
-        IMsg.debug( 'utils.isAlivePid()', 'pid='+pid );
+        Msg.debug( 'utils.isAlivePid()', 'pid='+pid );
         return new Promise(( resolve, reject ) => {
             ps({ pid:pid, fields:[ 'pid','user','time','etime' ]})
                 .then(( res ) => {
-                    IMsg.debug( 'utils.isAlivePid()', 'pid='+pid, 'resolved with res', res );
+                    Msg.debug( 'utils.isAlivePid()', 'pid='+pid, 'resolved with res', res );
                     resolve( res.length === 1 ? res : false );
                 }, ( rej ) => {
-                    IMsg.debug( 'utils.isAlivePid()', 'pid='+pid, 'rejected by ps, resolving falsy' );
+                    Msg.debug( 'utils.isAlivePid()', 'pid='+pid, 'rejected by ps, resolving falsy' );
                     resolve( false );
                 })
                 .catch(( e ) => {
-                    IMsg.error( 'utils.isAlivePid()', 'pid='+pid, 'catched exception', e.name, e.message, 'resolving falsy' );
+                    Msg.error( 'utils.isAlivePid()', 'pid='+pid, 'catched exception', e.name, e.message, 'resolving falsy' );
                     resolve( false );
                 });
         });
@@ -92,18 +92,18 @@ export const utils = {
      * @returns {Promise} which will will resolves with { iz.ack } or false
      */
     isAlivePort: function( port ){
-        IMsg.debug( 'utils.isAlivePort()', 'port='+port );
+        Msg.debug( 'utils.isAlivePort()', 'port='+port );
         return new Promise(( resolve, reject ) => {
             utils.tcpRequest( port, 'iz.ping' )
                 .then(( res ) => {
-                    IMsg.debug( 'utils.isAlivePort()', 'port='+port, 'resolved with res', res );
+                    Msg.debug( 'utils.isAlivePort()', 'port='+port, 'resolved with res', res );
                     resolve( res );
                 }, ( rej ) => {
-                    IMsg.debug( 'utils.isAlivePort()', 'port='+port, 'rejected, resolving falsy' );
+                    Msg.debug( 'utils.isAlivePort()', 'port='+port, 'rejected, resolving falsy' );
                     resolve( false );
                 })
                 .catch(( e ) => {
-                    IMsg.error( 'utils.isAlivePort()', 'port='+port, 'resolving falsy', e.name, e.message );
+                    Msg.error( 'utils.isAlivePort()', 'port='+port, 'resolving falsy', e.name, e.message );
                     resolve( false );
                 });
         });
@@ -129,13 +129,13 @@ export const utils = {
      * @throws {coreError}, unless ENOENT which is sent to coreLogger
      */
      jsonReadFileSync: function( fname, options={} ){
-        IMsg.debug( 'utils.jsonReadFileSync()', 'fname='+fname );
+        Msg.debug( 'utils.jsonReadFileSync()', 'fname='+fname );
         let _json = null;
         try {
             _json = JSON.parse( fs.readFileSync( fname, { encoding: 'utf8' }));
         } catch( e ){
             if( e.code === 'ENOENT' ){
-                IMsg.debug( 'utils.jsonReadFileSync()', fname+': file not found or not readable' );
+                Msg.debug( 'utils.jsonReadFileSync()', fname+': file not found or not readable' );
                 _json = null;
             } else {
                 throw e;
@@ -154,7 +154,7 @@ export const utils = {
      *  When removing the last key, we rather unlink the file to not leave an empty file in the run dir.
      */
     jsonRemoveKeySync: function( fname, key, deleteEmpty=true ){
-        IMsg.debug( 'utils.jsonRemoveKeySync()', 'fname='+fname, 'key='+key, 'deleteEmpty='+deleteEmpty );
+        Msg.debug( 'utils.jsonRemoveKeySync()', 'fname='+fname, 'key='+key, 'deleteEmpty='+deleteEmpty );
         let _json = utils.jsonReadFileSync( fname ) || {};
         const _orig = { ..._json };
         delete _json[key];
@@ -179,10 +179,10 @@ export const utils = {
      * @throws {Error}
      */
     jsonWriteFileSync: function( fname, obj, orig ){
-        IMsg.debug( 'utils.jsonWriteFileSync()', 'fname='+fname, obj, orig );
+        Msg.debug( 'utils.jsonWriteFileSync()', 'fname='+fname, obj, orig );
         let e = utils.makeFnameDirExists( fname );
         if( e ){
-            IMsg.error( 'utils.jsonWriteFileSync().makeFnameDirExists()', e.name, e.message );
+            Msg.error( 'utils.jsonWriteFileSync().makeFnameDirExists()', e.name, e.message );
             throw new Error( e );
         }
         // if an original object is provided, then try to make sure the current file is unchanged
@@ -190,9 +190,9 @@ export const utils = {
             const current = utils.jsonReadFileSync( fname ) || {};
             if( !deepEqual( orig, current )){
                 const _msg = 'utils.jsonWriteFileSync() fname '+fname+' has changed on the disk, refusing the update';
-                IMsg.error( _msg );
-                IMsg.debug( orig );
-                IMsg.debug( current );
+                Msg.error( _msg );
+                Msg.debug( orig );
+                Msg.debug( current );
                 throw new Error( _msg );
             }
         }
@@ -201,7 +201,7 @@ export const utils = {
         try {
             fs.writeFileSync( fname, JSON.stringify( obj ));
         } catch( e ){
-            IMsg.error( 'utils.jsonWriteFileSync().writeFileSync()', e.name, e.message );
+            Msg.error( 'utils.jsonWriteFileSync().writeFileSync()', e.name, e.message );
             throw new Error( e );
         }
         return obj;
@@ -213,7 +213,7 @@ export const utils = {
      * @throws {Error}
      */
     makeDirExists: function( dir ){
-        IMsg.debug( 'utils.makeDirExists()', 'dir='+dir );
+        Msg.debug( 'utils.makeDirExists()', 'dir='+dir );
         // make sure the target directory exists
         fs.mkdirSync( dir, { recursive: true });
     },
@@ -248,7 +248,7 @@ export const utils = {
      * @returns {Promise} which will resolves with the received answer, or rejects with the catched or received error
      */
     tcpRequest: function( port, command ){
-        IMsg.debug( 'utils.tcpRequest()', 'port='+port, 'command='+command );
+        Msg.debug( 'utils.tcpRequest()', 'port='+port, 'command='+command );
         return new Promise(( resolve, reject ) => {
             try {
                 const client = net.createConnection( port, () => {
@@ -259,19 +259,19 @@ export const utils = {
                     const _json = JSON.parse( _bufferStr );
                     // doesn't keep the connection opened as this function is a one-shot
                     client.end();
-                    IMsg.debug( 'utils.tcpRequest() resolves with', _json );
+                    Msg.debug( 'utils.tcpRequest() resolves with', _json );
                     resolve( _json );
                 });
                 client.on( 'error', ( e ) => {
-                    IMsg.error( 'utils.tcpRequest().on(\'error\') ', e.name, e.code, e.message );
+                    Msg.error( 'utils.tcpRequest().on(\'error\') ', e.name, e.code, e.message );
                     reject( e.code );
                 });
                 client.on( 'end', ( m ) => {
-                    IMsg.verbose( 'utils.tcpRequest().on(\'end\'): connection ended by the server', m );
+                    Msg.verbose( 'utils.tcpRequest().on(\'end\'): connection ended by the server', m );
                     resolve( true );
                 });
             } catch( e ){
-                IMsg.error( 'utils.tcpRequest().catch()', e.name, e.message );
+                Msg.error( 'utils.tcpRequest().catch()', e.name, e.message );
                 reject( e.message );
             }
         });
@@ -283,12 +283,12 @@ export const utils = {
      * @throws {Error}
      */
     unlink: function( fname ){
-        IMsg.debug( 'utils.unlink()', 'fname='+fname );
+        Msg.debug( 'utils.unlink()', 'fname='+fname );
         try {
             fs.unlinkSync( fname );
         } catch( e ){
             if( e.code === 'ENOENT' ){
-                IMsg.debug( 'utils.unlink()', fname+': file doesn\'t exist' );
+                Msg.debug( 'utils.unlink()', fname+': file doesn\'t exist' );
             } else {
                 throw e;
             }
@@ -303,7 +303,7 @@ export const utils = {
      * @returns {Promise} a resolved promise, with result value
      */
     waitFor: function( result, promiseFn, promiseParms, timeout ){
-        IMsg.debug( 'utils.waitFor() timeout='+timeout );
+        Msg.debug( 'utils.waitFor() timeout='+timeout );
         let _end = Date.now()+timeout;
         return new Promise(( outResolve, reject ) => {
             const _outerTest = function(){
@@ -312,17 +312,17 @@ export const utils = {
                         promiseFn( promiseParms )
                             .then(( res ) => {
                                 if( res ){
-                                    IMsg.debug( 'utils.waitFor() resolves to true' );
+                                    Msg.debug( 'utils.waitFor() resolves to true' );
                                     inResolve( true );
                                 } else if( Date.now() > _end ){
-                                    IMsg.debug( 'utils.waitFor() timed out, resolves to false' );
+                                    Msg.debug( 'utils.waitFor() timed out, resolves to false' );
                                     inResolve( false );
                                 } else {
                                     setTimeout( _innerTest, 10 );
                                 }
                             })
                             .catch(( e ) => {
-                                    IMsg.error( 'utils.waitFor().catch()', e.name, e.message );
+                                    Msg.error( 'utils.waitFor().catch()', e.name, e.message );
                                     inResolve( true );
                             });
                     };

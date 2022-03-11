@@ -1,7 +1,5 @@
 // interfaces
 export * from './icmdline.interface.js';
-export * from './ilogger.interface.js';
-export * from './imsg.interface.js';
 export * from './iplugin-manager.interface.js';
 export * from './irunfile.interface.js';
 export * from './irunnable.interface.js';
@@ -15,6 +13,8 @@ export * from './forkable.class.js';
 export * from './controller.class.js';
 export * from './interface.class.js';
 export * from './log-level.class.js';
+export * from './logger.class.js';
+export * from './msg.class.js';
 export * from './package-json.class.js';
 export * from './service.class.js';
 

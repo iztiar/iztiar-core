@@ -11,7 +11,7 @@
  */
 import path from 'path';
 
-import { IMsg, utils } from './index.js';
+import { Msg, utils } from './index.js';
 
 export class IRunFile {
 
@@ -66,7 +66,7 @@ export class IRunFile {
      * @throws Error (but not ENOENT, this being already handled)
      */
     remove( name ){
-        IMsg.debug( 'IRunFile.remove()', 'name='+name );
+        Msg.debug( 'IRunFile.remove()', 'name='+name );
         return utils.jsonRemoveKeySync( this.runFile( name ), name );
     }
 
@@ -92,7 +92,7 @@ export class IRunFile {
      * @throws Error (but not ENOENT, this being already handled)
      */
     set( name, data ){
-        IMsg.debug( 'IRunFile.set()', 'name='+name, 'data='+data );
+        Msg.debug( 'IRunFile.set()', 'name='+name, 'data='+data );
         let _written = null;
         const _fname = this.runFile( name );
         const _orig = this.jsonByFilename( _fname );

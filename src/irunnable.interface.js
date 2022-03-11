@@ -4,8 +4,9 @@
  *  Implemented by coreApplication only, so a singleton.
  */
 import chalk from 'chalk';
+import path from 'path';
 
-import { IMsg, coreForkable } from './index.js';
+import { coreForkable, Msg } from './index.js';
 
 import { cliStart } from './cli-start.js';
 import { cliStatus } from './cli-status.js';
@@ -74,7 +75,13 @@ export class IRunnable {
      */
     run( app ){
         const action = app.ICmdline.getAction();
-        app.IMsg.startup( action );
+        Msg.startup( action, {
+            appname: app.commonName(),
+            fname: path.join( app.config().logDir(), app.commonName()+'.log' ),
+            level: app.config().logLevel(),
+            process: coreForkable.forkedProcess(),
+            console: app.config().consoleLevel()
+        });
         //console.log( 'IRunnable.run() action='+action );
         let promise = null;
         process.exitCode = 0;
@@ -107,14 +114,14 @@ export class IRunnable {
         // It is up to the action to compute whether its own code is successful or not.
         if( promise && promise instanceof Promise ){
             promise.then(( successValue ) => {
-                IMsg.debug( 'IRunnable.run().success with', successValue );
-                IMsg.verbose( 'Exiting with code', process.exitCode );
+                Msg.debug( 'IRunnable.run().success with', successValue );
+                Msg.verbose( 'Exiting with code', process.exitCode );
                 // https://nodejs.org/api/process.html#processexitcode prevents against a direct process.exit() call
                 process.exit();
 
             }, ( failureReason ) => {
-                IMsg.error( 'IRunnable.run().failure', failureReason );
-                IMsg.verbose( 'Exiting with code', process.exitCode );
+                Msg.error( 'IRunnable.run().failure', failureReason );
+                Msg.verbose( 'Exiting with code', process.exitCode );
                 process.exit();
             });
         }

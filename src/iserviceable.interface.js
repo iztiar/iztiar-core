@@ -3,7 +3,7 @@
  *
  *  The interface to be implemented by the running services to be managed by Iztiar
  */
-import { IMsg } from './index.js';
+import { Msg } from './index.js';
 
 export class IServiceable {
 
@@ -17,7 +17,7 @@ export class IServiceable {
      * [-implementation Api-]
      */
     class(){
-        IMsg.debug( 'IServiceable.class()' );
+        Msg.debug( 'IServiceable.class()' );
         return this.constructor && this.constructor.name ? this.constructor.name : '';
     }
 
@@ -26,7 +26,7 @@ export class IServiceable {
      * [-implementation Api-]
      */
     cleanupAfterKill(){
-        IMsg.debug( 'IServiceable.cleanupAfterKill()' );
+        Msg.debug( 'IServiceable.cleanupAfterKill()' );
     }
 
     /**
@@ -35,7 +35,7 @@ export class IServiceable {
      * [-implementation Api-]
      */
     getCheckStatus(){
-        IMsg.debug( 'IServiceable.getCheckStatus()' );
+        Msg.debug( 'IServiceable.getCheckStatus()' );
         return Promise.resolve({
             startable: false,
             reasons: [ 'not implemented' ],
@@ -49,7 +49,7 @@ export class IServiceable {
      * [-implementation Api-]
      */
     isForkable(){
-        IMsg.debug( 'IServiceable.isForkable()' );
+        Msg.debug( 'IServiceable.isForkable()' );
         return true;
     }
 
@@ -59,7 +59,7 @@ export class IServiceable {
      * [-implementation Api-]
      */
     onStartupConfirmed( data ){
-        IMsg.debug( 'IServiceable.onStartupConfirmed()' );
+        Msg.debug( 'IServiceable.onStartupConfirmed()' );
     }
 
     /**
@@ -68,7 +68,7 @@ export class IServiceable {
      * [-implementation Api-]
      */
     start(){
-        IMsg.verbose( 'IServiceable.start()' );
+        Msg.verbose( 'IServiceable.start()' );
         return Promise.resolve( true );
     }
 
@@ -79,7 +79,7 @@ export class IServiceable {
      * [-implementation Api-]
      */
     status(){
-        IMsg.debug( 'IServiceable.status()' );
+        Msg.debug( 'IServiceable.status()' );
         return Promise.resolve({
             name: {
                 module: 'unknown',
@@ -97,7 +97,7 @@ export class IServiceable {
      * [-implementation Api-]
      */
     stop(){
-        IMsg.debug( 'IServiceable.stop()' );
+        Msg.debug( 'IServiceable.stop()' );
         return Promise.resolve( true );
     }
 

@@ -1,7 +1,7 @@
 /*
  * coreApi class
  */
-import { IMsg, coreConfig, coreService, PackageJson } from './index.js';
+import { coreConfig, coreService, Msg, PackageJson } from './index.js';
 
 export class coreApi {
 
@@ -14,7 +14,7 @@ export class coreApi {
     // the coreConfig object from the application configuration file
     _config = null;
 
-    // the IMsg interface instance
+    // the Msg interface instance
     _imsg = null;
 
     /*
@@ -54,7 +54,7 @@ export class coreApi {
 
     /**
      * Getter/Setter
-     * @param {*} o the IMsg interface instance
+     * @param {*} o the Msg interface instance
      * @returns {*}
      */
     exports( o ){
@@ -66,11 +66,11 @@ export class coreApi {
 
     /**
      * Getter/Setter
-     * @param {IMsg} o the IMsg interface instance
-     * @returns {IMsg}
+     * @param {Msg} o the Msg interface instance
+     * @returns {Msg}
      */
-    IMsg( o ){
-        if( o && o instanceof IMsg ){
+    Msg( o ){
+        if( o && o instanceof Msg ){
             this._imsg = o;
         }
         return this._imsg;

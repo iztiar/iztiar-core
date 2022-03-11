@@ -8,7 +8,7 @@
 import chalk from 'chalk';
 import ps from 'ps';
 
-import { IMsg, IServiceable, utils } from './index.js';
+import { IServiceable, Msg, utils } from './index.js';
 
 /**
  * Stop the named service
@@ -20,23 +20,23 @@ import { IMsg, IServiceable, utils } from './index.js';
  */
 export function cliStop( app, name, options={} ){
 
-    const _origLevel = app.IMsg.consoleLevel();
+    const _origLevel = Msg.consoleLevel();
     const _consoleLevel = Object.keys( options ).includes( 'consoleLevel' ) ? options.consoleLevel : _origLevel;
-    if( _consoleLevel !== _origLevel ) app.IMsg.consoleLevel( _consoleLevel );
+    if( _consoleLevel !== _origLevel ) Msg.consoleLevel( _consoleLevel );
 
-    IMsg.out( 'Stopping \''+name+'\' service' );
+    Msg.out( 'Stopping \''+name+'\' service' );
     let result = {};
 
     // service.Initialize() must resolve with a IServiceable instance
     const _checkInitialize = function( res ){
-        IMsg.debug( 'cliStop()._checkInitialize()' );
+        Msg.debug( 'cliStop()._checkInitialize()' );
         return new Promise(( resolve, reject ) => {
             if( res && res instanceof IServiceable ){
                 result.iServiceable = { ...res };
-                IMsg.verbose( 'cliStop() iServiceable instance successfully checked' );
+                Msg.verbose( 'cliStop() iServiceable instance successfully checked' );
             } else {
                 result.iServiceable = null;
-                IMsg.verbose( 'cliStop() iServiceable instance is null: erroneous service initialization' );
+                Msg.verbose( 'cliStop() iServiceable instance is null: erroneous service initialization' );
             }
             resolve( result );
         });
@@ -46,35 +46,35 @@ export function cliStop( app, name, options={} ){
     //  we are only interested here to the 'startable' attribute which is only true if the JSON runfile is empty or not present
     const _checkStatus = function( res, expected ){
         if( res.iServiceable && ( !res.status || !res.status.startable )){
-            IMsg.debug( 'cliStop()._checkStatus()', 'expected='+expected );
+            Msg.debug( 'cliStop()._checkStatus()', 'expected='+expected );
             const _name = service.name();
             return service.status()
                 .then(( status ) => {
                     return new Promise(( resolve, reject ) => {
                         if( expected ){
                             if( status.startable ){
-                                IMsg.out( chalk.green( 'Service is not running (fine). Gracefully exiting' ));
+                                Msg.out( chalk.green( 'Service is not running (fine). Gracefully exiting' ));
                                 result.stoppable = false;
 
                             } else if( status.reasons.length === 0 ){
-                                IMsg.info( 'Service \''+_name+'\' is running, is stoppable (fine)' );
+                                Msg.info( 'Service \''+_name+'\' is running, is stoppable (fine)' );
                                 result.stoppable = true;
 
                             } else {
-                                IMsg.warn( 'Service is said running, but exhibits', status.reasons.length,'error message(s):' );
+                                Msg.warn( 'Service is said running, but exhibits', status.reasons.length,'error message(s):' );
                                 status.reasons.every(( m ) => {
-                                    IMsg.warn( ' '+m );
+                                    Msg.warn( ' '+m );
                                     return true;
                                 })
                                 result.stoppable = true;
                             }
                         } else {
                             if( status.startable ){
-                                IMsg.out( chalk.green( 'Service(s) \''+_name+'\' successfully stopped.' ));
+                                Msg.out( chalk.green( 'Service(s) \''+_name+'\' successfully stopped.' ));
                             } else {
-                                IMsg.warn( 'Unable to stop the service:' );
+                                Msg.warn( 'Unable to stop the service:' );
                                 status.reasons.every(( m ) => {
-                                    IMsg.warn( ' '+m );
+                                    Msg.warn( ' '+m );
                                     return true;
                                 });
                                 process.exitCode += 1;
@@ -85,7 +85,7 @@ export function cliStop( app, name, options={} ){
                     });
                 });
         } else {
-            IMsg.debug( 'cliStop()._checkStatus() not run', 'iServiceable='+res.iServiceable, 'status='+res.status, 'startable='+res.status.startable );
+            Msg.debug( 'cliStop()._checkStatus() not run', 'iServiceable='+res.iServiceable, 'status='+res.status, 'startable='+res.status.startable );
             return Promise.resolve( result );
         }
     };
@@ -94,10 +94,10 @@ export function cliStop( app, name, options={} ){
     const _stopService = function(){
         //console.log( result );
         if( result.iServiceable && result.stoppable ){
-            IMsg.debug( 'cliStop()._stopService()' );
+            Msg.debug( 'cliStop()._stopService()' );
             return service.stop().then(() => { return Promise.resolve( result ); });
         } else {
-            IMsg.debug( 'cliStop()._stopService() not run', 'iServiceable='+result.iServiceable, 'stoppable='+result.stoppable );
+            Msg.debug( 'cliStop()._stopService() not run', 'iServiceable='+result.iServiceable, 'stoppable='+result.stoppable );
             return Promise.resolve( result );
         }
     };
@@ -107,15 +107,15 @@ export function cliStop( app, name, options={} ){
     const _countProcesses = function( pids ){
         //console.log( result );
         if( result.iServiceable && result.stoppable ){
-            IMsg.debug( 'cliStop()._countProcesses()', 'pids='+pids );
+            Msg.debug( 'cliStop()._countProcesses()', 'pids='+pids );
             return new Promise(( resolve, reject ) => {
                 if( pids.length ){
                     ps({ pid: pids })
                         .then(( success ) => {
-                            IMsg.debug( 'cliStop().countProcesses() ps resolves with', success );
+                            Msg.debug( 'cliStop().countProcesses() ps resolves with', success );
                             resolve( success.length === 0 );
                         }, ( failure ) => {
-                            IMsg.debug( 'cliStop().countProcesses() ps failure', failure );
+                            Msg.debug( 'cliStop().countProcesses() ps failure', failure );
                             resolve( failure.length === 0 );
                         });
                 } else {
@@ -123,7 +123,7 @@ export function cliStop( app, name, options={} ){
                 }
             });
         } else {
-            IMsg.debug( 'cliStop()._countProcesses() not run', 'iServiceable='+result.iServiceable, 'stoppable='+result.stoppable );
+            Msg.debug( 'cliStop()._countProcesses() not run', 'iServiceable='+result.iServiceable, 'stoppable='+result.stoppable );
             return Promise.resolve( true );
         }
     };
@@ -132,11 +132,11 @@ export function cliStop( app, name, options={} ){
     const _checkTimeout = function( result, pids ){
         //console.log( result );
         if( result.iServiceable && result.stoppable ){
-            IMsg.debug( 'cliStop()._checkTimeout()', 'pids='+pids );
+            Msg.debug( 'cliStop()._checkTimeout()', 'pids='+pids );
             return new Promise(( resolve, reject ) => {
                 if( !result.waitFor && pids.length ){
                     pids.every(( p ) => {
-                        IMsg.verbose( 'cliStop()._checkTimeout() killing process', p );
+                        Msg.verbose( 'cliStop()._checkTimeout() killing process', p );
                         process.kill( p, 'SIGKILL' );
                         result.iServiceable.cleanupAfterKill();
                         return true;
@@ -147,7 +147,7 @@ export function cliStop( app, name, options={} ){
                 }
             });
         } else {
-            IMsg.debug( 'cliStop()._checkTimeout() not run', 'iServiceable='+result.iServiceable, 'stoppable='+result.stoppable );
+            Msg.debug( 'cliStop()._checkTimeout() not run', 'iServiceable='+result.iServiceable, 'stoppable='+result.stoppable );
             return Promise.resolve( result );
         }
     };
@@ -164,7 +164,7 @@ export function cliStop( app, name, options={} ){
             .then(() => { return _checkTimeout( result, result.status.pids ); })
             .then(() => { return _checkStatus( result, false ); })
             .then(() => {
-                if( _consoleLevel !== _origLevel ) app.IMsg.consoleLevel( _origLevel );
+                if( _consoleLevel !== _origLevel ) Msg.consoleLevel( _origLevel );
                 return Promise.resolve( result );
             });
     }

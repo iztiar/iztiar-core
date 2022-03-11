@@ -15,9 +15,9 @@
                         "type": "coreConfig",
                         "comment": "the configuration instance filled-up from <configDir>/iztiar.json core configuration file"
                     },
-                    "IMsg": {
-                        "type": "IMsg",
-                        "comment": "the interface instance to IMsg/ILogger"
+                    "Msg": {
+                        "type": "Msg",
+                        "comment": "the interface instance to Msg/Logger"
                     }
                 }
             },

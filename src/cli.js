@@ -11,7 +11,7 @@
  */
 import { coreApplication } from './index.js';
 
-const app = new coreApplication( 'iztiar' );
+const app = new coreApplication();
 //console.log( app );
 
 app.IRunnable.displayCopyright();

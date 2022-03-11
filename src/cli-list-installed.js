@@ -4,7 +4,7 @@
  *  Display the list of installed plugins, along with their associated target module.
  *  Returns a Promise resolved with the array of the corresponding PackageJson objects.
  */
-import { IMsg, coreApplication } from './index.js';
+import { coreApplication, Logger, Msg  } from './index.js';
 
 /**
  * 
@@ -15,12 +15,12 @@ import { IMsg, coreApplication } from './index.js';
  */
 export function cliListInstalled( app, options={} ){
 
-    const _origLevel = app.IMsg.consoleLevel();
+    const _origLevel = Msg.consoleLevel();
     const _consoleLevel = Object.keys( options ).includes( 'consoleLevel' ) ? options.consoleLevel : _origLevel;
-    if( _consoleLevel !== _origLevel ) app.IMsg.consoleLevel( _consoleLevel );
+    if( _consoleLevel !== _origLevel ) Msg.consoleLevel( _consoleLevel );
 
-    IMsg.out( 'Listing installed Iztiar modules' );
-    IMsg.verbose( 'An Iztiar module is identified by its name; its target is qualified from package.json \'iztiar\' group' );
+    Msg.out( 'Listing installed Iztiar modules' );
+    Msg.verbose( 'An Iztiar module is identified by its name; its target is qualified from package.json \'iztiar\' group' );
     
     const pckInstalled = app.IPluginManager.getInstalled( app );
 
@@ -36,13 +36,13 @@ export function cliListInstalled( app, options={} ){
         return true;
     });
     if( pckDisplay.length ){
-        app.IMsg.tabular( pckDisplay, { prefix:'  ' });
+        Msg.tabular( pckDisplay, { prefix:'  ' });
     }
     const _msg = 'Found '+pckDisplay.length+' installed module(s) targeting '+coreApplication.const.displayName+' family';
-    IMsg.out( _msg );
-    app.IMsg.logInfo( _msg );
+    Msg.out( _msg );
+    Logger.info( _msg );
 
-    if( _consoleLevel !== _origLevel ) app.IMsg.consoleLevel( _origLevel );
+    if( _consoleLevel !== _origLevel ) Msg.consoleLevel( _origLevel );
 
     return Promise.resolve( pckInstalled );
 }

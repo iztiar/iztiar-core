@@ -4,13 +4,15 @@
 
 - coreBroker
 
-The _coreBroker_ is managed by the _coreController_ to which it is attached, and manages itself the MQTT messaging bus.
+A messaging broker is one of the _services_ required to run Iztiar (see [Architecture](./Architecture.md) for a description).
+
+The _coreBroker_ is a core _plugin_ which provides a (MQTT) message broker _service_.
 
 - coreController
 
 The _coreController_ is one of the services required to run Iztiar (see [Architecture](./Architecture.md) for a description).
 
-A _coreController_ is identified by its name, and this name must be unique on the host (inside of the storage directory). More, we suggest to make this name unique in the whole environment.
+The _coreController_ provides a TCP-based management system between the running _plugins_.
 
 - Device
 
@@ -37,6 +39,32 @@ A gateway is something which manages some devices of the same nature. Common exa
 Because Iztiar is protocol agnostic, at least one gateway is required to manage a given protocol.
 
 A gateway is attached to one _coreController_ as a plugin.
+
+- Plugin
+
+A _plugin_ is a ESM module designed and written to provide some _service_ to the Iztiar family.
+
+The `package.json` file must include a `main` key, whose value must address a file containing a default-exported function.
+
+This default-exported function will be called by Iztiar, with a single `coreApi` argument.
+
+The rest is up to the _plugin_...
+
+- Service
+
+A _service_ is anything which provides some feature to Iztiar, and/or participates to the good run of the whole thing.
+
+A _service_ is provided:
+
+- either by the core @iztiar/iztiar-core module
+- or by an external _plugin_.
+
+For example, the core Iztiar family includes:
+
+- a TCP management _service, provided by a _coreController_
+- a message broker _service, provided by a _coreBroker_.
+
+A _service_ is identified by its name, and this name must be unique on the host (inside of the storage directory). More, we suggest to make this name unique in the whole environment.
 
 - Storage directory
 

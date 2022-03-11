@@ -3,7 +3,7 @@
  */
 import cp from 'child_process';
 
-import { IMsg } from './index.js';
+import { Msg } from './index.js';
 
 export class coreForkable {
 
@@ -46,12 +46,12 @@ export class coreForkable {
      *  Execute in parent process.
      */
     static fork( forkable, ipcCallback, args ){
-        IMsg.debug( 'coreForkable::fork() about to fork '+forkable );
+        Msg.debug( 'coreForkable::fork() about to fork '+forkable );
         const _path = process.argv[1];
         let _args = args ? [ ...args ] : [ ...process.argv ];
         _args.shift();
         _args.shift();
-        IMsg.debug( 'coreForkable::fork()', 'forking with path='+_path, 'args', _args );
+        Msg.debug( 'coreForkable::fork()', 'forking with path='+_path, 'args', _args );
         let _env = { ...process.env };
         _env[coreForkable._forkedVar()] = forkable; // this says to the child that it has been forked
         let _options = {
@@ -87,7 +87,7 @@ export class coreForkable {
      * @returns {coreForkable}
      */
      constructor( api ){
-        IMsg.debug( 'coreForkable instanciation' );
+        Msg.debug( 'coreForkable instanciation' );
         //console.log( api );
         this._api = api;
         return this;
@@ -103,7 +103,7 @@ export class coreForkable {
     advertiseParent( port, message, data ){
         if( this._status !== coreForkable.s.STOPPING ){
             let _procName = coreForkable.forkedProcess();
-            IMsg.debug( _procName+' advertising parent' );
+            Msg.debug( _procName+' advertising parent' );
             // unfortunately this try/catch doesn't handle Error [ERR_IPC_CHANNEL_CLOSED]: Channel closed
             //  triggered by process.send() in coreController/coreBroker processes when the parent has already terminated
             try {
@@ -114,9 +114,9 @@ export class coreForkable {
                 _msg[_procName].helloMessage = message;
                 //console.log( '_msg', _msg );
                 process.send( _msg );
-                IMsg.info( 'coreForkable.advertiseParent() sends', _msg );
+                Msg.info( 'coreForkable.advertiseParent() sends', _msg );
             } catch( e ){
-                IMsg.error( e.name, e.message );
+                Msg.error( e.name, e.message );
             }
         }
     }
@@ -141,9 +141,9 @@ export class coreForkable {
      * (child process)
      */
     errorHandler( e ){
-        IMsg.debug( 'coreForkable:errorHandler() entering...' );
+        Msg.debug( 'coreForkable:errorHandler() entering...' );
         if( e.stack ){
-            IMsg.error( 'coreForkable:errorHandler()', e.name, e.message );
+            Msg.error( 'coreForkable:errorHandler()', e.name, e.message );
         }
         // for now, do not terminate on ECONNRESET
         //if( e.code === 'ECONNRESET' ){
@@ -151,7 +151,7 @@ export class coreForkable {
         //}
         // not very sure this is good idea !?
         if( this._sceStatus !== coreForkable.s.STOPPING ){
-            IMsg.info( 'auto-killing on '+e.code+' error' );
+            Msg.info( 'auto-killing on '+e.code+' error' );
             this._sceStatus = coreForkable.s.STOPPING;
             process.kill( process.pid, 'SIGTERM' );
             //process.kill( process.pid, 'SIGKILL' ); // if previous is not enough ?
@@ -198,7 +198,7 @@ export class coreForkable {
         if( status && typeof status === 'string' && status.length ){
             this._status = status;
         }
-        //IMsg.debug( 'status='+status, 'returning '+this._status );
+        //Msg.debug( 'status='+status, 'returning '+this._status );
         return this._status;
     }
 
