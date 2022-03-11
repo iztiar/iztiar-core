@@ -14,7 +14,7 @@
  * 
  *  Returns a Promise resolved with the array of the corresponding Plugin objects.
  */
-import { ILogger, IMsg, coreApplication } from './index.js';
+import { IMsg, coreApplication } from './index.js';
 
 /**
  * 
@@ -55,7 +55,7 @@ export function cliListEnabled( app, options={} ){
     }
     const _msg = 'Found '+sceDisplay.length+' enabled plugin(s) targeting \''+app.package().getFullName()+'\'';
     IMsg.out( _msg );
-    ILogger.info( _msg );
+    app.IMsg.logInfo( _msg );
 
     if( _consoleLevel !== _origLevel ) app.IMsg.consoleLevel( _origLevel );
     return Promise.resolve( services );

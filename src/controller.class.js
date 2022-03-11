@@ -336,7 +336,7 @@ export class coreController {
                         NODE_ENV: process.env.NODE_ENV || '(undefined)'
                     },
                     // general runtime constants
-                    logfile: self.api().exports().ILogger.logFname(),
+                    logfile: self.api().IMsg().logFname(),
                     runfile: self.IRunFile.runFile( _serviceName ),
                     storageDir: self.api().exports().coreConfig.storageDir(),
                     version: self.api().corePackage().getVersion()

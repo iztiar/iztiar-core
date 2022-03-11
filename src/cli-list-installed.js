@@ -4,7 +4,7 @@
  *  Display the list of installed plugins, along with their associated target module.
  *  Returns a Promise resolved with the array of the corresponding PackageJson objects.
  */
-import { ILogger, IMsg, coreApplication } from './index.js';
+import { IMsg, coreApplication } from './index.js';
 
 /**
  * 
@@ -40,7 +40,7 @@ export function cliListInstalled( app, options={} ){
     }
     const _msg = 'Found '+pckDisplay.length+' installed module(s) targeting '+coreApplication.const.displayName+' family';
     IMsg.out( _msg );
-    ILogger.info( _msg );
+    app.IMsg.logInfo( _msg );
 
     if( _consoleLevel !== _origLevel ) app.IMsg.consoleLevel( _origLevel );
 

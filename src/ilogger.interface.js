@@ -36,10 +36,6 @@
  *                                                                                          5    verbose()
  *    KERN_DEBUG         debug()                                                 debug()    6    debug()
  *                      trace()     -> ignored here, assimilated to debug()
- * 
- * Note: we really need to define debug(), verbose(), out() and so on as static functions to prevent us to
- *  pass an instance of IMsg (resp. ILogger) all around the code. We do not really need a singleton here, but
- *  we need to have here the allocated instance.
  */
 import chalk from 'chalk';
 import pino from 'pino';
@@ -47,8 +43,6 @@ import pino from 'pino';
 import { coreForkable, LogLevel, utils } from './index.js';
 
 export class ILogger {
-
-    static _instance = null;
 
     static defaults = {
         fname: '/dev/null',
@@ -65,7 +59,7 @@ export class ILogger {
         return coreForkable.forkedProcess() || 'main';
     }
 
-    static _log(){
+    _iloggerLog(){
         // ILogger log LogLevel object
         const _logLevel = arguments[0];
         delete arguments[0];
@@ -74,15 +68,16 @@ export class ILogger {
         //console.log( 'ILogger.log() app-configured log filename', ILogger._singleton._logFname());
         //console.log( arguments );
 
-        if( ILogger._instance._logger ){
+        if( this._logger ){
             // check that the level is allowed for the current transport
             //  may be overriden with IZTIAR_DEBUG
-            if( !ILogger._instance._logger.isLevelEnabled( _logLevel.label()) && process.env.IZTIAR_DEBUG && process.env.IZTIAR_DEBUG.includes( 'logLevel' )){
+            if( !this._logger.isLevelEnabled( _logLevel.label()) && process.env.IZTIAR_DEBUG && process.env.IZTIAR_DEBUG.includes( 'logLevel' )){
                 console.log(( _logLevel.color())( ILogger._emitter(), '(not allowed log level)', ...arguments ));
             } else {
-                ILogger._instance._logger[_logLevel.label()]([ ILogger._emitter(), ...arguments ]);
+                this._logger[_logLevel.label()]([ ILogger._emitter(), ...arguments ]);
                 //_logger[_lower]( color( [ _emitter(), ...arguments ]));
             }
+
         // before any logger be instanciated, one can still log the main CLI process to the console
         } else if( !coreForkable.forkedProcess() && process.env.IZTIAR_DEBUG && process.env.IZTIAR_DEBUG.includes( 'preCore' )){
             console.log(( _logLevel.color())( ILogger._emitter(), ...arguments ));
@@ -101,7 +96,6 @@ export class ILogger {
                 DEBUG: new LogLevel( 60, 'debug', chalk.hex( '#0000ff' ))
             };
         }
-        ILogger._instance = this;
         return this;
     }
     
@@ -140,44 +134,48 @@ export class ILogger {
     /**
      * [-public API-]
      */
-    static error(){
-        ILogger._log( ILogger.const.ERROR, ...arguments );
+    error(){
+        this._iloggerLog( ILogger.const.ERROR, ...arguments );
     }
 
     /**
      * [-public API-]
      */
-    static warn(){
-        ILogger._log( ILogger.const.WARN, ...arguments );
+    warn(){
+        this._iloggerLog( ILogger.const.WARN, ...arguments );
     }
 
     /**
      * [-public API-]
      */
-    static info(){
-        ILogger._log( ILogger.const.INFO, ...arguments );
+    info(){
+        this._iloggerLog( ILogger.const.INFO, ...arguments );
     }
 
     /**
      * [-public API-]
      */
-    static debug(){
-        ILogger._log( ILogger.const.DEBUG, ...arguments );
+    debug(){
+        this._iloggerLog( ILogger.const.DEBUG, ...arguments );
     }
 
     /**
      * @returns {String} the log filename
+     * [-public API-]
      */
-    static logFname(){
-        return ILogger._instance._logFname();
+    logFname(){
+        return this._logFname();
     }
 
     /**
      * Initialize the log implentation
-     * @throws {Error}
+     * @throws {Error} when trying to startup() more than once
      * [-public API-]
      */
     startup(){
+        if( this._logger ){
+            throw new Error( 'ILogger: trying to startup() more than once' );
+        }
         this._logOptions = {
             name: this._logAppname(),
             level: ILogger.const[this._logLevel()].label()

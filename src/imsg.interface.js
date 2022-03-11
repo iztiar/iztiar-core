@@ -13,14 +13,17 @@ export class IMsg extends ILogger {
         level: 'NORMAL'
     };
 
-    constructor(){
-        super();
-        return this;
+    static _instance = null;
+
+    static _staticLog(){
+        // doesn't do anything before instanciation
+        if( !IMsg._instance ){
+            return;
+        }
+        IMsg._instance._imsgLog( ...arguments );
     }
 
-    static _log(){
-        //console.log( 'IMsg._log()', arguments );
-
+    _imsgLog(){
         // the current console level label for the instance
         //  may be null before configuration
         //  else get the corresponding current console LogLevel object
@@ -60,7 +63,7 @@ export class IMsg extends ILogger {
 
         // log to the file if not prevented from
         if( _logLevel ){
-            ILogger[_logLevel]( ..._args );
+            super[_logLevel]( ..._args );
         }
 
         // log to the console if not prevented from
@@ -75,6 +78,16 @@ export class IMsg extends ILogger {
                 console.log( ..._args );
             }
         }
+    }
+
+    /**
+     * Constructor
+     * @returns {IMsg}
+     */
+    constructor(){
+        super();
+        IMsg._instance = this;
+        return this;
     }
 
     /* *** ***************************************************************************************
@@ -100,42 +113,50 @@ export class IMsg extends ILogger {
      * [-public API-]
      */
     static error(){
-        IMsg._log( ILogger.const.ERROR, ...arguments );
+        IMsg._staticLog( ILogger.const.ERROR, ...arguments );
     }
 
     /**
      * [-public API-]
      */
     static warn(){
-        IMsg._log( ILogger.const.WARN, ...arguments );
+        IMsg._staticLog( ILogger.const.WARN, ...arguments );
     }
 
     /**
      * [-public API-]
      */
     static out(){
-        IMsg._log( ILogger.const.NORMAL, ...arguments );
+        IMsg._staticLog( ILogger.const.NORMAL, ...arguments );
     }
 
     /**
      * [-public API-]
      */
     static info(){
-        IMsg._log( ILogger.const.INFO, ...arguments );
+        IMsg._staticLog( ILogger.const.INFO, ...arguments );
+    }
+
+    /**
+     * A pass-through direct to ILogger
+     * [-public API-]
+     */
+    logInfo(){
+        super.info( ...arguments );
     }
 
     /**
      * [-public API-]
      */
     static verbose(){
-        IMsg._log( ILogger.const.VERBOSE, ...arguments );
+        IMsg._staticLog( ILogger.const.VERBOSE, ...arguments );
     }
 
     /**
      * [-public API-]
      */
     static debug(){
-        IMsg._log( ILogger.const.DEBUG, '(debug)', ...arguments );
+        IMsg._staticLog( ILogger.const.DEBUG, '(debug)', ...arguments );
     }
 
     /**
@@ -154,8 +175,8 @@ export class IMsg extends ILogger {
      */
     startup( action ){
         super.startup();
-        ILogger.info( 'program invoked with args', process.argv );
-        ILogger.info( 'command-line arguments successfully parsed: identified action \''+action+'\'');
+        super.info( 'program invoked with args', process.argv );
+        super.info( 'command-line arguments successfully parsed: identified action \''+action+'\'');
     }
 
     /**
