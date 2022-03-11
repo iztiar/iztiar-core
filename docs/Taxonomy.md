@@ -26,11 +26,14 @@ Besides of this physical device, a plugin let the user define virtual devices, w
 
 We are talking here about _development_ vs. _staging_ vs. _production_, etc. to use some widely used terms. You can have as many environments as you like, and name them as you want.
 
-From the core application point of vieuw, you can have as many environments as you want on a same host, and each and every plugin may define in its settings environment-dependant specificities.
+From the Iztiar family point of view, you can have as many environments as you want on a same host, as this is only determined by:
 
-The environment is materialized by its storage directory which is uniquely attached to it.
+- the storage directory which must be dedicated to an environment
+- the user TCP ports which must not overlap between environments.
 
 Environments are meant to be self-content, and __do not communicate between each others__.
+
+Besides of `NODE_ENV` variable which is rather limited, Iztiar honors the `IZTIAR_ENV` variable which can be used to suit your own needs.
 
 - Gateway
 
@@ -44,34 +47,38 @@ A gateway is attached to one _coreController_ as a plugin.
 
 A _plugin_ is a ESM module designed and written to provide some _service_ to the Iztiar family.
 
-The `package.json` file must include a `main` key, whose value must address a file containing a default-exported function.
+The `package.json` file of the plugin must include:
 
-This default-exported function will be called by Iztiar, with a single `coreApi` argument.
+    - a `main` key, whose value must address a file containing a default-exported function
 
-The rest is up to the _plugin_...
+        This default-exported function will be called by Iztiar, with a single `coreApi` argument
+
+    - a `iztiar` group, which must contains a `target` key, which itself must adress the module that this plugin targets.
+
+The rest is up to the plugin...
 
 - Service
 
 A _service_ is anything which provides some feature to Iztiar, and/or participates to the good run of the whole thing.
 
-A _service_ is provided:
+A service can be provided:
 
-- either by the core @iztiar/iztiar-core module
-- or by an external _plugin_.
+    - either by the core `@iztiar/iztiar-core` module
+    - or by an external plugin.
 
 For example, the core Iztiar family includes:
 
-- a TCP management _service, provided by a _coreController_
-- a message broker _service, provided by a _coreBroker_.
+    - a TCP management service, provided by a coreController
+    - a message broker service, provided by a coreBroker.
 
-A _service_ is identified by its name, and this name must be unique on the host (inside of the storage directory). More, we suggest to make this name unique in the whole environment.
+A service is identified by its name in the application configuration file, and this name must be unique on the host for this environment (inside of the storage directory). More, we suggest to make this name unique in the whole environment.
 
 - Storage directory
 
-The storage directory is the top of the file tree of all software and data used by Iztiar for a given environment. Storage directory is set at install time.
+The storage directory is the top of the file tree of all software and data used by Iztiar family for a given _environment_.
 
-There is one main `<storageDir>`, defaulting to `/var/lib/iztiar` in *nix-like systems. As said above, this is the root directory for configurations, plugins, data storage, logs.
+On a given host, and for a given environment, it gathers all the configurations of the application and plugins, the logs directory, the run directory, all the data, and so on.
 
-This hard-coded default is overridable at install time.
+The storage directory is determined at install time, and defaults to `/var/lib/iztiar` in *nix-like systems.
 
-Because `<storageDir>` addresses all configuration files, it is also determinant when qualifying a running environment (production, development, staging, test and so on).
+It must be specified - if not the default - as a command-line argument for all CLI commands.
