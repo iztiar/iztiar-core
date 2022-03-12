@@ -117,23 +117,15 @@ export class IForkable {
 
     /**
      * Send an IPC message to the parent when this (child process) service is ready
-     * @param {string} message a Hello message to be written in the logfile
      * @param {*} data to be send to the parent, for example the current status of the server
      * @throw {Error}
      */
-    advertiseParent( message, data={} ){
-        let _procName = IForkable.forkedProcess();
-        Msg.debug( _procName+' advertising parent', 'message='+message, data );
-        // unfortunately this try/catch doesn't handle Error [ERR_IPC_CHANNEL_CLOSED]: Channel closed
+    advertiseParent( data ){
+        Msg.verbose( 'IForkable.advertiseParent() with', data );
+        // note that this try/catch doesn't handle Error [ERR_IPC_CHANNEL_CLOSED]: Channel closed
         //  triggered by process.send() in coreController/coreBroker processes when the parent has already terminated
         try {
-            let _msg = { ...data };
-            //console.log( 'data', data );
-            _msg[_procName].event = 'startup';
-            _msg[_procName].helloMessage = message;
-            //console.log( '_msg', _msg );
-            process.send( _msg );
-            Msg.info( 'IForkable.advertiseParent() sends', _msg );
+            process.send( data );
         } catch( e ){
             Msg.error( e.name, e.message );
         }

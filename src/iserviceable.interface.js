@@ -45,6 +45,14 @@ export class IServiceable {
     }
 
     /**
+     * @returns {String} the helloMessage from the runfile (if any)
+     * [-implementation Api-]
+     */
+    helloMessage(){
+         return null;
+    }
+
+    /**
      * @returns {Boolean} true if the process must be forked (and the main application will take care of that)
      * [-implementation Api-]
      */

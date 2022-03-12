@@ -101,9 +101,10 @@ export function cliStart( app, name, options={} ){
             // + (MYNAME coreController) MYNAME-managed coreBroker successfully startup, listening on port 24002 (message bus on port 24003)
             // + (MYNAME coreController) ANOTHER (MYNAME-managed) coreController successfully startup, listening on port 24001
             // + (MYNAME coreController) ANOTHER-managed coreBroker successfully startup, listening on port 24001 (message bus on port 24003)
-            const _ipcToConsole = function( messageData ){
-                const _name = Object.keys( messageData )[0];
-                const _runStatus = messageData[_name];
+            const _ipcToConsole = function( ipcMessage ){
+                //console.log( ipcMessage );
+                const _name = Object.keys( ipcMessage )[0];
+                const _runStatus = ipcMessage[_name];
                 let _msg = '';
                 if( _runStatus.event === 'startup' ){
                     _msg += '(main)';
@@ -116,9 +117,9 @@ export function cliStart( app, name, options={} ){
                 Msg.info( _msg );
             };
 
-            const _ipcCallback = function( child, message ){
-                Msg.debug( '_ipcCallback()', message );
-                _ipcToConsole( message );
+            const _ipcCallback = function( child, ipcMessage ){
+                Msg.debug( '_ipcCallback()', ipcMessage );
+                _ipcToConsole( ipcMessage );
                 result.ipcStartupReceived = true;
             };
 

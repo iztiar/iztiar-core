@@ -50,6 +50,10 @@ export function cliStatus( app, name, options={} ){
 
                 } else {
                     Msg.out( chalk.green( 'Service \''+name+'\' is confirmed up and running' ));
+                    const hello = result.iServiceable.helloMessage();
+                    if( hello ){
+                        Msg.out( chalk.green( 'Greetings message is « '+hello+' »' ));
+                    }
                 }
 
                 if( _consoleLevel !== _origLevel ) Msg.consoleLevel( _origLevel );

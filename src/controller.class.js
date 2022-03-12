@@ -105,6 +105,7 @@ export class coreController {
         api.exports().Interface.add( this, api.exports().IServiceable, {
             cleanupAfterKill: this.iserviceableCleanupAfterKill,
             getCheckStatus: this.iserviceableGetCheckStatus,
+            helloMessage: this.iserviceableHelloMessage,
             start: this.iserviceableStart,
             status: this.iserviceableStatus,
             stop: this.iserviceableStop
@@ -178,6 +179,19 @@ export class coreController {
     }
 
     /*
+     * @returns {String} the helloMessage from the runfile (if any)
+     * [-implementation Api-]
+     */
+    iserviceableHelloMessage(){
+        const _name = this.api().service().name();
+        const _json = this.IRunFile.jsonByName( _name );
+        if( _json && _json[_name].helloMessage ){
+            return _json[_name].helloMessage;
+        }
+        return null;
+    }
+
+    /*
      * Start the service
      * @returns {Promise} which never resolves
      * [-implementation Api-]
@@ -247,22 +261,22 @@ export class coreController {
     /*
      * What to do when this ITcpServer is ready listening ?
      *  -> write the runfile before advertising parent to prevent a race condition when writing the file
-     *  -> send a Hello message + current service status
+     *  -> send the current service status
      * [-implementation Api-]
      */
     itcpserverListening(){
         Msg.debug( 'coreController.itcpserverListening()' );
         const self = this;
         const _name = this.api().service().name();
-        let _msg = 'Hello, I am '+_name+' '+this.constructor.name;
+        let _msg = 'Hello, I am \''+_name+'\' '+this.constructor.name;
         _msg += ', running with pid '+process.pid+ ', listening on port '+this._tcpPort;
         this.status().then(( status ) => {
-            // double goal
-            //  - set the ITcpServer to 'running'
+            status[_name].event = 'startup';
+            status[_name].helloMessage = _msg;
             status[_name].status = this.ITcpServer.status().status;
             self.IRunFile.set( _name, status );
-            self.IForkable.advertiseParent( _msg, status );
-            });
+            self.IForkable.advertiseParent( status );
+        });
     }
 
     /**
