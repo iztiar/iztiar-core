@@ -1,0 +1,39 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://github.com/iztiar/iztiar-core/schemas/controller-config.schema.json",
+    "title": "controllerConfig",
+    "description": "the configuration of the coreController",
+    "type": "object",
+    "patternProperties" : {
+        "^[a-zA-Z][a-zA-Z0-9-_]*$": {
+            "type": "object",
+            "description": "the name of the service",
+            "properties": {
+                "module": {
+                    "type": "string",
+                    "comment": "the name of the module which provides the service, or 'core'"
+                },
+                "class": {
+                    "type": "string",
+                    "comment": "the name of the class or type or something inside the module, which qualifies the service type",
+                    "mandatory": "coreController"
+                },
+                "listenPort": {
+                    "type": "integer",
+                    "comment": "TCP listening port number for internal service management",
+                    "default": 24001
+                },
+                "messagingHost": {
+                    "type": "string",
+                    "comment": "hostname to which the coreController may connect to read from and write to messages bus",
+                    "default": "localhost"
+                },
+                "messagingPort": {
+                    "type": "integer",
+                    "comment": "Messaging port number",
+                    "default": 24003
+                }
+            }
+        }
+    }
+}

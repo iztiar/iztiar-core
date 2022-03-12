@@ -171,8 +171,8 @@ export class coreController {
         const _json = this.IRunFile.jsonByName( _name );
         let o = { startable: false, reasons: [], pids: [], ports: [] };
         if( _json && _json[_name] ){
-            o.pids = [ ... _json[_name].pids ];
-            o.ports = [ ... _json[_name].ports ];
+            o.pids = [ ..._json[_name].pids ];
+            o.ports = [ _json[_name].listenPort ];
             o.startable = o.pids.length === 0 && o.ports.length === 0;
         } else {
             o.startable = true;
@@ -217,7 +217,7 @@ export class coreController {
         Msg.debug( 'coreController.iserviceableStatus()' );
         this.api().exports().utils.tcpRequest( this._tcpPort, 'iz.status' )
             .then(( answer ) => {
-                Msg.debug( 'coreController.iserviceableStatus()', 'receives answer to \'iz.status\''+answer );
+                Msg.debug( 'coreController.iserviceableStatus()', 'receives answer to \'iz.status\'', answer );
             }, ( failure ) => {
                 // an error message is already sent by the called self.api().exports().utils.tcpRequest()
                 //  what more to do ??
@@ -313,7 +313,7 @@ export class coreController {
                     module: 'core',
                     class: self.constructor.name,
                     pids: [ process.pid ],
-                    ports: [ self._tcpPort ],
+                    ports: [ self._tcpPort, self._messagingPort ],
                     status: status[_serviceName].ITcpServer.status
                 };
                 Msg.debug( 'coreController.status()', 'runStatus', o );
@@ -393,7 +393,7 @@ export class coreController {
         }
 
         const _name = this.api().service().name();
-        const _module = this.api().service().config().module;
+        const _module = this.api().service().module();
         this._forwardPort = args && args[0] && self.api().exports().utils.isInt( args[0] ) ? args[0] : 0;
 
         const self = this;

@@ -1,0 +1,45 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://github.com/iztiar/iztiar-core/schemas/run-status.schema.json",
+    "title": "runStatus",
+    "description": "the content of the object to be provided by the IServiceable to publish its running status",
+    "type": "object",
+    "patternProperties": {
+        "^[a-zA-Z][a-zA-Z0-9-_]*$": {
+            "type": "object",
+            "description": "the name of the service",
+            "properties": {
+                "module": {
+                    "type": "string",
+                    "description": "the name of the module which provides the service, or 'core'"
+                },
+                "class": {
+                    "type": "string",
+                    "description": "the name of the class or type or something inside the module, which qualifies the service type"
+                },
+                "pids": {
+                    "type": "integer[]",
+                    "description": "list of running pids owned by this IServiceable"
+                },
+                "ports": {
+                    "type": "integer[]",
+                    "description": "list of used TCP ports"
+                },
+                "status": {
+                    "type": "string",
+                    "description": "the current status of the service",
+                    "enum": [
+                        "starting",
+                        "running",
+                        "stopping",
+                        "stopped"
+                    ]
+                },
+                "helloMessage": {
+                    "type": "string",
+                    "description": "an optional hello message"
+                }
+            }
+        }
+    }
+}

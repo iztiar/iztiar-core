@@ -1,0 +1,31 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://github.com/iztiar/iztiar-core/schemas/controller-config.schema.json",
+    "title": "coreApi",
+    "description": "the coreApi provided to each service at initialization time",
+    "type": "object",
+    "properties": {
+        "core": {
+            "type": "object",
+            "description": "runtime datas relative to the whole application",
+            "properties": {
+                "package": {
+                    "type": "PackageJson",
+                    "description": "the package instance of the calling '@iztiar/iztiar-core' core module"
+                },
+                "config": {
+                    "type": "coreConfig",
+                    "description": "the configuration instance filled-up from <configDir>/iztiar.json core configuration file"
+                }
+            }
+        },
+        "exports": {
+            "type": "object [Module: null prototype]",
+            "description": "the whole list of the definitions exported by the calling '@iztiar/iztiar-core' core module"
+        },
+        "service": {
+            "type": "coreService",
+            "description": "the instance which describes the service from calling '@iztiar/iztiar-core' core module point of view"
+        }
+    }
+}
