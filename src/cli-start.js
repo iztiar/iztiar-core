@@ -7,7 +7,7 @@
  */
 import chalk from 'chalk';
 
-import { IServiceable, coreForkable, Msg, utils } from './index.js';
+import { IForkable, IServiceable, Msg, utils } from './index.js';
 
 /**
  * Start the named service
@@ -31,23 +31,17 @@ export function cliStart( app, name, options={} ){
 
     if( service ){
         _promise = _promise.then(() => { return service.initialize( app ); });
+        let result = {};
 
-        if( !coreForkable.forkedProcess()){
+        if( !IForkable.forkedProcess()){
 
             Msg.out( 'Starting \''+name+'\' service' );
-            let ipcStartupReceived = false;
-            let result = {};
+            result.ipcStartupReceived = false;
 
             // service.Initialize() must resolve with a IServiceable instance
             const _checkInitialize = function( res ){
-                return new Promise(( resolve, reject ) => {
-                    if( res && res instanceof IServiceable ){
-                        result.iServiceable = { ...res };
-                    } else {
-                        result.iServiceable = null;
-                    }
-                    resolve( result );
-                });
+                return IServiceable.successfullyInitialized( res )
+                    .then(( success ) => { result.iServiceable = success ?  { ...res } : null; });
             };
 
             // coreService.status() promise resolves as { reasons, startable, pids, ports, status }
@@ -92,7 +86,7 @@ export function cliStart( app, name, options={} ){
                 if( res.iServiceable && res.status.startable ){
                     return new Promise(( resolve, reject ) => {
                         if( service.isForkable()){
-                            res.child = coreForkable.fork( service.name(), _ipcCallback, _args );
+                            res.child = IForkable.fork( service.name(), _ipcCallback, _args );
                             resolve( res );
                         } else {
                             service.start().then(() => { return Promise.resolve( res ); });
@@ -125,15 +119,14 @@ export function cliStart( app, name, options={} ){
             const _ipcCallback = function( child, message ){
                 Msg.debug( '_ipcCallback()', message );
                 _ipcToConsole( message );
-                service.iServiceable().onStartupConfirmed( message );
-                ipcStartupReceived = true;
+                result.ipcStartupReceived = true;
             };
 
             // wait until having received the IPC message
             const _waitIpc = function( res ){
                 if( res.iServiceable && res.status.startable ){
                     return new Promise(( resolve, reject ) => {
-                        resolve( ipcStartupReceived );
+                        resolve( res.ipcStartupReceived );
                     });
                 } else {
                     return Promise.resolve( true );
@@ -156,20 +149,19 @@ export function cliStart( app, name, options={} ){
                 .then(() => { return _forkOrStart( result ); })
                 .then(() => { return utils.waitFor( result, _waitIpc, result, 5*1000 ); })
                 .then(() => { return _checkTimeout( result ); })
-                .then(() => { return _checkStatus( result, true ); })
-                .then(() => {
-                    if( _consoleLevel !== _origLevel ) Msg.consoleLevel( _origLevel );
-                    return Promise.resolve( result );
-                });
+                .then(() => { return _checkStatus( result, true ); });
 
         } else {
             _promise = _promise
-                .then(() => { return service.start(); })
-                .then(() => {
-                    if( _consoleLevel !== _origLevel ) Msg.consoleLevel( _origLevel );
-                    return Promise.resolve( result );
-                });
+                .then(() => { return service.start(); });
         }
+
+        // in all cases, restore the original console level
+        _promise = _promise
+            .then(() => {
+                if( _consoleLevel !== _origLevel ) Msg.consoleLevel( _origLevel );
+                return Promise.resolve( result );
+            });
     }
 
     return _promise;

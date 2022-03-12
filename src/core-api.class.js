@@ -1,7 +1,7 @@
 /*
  * coreApi class
  */
-import { coreConfig, coreService, Msg, PackageJson } from './index.js';
+import { coreConfig, coreService, PackageJson } from './index.js';
 
 export class coreApi {
 
@@ -13,9 +13,6 @@ export class coreApi {
 
     // the coreConfig object from the application configuration file
     _config = null;
-
-    // the Msg interface instance
-    _imsg = null;
 
     /*
      * all the definitions exported by the '@iztiar/iztiar-core' module
@@ -62,18 +59,6 @@ export class coreApi {
             this._exports = o;
         }
         return this._exports;
-    }
-
-    /**
-     * Getter/Setter
-     * @param {Msg} o the Msg interface instance
-     * @returns {Msg}
-     */
-    Msg( o ){
-        if( o && o instanceof Msg ){
-            this._imsg = o;
-        }
-        return this._imsg;
     }
 
     /**

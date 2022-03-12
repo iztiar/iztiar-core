@@ -6,7 +6,7 @@
 import chalk from 'chalk';
 import path from 'path';
 
-import { coreForkable, Msg } from './index.js';
+import { IForkable, Msg } from './index.js';
 
 import { cliStart } from './cli-start.js';
 import { cliStatus } from './cli-status.js';
@@ -57,7 +57,7 @@ export class IRunnable {
      * [-public API-]
      */
     displayCopyright(){
-        if( !coreForkable.forkedProcess()){
+        if( !IForkable.forkedProcess()){
             const _color = IRunnable._copyrightColor();
             const _text = IRunnable._copyrightText();
             if( _color && _text ){
@@ -79,7 +79,7 @@ export class IRunnable {
             appname: app.commonName(),
             fname: path.join( app.config().logDir(), app.commonName()+'.log' ),
             level: app.config().logLevel(),
-            process: coreForkable.forkedProcess(),
+            process: IForkable.forkedProcess(),
             console: app.config().consoleLevel()
         });
         //console.log( 'IRunnable.run() action='+action );

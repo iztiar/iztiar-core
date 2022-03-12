@@ -54,15 +54,6 @@ export class IServiceable {
     }
 
     /**
-     * The service provides a daemon which has confirmed its successful startup
-     * Maybe the time for the service to take some actions (for example, create a run file)
-     * [-implementation Api-]
-     */
-    onStartupConfirmed( data ){
-        Msg.debug( 'IServiceable.onStartupConfirmed()' );
-    }
-
-    /**
      * Start the service
      * @returns {Promise}
      * [-implementation Api-]
@@ -105,4 +96,15 @@ export class IServiceable {
        *** The public API, i.e; the API anyone may call to access the interface service        ***
        *** *************************************************************************************** */
 
+    /**
+     * @param {IServiceable} instance to be checked
+     * @returns {Promise} which resolves to true if the instance has been successfully initialized
+     */
+    static successfullyInitialized( instance ){
+        return new Promise(( resolve, reject ) => {
+            const _res = instance && instance instanceof IServiceable;
+            Msg.verbose( 'IServiceable.successfullyInitialized()', _res );
+            resolve( _res );
+        })
+    }
 }

@@ -14,10 +14,6 @@
                     "config": {
                         "type": "coreConfig",
                         "comment": "the configuration instance filled-up from <configDir>/iztiar.json core configuration file"
-                    },
-                    "Msg": {
-                        "type": "Msg",
-                        "comment": "the interface instance to Msg/Logger"
                     }
                 }
             },

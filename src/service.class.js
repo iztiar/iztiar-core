@@ -59,7 +59,6 @@ export class coreService {
         let api = new coreApi();
         api.corePackage( app.package());
         api.coreConfig( app.config());
-        api.Msg( Msg );
         api.service( self );
 
         // import all what this @iztiar/iztiar-core exports
@@ -72,7 +71,7 @@ export class coreService {
         const _apiPromise = function( _coreExports ){
             return new Promise(( resolve, reject ) => {
                 api.exports( _coreExports );
-                //console.log( new api.exports.coreForkable() );
+                //console.log( new api.exports.IForkable() );
                 resolve( api );
             });
         };
@@ -142,7 +141,7 @@ export class coreService {
 
     isForkable(){
         const _forkable = this._iServiceable.isForkable();
-        Msg.debug( 'coreService.isForkable()', 'name='+this.name(), 'forkable='+_forkable );
+        Msg.verbose( 'coreService.isForkable()', 'name='+this.name(), 'forkable='+_forkable );
         return _forkable;
     }
 
@@ -185,6 +184,7 @@ export class coreService {
         if( this._iServiceable && this._iServiceable.start && typeof this._iServiceable.start === 'function' ){
             promise = promise.then(() => { return this._iServiceable.start(); });
         }
+
         promise = promise
             .then(( res ) => { return Promise.resolve( res )});
 
@@ -287,6 +287,7 @@ export class coreService {
                 return new Promise(( resolve, reject ) => {
                     utils.tcpRequest( port, 'iz.status' )
                         .then(( res ) => {
+                            //console.log( 'iz.status returns', res );
                             let _answeredName = null;
                             let _answeredPids = [];
                             let _answeredClass = null;
@@ -359,9 +360,11 @@ export class coreService {
             return subProms;
         });
         // after our own cheks, ask the service itself
-        if( this._iServiceable && this._iServiceable.status && typeof this._iServiceable.status === 'function' ){
-            promise = promise.then(() => { return this._iServiceable.status(); });
-        }
+        //  NO: first, the status has already been requested in _portStatusPromise()
+        //      second, this would ask the status of the service in *this* process instead of in the forked one...
+        //if( this._iServiceable && this._iServiceable.status && typeof this._iServiceable.status === 'function' ){
+        //    promise = promise.then(() => { return this._iServiceable.status(); });
+        //}
         promise = promise.then(() => { return Promise.resolve( result )});
         return promise;
     }
@@ -376,6 +379,8 @@ export class coreService {
      *  It is up to the caller to begin with a first check, and end with a later check.
      */
     stop(){
+        Msg.verbose( 'coreService.stop()' );
+
         let promise = Promise.resolve( true )
 
         if( this._iServiceable && this._iServiceable.stop && typeof this._iServiceable.stop === 'function' ){

@@ -5,7 +5,7 @@
  */
 import chalk from 'chalk';
 
-import { Msg } from './index.js';
+import { IServiceable, Msg } from './index.js';
 
 /**
  * Get the status of the named service
@@ -25,10 +25,18 @@ export function cliStatus( app, name, options={} ){
 
     const service = app.IPluginManager.byName( app, name );
     let _promise = Promise.resolve( true );
+    let result = {};
+
+    // service.Initialize() must resolve with a IServiceable instance
+    const _checkInitialize = function( res ){
+        return IServiceable.successfullyInitialized( res )
+            .then(( success ) => { result.iServiceable = success ?  { ...res } : null; });
+    };
 
     if( service ){
         _promise = _promise
             .then(() => { return service.initialize( app ); })
+            .then(( res ) => { return _checkInitialize( res ); })
             .then(( res ) => { return service.status(); })
             .then(( res ) => {
 

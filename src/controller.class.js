@@ -1,49 +1,35 @@
 /*
  * coreController class
  */
-import net from 'net';
 import pidUsage from 'pidusage';
 
 import { Msg } from './index.js';
 
-// cb is to be called with the result
-//  the connexion will be closed after execution of the callback - only one answer is allowed
-//
 //  returns the list of available commands
-function _izHelp( self, cmd, words, cb ){
-    cb({
-        command: cmd,
-        arguments: words,
-        timestamp: self.api().exports().utils.now(),
-        answer: coreController.c
-    });
+function _izHelp( self, reply ){
+    reply.answer = coreController.c;
+    return Promise.resolve( reply );
 }
 
 // ping -> ack: the port is alive
-function _izPing( self, cmd, words, cb ){
-    cb({
-        command: cmd,
-        arguments: words,
-        timestamp: self.api().exports().utils.now(),
-        answer: 'iz.ack'
-    });
+function _izPing( self, reply ){
+    reply.answer = 'iz.ack';
+    return Promise.resolve( reply );
 }
 
 // returns the full status of the server
-function _izStatus( self, cmd, words, cb ){
-    self.getStatus().then(( status ) => { cb({
-        command: cmd,
-        arguments: words,
-        timestamp: self.api().exports().utils.now(),
-        answer: status
+function _izStatus( self, reply ){
+    return self.status()
+        .then(( status ) => {
+            reply.answer = status;
+            return Promise.resolve( reply );
         });
-    });
 }
 
 // terminate the server and its relatives (broker, managed, plugins)
-//  the cb is called with a '<name> <forkable> terminated with code <code>' message
-function _izStop( self, cmd, words, cb ){
-    self.terminate( words, cb );
+function _izStop( self, reply ){
+    return self.terminate( reply.args )
+        .then(() => { return Promise.resolve( reply ); });
 }
 
 export class coreController {
@@ -88,11 +74,8 @@ export class coreController {
         messagingPort: 24003
     };
 
-    // the communication TCP server
-    _tcpServer = null;
+    // configuration at construction time
     _tcpPort = 0;
-
-    // the messaging bus
     _messagingHost = null;
     _messagingPort = 0;
 
@@ -101,16 +84,19 @@ export class coreController {
 
     /**
      * @param {coreApi} api the core API as described in core-api.schema.json
-     * @param {coreService} service
      * @returns {coreController}
      */
     constructor( api ){
-        api.exports().Interface.extends( this, api.exports().coreForkable, api );
+        api.exports().Interface.extends( this, api.exports().baseService, api );
         Msg.debug( 'coreController instanciation' );
 
         //console.log( this );
         //console.log( Object.getPrototypeOf( this ));
         //console.log( this.api());
+
+        api.exports().Interface.add( this, api.exports().IForkable, {
+            _terminate: this.iforkableTerminate
+        });
 
         api.exports().Interface.add( this, api.exports().IRunFile, {
             runDir: this.irunfileRunDir
@@ -119,32 +105,14 @@ export class coreController {
         api.exports().Interface.add( this, api.exports().IServiceable, {
             cleanupAfterKill: this.iserviceableCleanupAfterKill,
             getCheckStatus: this.iserviceableGetCheckStatus,
-            onStartupConfirmed: this.iserviceableOnStartupConfirmed,
             start: this.iserviceableStart,
+            status: this.iserviceableStatus,
             stop: this.iserviceableStop
         });
 
-        // install signal handlers
-        const self = this;
-        process.on( 'SIGUSR1', () => {
-            Msg.debug( 'USR1 signal handler' );
-        });
-
-        process.on( 'SIGUSR2', () => {
-            Msg.debug( 'USR2 signal handler' );
-        });
-
-        process.on( 'SIGTERM', () => {
-            Msg.debug( 'server receives SIGTERM signal' );
-            self.terminate();
-        });
-
-        process.on( 'SIGHUP', () => {
-            Msg.debug( 'HUP signal handler' );
-        });
-
-        process.on( 'SIGQUIT', () => {
-            Msg.debug( 'QUIT signal handler' );
+        api.exports().Interface.add( this, api.exports().ITcpServer, {
+            _execute: this.itcpserverExecute,
+            _listening: this.itcpserverListening
         });
 
         // unable to handle SIGKILL signal: Error: uv_signal_start EINVAL
@@ -154,11 +122,21 @@ export class coreController {
         //});
 
         // must be determined at construction time to be available when initializing IServiceable instance
-        this._tcpPort = this.service().config().listenPort || coreController.d.listenPort;
-        this._messagingHost = this.service().config().messagingHost || coreController.d.messagingHost;
-        this._messagingPort = this.service().config().messagingPort || coreController.d.messagingPort;
+        this._tcpPort = api.service().config().listenPort || coreController.d.listenPort;
+        this._messagingHost = api.service().config().messagingHost || coreController.d.messagingHost;
+        this._messagingPort = api.service().config().messagingPort || coreController.d.messagingPort;
 
         return this;
+    }
+
+    /*
+     * Terminates the child process
+     * @returns {Promise} which resolves when the process is actually about to terminate (only waiting for this Promise)
+     * [-implementation Api-]
+     */
+    iforkableTerminate(){
+        Msg.debug( 'coreController.iforkableTerminate()' );
+        return this.iserviceableStop();
     }
 
     /*
@@ -167,7 +145,7 @@ export class coreController {
      */
     irunfileRunDir(){
         Msg.debug( 'coreController.irunfileRunDir()' );
-        return this.coreConfig().runDir();
+        return this.api().coreConfig().runDir();
     }
 
     /*
@@ -176,7 +154,7 @@ export class coreController {
      */
     iserviceableCleanupAfterKill(){
         Msg.debug( 'coreController.iserviceableCleanupAfterKill()' );
-        this.IRunFile.remove( this.service().name());
+        this.IRunFile.remove( this.api().service().name());
     }
 
     /*
@@ -185,7 +163,7 @@ export class coreController {
      */
     iserviceableGetCheckStatus(){
         Msg.debug( 'coreController.iserviceableGetCheckStatus()' );
-        const _name = this.service().name();
+        const _name = this.api().service().name();
         const _json = this.IRunFile.jsonByName( _name );
         let o = { startable: false, reasons: [], pids: [], ports: [] };
         if( _json && _json[_name] ){
@@ -200,85 +178,34 @@ export class coreController {
     }
 
     /*
-     * Take advantage of this event to create the runfile
-     * @param {Object} data the data transmitted via IPC on startup: here the full status
-     * [-implementation Api-]
-     */
-    iserviceableOnStartupConfirmed( data ){
-        Msg.debug( 'coreController.iserviceableOnStartupConfirmed()' );
-        const name = Object.keys( data )[0];
-        this.IRunFile.set( name, data );
-    }
-
-    /*
-     * @returns {Promise}
+     * Start the service
+     * @returns {Promise} which never resolves
      * [-implementation Api-]
      */
     iserviceableStart(){
-        Msg.verbose( 'coreController.iserviceableStart()', 'forkedProcess='+this.api().exports().coreForkable.forkedProcess());
-        const self = this;
-        self.runningStatus( this.api().exports().coreForkable.s.STARTING );
-
-        this._tcpServer = net.createServer(( c ) => {
-            Msg.debug( 'coreController::iserviceableStart() incoming connection' );
-
-            // refuse all connections if the server is not 'running'
-            if( self.runningStatus() !== self.api().exports().coreForkable.s.RUNNING ){
-                const _answer = 'temporarily refusing connections';
-                const _res = { answer:_answer, reason:self.runningStatus(), timestamp:self.api().exports().utils.now()};
-                c.write( JSON.stringify( _res )+'\r\n' );
-                Msg.info( 'server answers to new incoming connection with', _res );
-                c.end();
-            }
-            //console.log( c );
-            c.on( 'data', ( data ) => {
-                //console.log( data );
-                const _bufferStr = new Buffer.from( data ).toString().replace( '\r\n', '' );
-                Msg.info( 'server receives \''+_bufferStr+'\' request' );
-                const _words = _bufferStr.split( ' ' );
-                if( _words[0] === self.api().exports().coreForkable.c.stop.command ){
-                    if( self._forwardPort ){
-                        self.api().exports().utils.tcpRequest( self._forwardPort, _bufferStr )
-                            .then(( res ) => {
-                                c.write( JSON.stringify( res ));
-                                Msg.info( 'server answers to \''+_bufferStr+'\' with', res );
-                                c.end();
-                            })
-                    } else {
-                        Msg.debug = 'coreController.iserviceableStart().on(\''+self.api().exports().coreForkable.c.stop.command+'\') forwardPort is unset';
-                    }
-                } else {
-                    try {
-                        const _executer = self.findExecuter( _bufferStr, coreController.c );
-                        _executer.object.fn( self, _executer.command, _executer.args, ( res ) => {
-                            c.write( JSON.stringify( res )+'\r\n' );
-                            Msg.info( 'server answers to \''+_bufferStr+'\' with', res );
-                            if( _executer.object.endConnection ){
-                                c.end();
-                            }
-                        });
-                    } catch( e ){
-                        Msg.error( 'coreController.iserviceableStart().execute()', e.name, e.message );
-                        c.end();
-                    }
-                }
-            })
-            .on( 'error', ( e ) => {
-                self.errorHandler( e );
+        Msg.debug( 'coreController.iserviceableStart()', 'forkedProcess='+this.api().exports().IForkable.forkedProcess());
+        return this.ITcpServer.create( this._tcpPort )
+            .then(() => {
+                Msg.debug( 'coreController.iserviceableStart() tcpServer created' );
+                return new Promise(() => {});
             });
-        });
-        Msg.debug( 'coreController::iserviceableStart() tcpServer created' );
+    }
 
-        this._tcpServer.listen( self._tcpPort, '0.0.0.0', () => {
-            let _msg = 'Hello, I am '+self.service().name()+' '+self.constructor.name;
-            _msg += ', running with pid '+process.pid+ ', listening on port '+self._tcpPort;
-            self.getStatus()
-                .then(( status ) => {
-                    self.advertiseParent( self._tcpPort, _msg, status );
-                });
-        });
-
-        return new Promise(() => {});   // never resolves
+    /*
+     * Get the status of the service
+     * @returns {Promise} which resolves the a status object
+     * [-implementation Api-]
+     */
+    iserviceableStatus(){
+        Msg.debug( 'coreController.iserviceableStatus()' );
+        this.api().exports().utils.tcpRequest( this._tcpPort, 'iz.status' )
+            .then(( answer ) => {
+                Msg.debug( 'coreController.iserviceableStatus()', 'receives answer to \'iz.status\''+answer );
+            }, ( failure ) => {
+                // an error message is already sent by the called self.api().exports().utils.tcpRequest()
+                //  what more to do ??
+                //Msg.error( 'TCP error on iz.stop command:', failure );
+            });
     }
 
     /*
@@ -297,6 +224,47 @@ export class coreController {
             });
     }
 
+    /*
+     * Execute a received commands and replies with an answer
+     * @param {String[]} words the received command and its arguments
+     * @param {Object} client the client connection
+     * @returns {Boolean} true if we knew the command and (at least tried) execute it
+     * [-implementation Api-]
+     */
+    itcpserverExecute( words, client ){
+        const self = this;
+        let reply = this.ITcpServer.findExecuter( words, coreController.c );
+        //console.log( reply );
+        if( reply ){
+            reply.obj.fn( this, reply.answer )
+                .then(( result ) => {
+                    self.ITcpServer.answer( client, result, reply.obj.endConnection );
+                });
+        }
+        return reply;
+    }
+
+    /*
+     * What to do when this ITcpServer is ready listening ?
+     *  -> write the runfile before advertising parent to prevent a race condition when writing the file
+     *  -> send a Hello message + current service status
+     * [-implementation Api-]
+     */
+    itcpserverListening(){
+        Msg.debug( 'coreController.itcpserverListening()' );
+        const self = this;
+        const _name = this.api().service().name();
+        let _msg = 'Hello, I am '+_name+' '+this.constructor.name;
+        _msg += ', running with pid '+process.pid+ ', listening on port '+this._tcpPort;
+        this.status().then(( status ) => {
+            // double goal
+            //  - set the ITcpServer to 'running'
+            status[_name].status = this.ITcpServer.status().status;
+            self.IRunFile.set( _name, status );
+            self.IForkable.advertiseParent( _msg, status );
+            });
+    }
+
     /**
      * @returns {Promise} which resolves to a status Object
      * Note:
@@ -306,12 +274,22 @@ export class coreController {
      *  - after startup, to write into the IRunFile.
      *  A minimum of structure is so required, described in run-status.schema.json.
      */
-    getStatus(){
-        Msg.debug( 'coreController.getStatus()' );
+    status(){
+        const _serviceName = this.api().service().name();
+        Msg.debug( 'coreController.status()', 'serviceName='+_serviceName );
         const self = this;
-        const _serviceName = this.service().name();
         let status = {};
         status[_serviceName] = {};
+        // ITcpServer
+        const _tcpServerPromise = function(){
+            return new Promise(( resolve, reject ) => {
+                const o = self.ITcpServer.status();
+                Msg.debug( 'coreController.status()', 'ITcpServer', o );
+                status[_serviceName].ITcpServer = { ...o };
+                resolve( status );
+            });
+        };
+        // run-status.schema.json
         const _runStatus = function(){
             return new Promise(( resolve, reject ) => {
                 const o = {
@@ -319,21 +297,26 @@ export class coreController {
                     class: self.constructor.name,
                     pids: [ process.pid ],
                     ports: [ self._tcpPort ],
-                    status: self.runningStatus()
+                    status: status[_serviceName].ITcpServer.status
                 };
+                Msg.debug( 'coreController.status()', 'runStatus', o );
                 status[_serviceName] = { ...status[_serviceName], ...o };
                 resolve( status );
             });
         };
+        // coreController
         const _thisStatus = function(){
             return new Promise(( resolve, reject ) => {
                 const o = {
                     listenPort: self._tcpPort,
+                    messagingHost: self._messagingHost | '',
+                    messagingPort: self._messagingPort,
                     // running environment
                     environment: {
                         IZTIAR_DEBUG: process.env.IZTIAR_DEBUG || '(undefined)',
                         IZTIAR_ENV: process.env.IZTIAR_ENV || '(undefined)',
-                        NODE_ENV: process.env.NODE_ENV || '(undefined)'
+                        NODE_ENV: process.env.NODE_ENV || '(undefined)',
+                        forkedProcess: self.api().exports().IForkable.forkedProcess()
                     },
                     // general runtime constants
                     logfile: self.api().exports().Logger.logFname(),
@@ -341,26 +324,28 @@ export class coreController {
                     storageDir: self.api().exports().coreConfig.storageDir(),
                     version: self.api().corePackage().getVersion()
                 };
+                Msg.debug( 'coreController.status()', 'controllerStatus', o );
                 status[_serviceName] = { ...status[_serviceName], ...o };
                 resolve( status );
             });
         };
-        const _pidPromise = function( firstRes ){
-            return new Promise(( resolve, reject ) => {
-                pidUsage( process.pid )
-                    .then(( pidRes ) => {
-                        const o = {
-                            cpu: pidRes.cpu,
-                            memory: pidRes.memory,
-                            ctime: pidRes.ctime,
-                            elapsed: pidRes.elapsed
-                        };
-                        status[_serviceName] = { ...status[_serviceName], ...o };
-                        resolve( status );
-                    });
-            });
+        // pidUsage
+        const _pidPromise = function(){
+            return pidUsage( process.pid )
+                .then(( pidRes ) => {
+                    const o = {
+                        cpu: pidRes.cpu,
+                        memory: pidRes.memory,
+                        ctime: pidRes.ctime,
+                        elapsed: pidRes.elapsed
+                    };
+                    Msg.debug( 'coreController.status()', 'pidUsage', o );
+                    status[_serviceName].pidUsage = { ...o };
+                    return Promise.resolve( status );
+                });
         };
         return Promise.resolve( true )
+            .then(() => { return _tcpServerPromise(); })
             .then(() => { return _runStatus(); })
             .then(() => { return _thisStatus(); })
             .then(() => { return _pidPromise(); });
@@ -370,29 +355,32 @@ export class coreController {
      * terminate the server
      * Does its best to advertise the main process of what it will do
      * (but be conscious that it will also close the connection rather soon)
-     * @param {string[]|null} words the parameters transmitted after the 'iz.stop' command
-     * @param {Callback|null} cb a (e,res) form callback called when all is terminated
+     * @param {string[]|null} args the parameters transmitted after the 'iz.stop' command
+     * @returns {Promise} which resolves when the server is terminated
      * Note:
      *  Receiving 'iz.stop' command calls this terminate() function, which has the side effect of.. terminating!
      *  Which sends a SIGTERM signal to this process, and so triggers the signal handler, which itself re-calls
      *  this terminate() function. So, try to prevent a double execution.
      */
-    terminate( words=[], cb=null ){
+    terminate( args=[] ){
         Msg.debug( 'coreController.terminate()' );
-        if( this.runningStatus() === this.api().exports().coreForkable.s.STOPPING ){
-            Msg.debug( 'coreController.terminate() returning as already stopping' );
-            return;
+        if( this.ITcpServer.status().status === ITcpServer.s.STOPPING ){
+            Msg.debug( 'coreController.terminate() returning as currently stopping' );
+            return Promise.resolve( true );
         }
-        const self = this;
-        const _name = this.service().name();
-        this._forwardPort = words && words[0] && self.api().exports().utils.isInt( words[0] ) ? words[0] : 0;
+        if( this.ITcpServer.status().status === ITcpServer.s.STOPPED ){
+            Msg.debug( 'coreController.terminate() returning as already stopped' );
+            return Promise.resolve( true );
+        }
 
-        // we advertise we are stopping as soon as possible
-        this.runningStatus( this.api().exports().coreForkable.s.STOPPING );
+        const _name = this.api().service().name();
+        this._forwardPort = args && args[0] && self.api().exports().utils.isInt( args[0] ) ? args[0] : 0;
+
+        const self = this;
 
         // closing the TCP server
         //  in order the TCP server be closeable, the current connection has to be ended itself
-        //  which is done by calling cb()
+        //  which is done by the promise
 
         let _promise = Promise.resolve( true );
 
@@ -400,31 +388,12 @@ export class coreController {
             const _sendCallback = function(){
                 Msg.debug( 'coreController.terminate() callback-answers to the request' );
                 return new Promise(( resolve, reject ) => {
-                    if( cb && typeof cb === 'function' ){ 
-                        cb({
-                            command: 'iz.stop',
-                            arguments: words,
-                            timestamp: self.api().exports().utils.now(),
-                            answer: { name:_name, class:self.constructor.name, pid:process.pid, port:self._tcpPort }
-                        });
-                        resolve( true );
-                    } else {
-                        resolve( false );
-                    }
-                });
-            };
-            const _closeServer = function(){
-                Msg.debug( 'coreController.terminate() about to close tcpServer' );
-                return new Promise(( resolve, reject ) => {
-                    self._tcpServer.close(() => {
-                        Msg.debug( 'coreController.terminate() tcpServer is closed' );
-                        resolve( true );
-                    });
+                    resolve({ name:_name, class:self.constructor.name, pid:process.pid, port:self._tcpPort });
                 });
             };
             _promise = _promise
                 .then(() => { return _sendCallback(); })
-                .then(() => { return _closeServer(); })
+                .then(() => { return self.ITcpServer.terminate(); })
                 .then(() => {
                     // we auto-remove from runfile as late as possible
                     //  (rationale: no more runfile implies that the service is no more testable and expected to be startable)

@@ -267,7 +267,7 @@ export const utils = {
                     reject( e.code );
                 });
                 client.on( 'end', ( m ) => {
-                    Msg.verbose( 'utils.tcpRequest().on(\'end\'): connection ended by the server', m );
+                    Msg.debug( 'utils.tcpRequest().on(\'end\'): client connection ended', m );
                     resolve( true );
                 });
             } catch( e ){

@@ -29,17 +29,8 @@ export function cliStop( app, name, options={} ){
 
     // service.Initialize() must resolve with a IServiceable instance
     const _checkInitialize = function( res ){
-        Msg.debug( 'cliStop()._checkInitialize()' );
-        return new Promise(( resolve, reject ) => {
-            if( res && res instanceof IServiceable ){
-                result.iServiceable = { ...res };
-                Msg.verbose( 'cliStop() iServiceable instance successfully checked' );
-            } else {
-                result.iServiceable = null;
-                Msg.verbose( 'cliStop() iServiceable instance is null: erroneous service initialization' );
-            }
-            resolve( result );
-        });
+        return IServiceable.successfullyInitialized( res )
+            .then(( success ) => { result.iServiceable = success ?  { ...res } : null; });
     };
 
     // coreService.status() promise resolves as { reasons, startable, pids, ports, status }
@@ -136,7 +127,7 @@ export function cliStop( app, name, options={} ){
             return new Promise(( resolve, reject ) => {
                 if( !result.waitFor && pids.length ){
                     pids.every(( p ) => {
-                        Msg.verbose( 'cliStop()._checkTimeout() killing process', p );
+                        Msg.verbose( 'cliStop().checkTimeout() killing process', p );
                         process.kill( p, 'SIGKILL' );
                         result.iServiceable.cleanupAfterKill();
                         return true;
