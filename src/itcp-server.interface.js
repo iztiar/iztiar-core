@@ -21,6 +21,7 @@ export class ITcpServer {
     _tcpServer = null;
     _port = 0;
     _inConnCount = 0;
+    _inClosedCount = 0;
     _inMsgCount = 0;
     _inBytesCount = 0;
     _outConnCount = 0;
@@ -93,6 +94,7 @@ export class ITcpServer {
         this._tcpServer = net.createServer(( c ) => {
             Msg.debug( 'ITcpServer.create() incoming connection' );
             self._inConnCount += 1;
+            Msg.debug( 'ITcpServer.create() opening', self._inConnCount, self._inClosedCount );
 
             // refuse all connections if the server is not 'running'
             if( self.status().status !== ITcpServer.s.RUNNING ){
@@ -118,6 +120,11 @@ export class ITcpServer {
                     c.end();
                 }
 
+            })
+
+            .on( 'close', () => {
+                self._inClosedCount += 1;
+                Msg.debug( 'ITcpServer.create() closing', self._inConnCount, self._inClosedCount );
             })
 
             .on( 'error', ( e ) => {
@@ -215,8 +222,8 @@ export class ITcpServer {
      * Terminate this ITcpServer
      * @returns {Promise} which resolves when the server is actually closed
      */
-     terminate(){
-        Msg.debug( 'ITcpServer.terminate()' );
+    terminate(){
+        Msg.debug( 'ITcpServer.terminate()', this._inConnCount, this._inClosedCount );
         if( this.status().status === ITcpServer.s.STOPPING ){
             Msg.debug( 'ITcpServer.terminate() returning as currently stopping' );
             return;
@@ -225,7 +232,6 @@ export class ITcpServer {
             Msg.debug( 'ITcpServer.terminate() returning as already stopped' );
             return;
         }
-        const self = this;
 
         // we advertise we are stopping as soon as possible
         this.status( ITcpServer.s.STOPPING );
@@ -235,6 +241,7 @@ export class ITcpServer {
         //  which must be done prior to calling this method
 
         let _promise = Promise.resolve( true );
+        const self = this;
 
         if( this._tcpServer ){
             const _closeServer = function(){
@@ -242,6 +249,7 @@ export class ITcpServer {
                 return new Promise(( resolve, reject ) => {
                     self._tcpServer.close(() => {
                         Msg.debug( 'ITcpServer.terminate() tcpServer is closed' );
+                        self.status( ITcpServer.s.STOPPED );
                         resolve( true );
                     });
                 });

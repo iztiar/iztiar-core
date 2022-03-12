@@ -28,8 +28,11 @@ function _izStatus( self, reply ){
 
 // terminate the server and its relatives (broker, managed, plugins)
 function _izStop( self, reply ){
-    return self.terminate( reply.args )
-        .then(() => { return Promise.resolve( reply ); });
+    self.terminate( reply.args, ( res ) => {
+        reply.answer = res;
+        Msg.debug( 'coreController.izStop()', 'replying with', reply );
+        return Promise.resolve( reply );
+    });
 }
 
 export class coreController {
@@ -137,7 +140,7 @@ export class coreController {
      */
     iforkableTerminate(){
         Msg.debug( 'coreController.iforkableTerminate()' );
-        return this.iserviceableStop();
+        return this.terminate();
     }
 
     /*
@@ -230,7 +233,7 @@ export class coreController {
         Msg.debug( 'coreController.iserviceableStop()' );
         this.api().exports().utils.tcpRequest( this._tcpPort, 'iz.stop' )
             .then(( answer ) => {
-                Msg.debug( 'coreController.iserviceableStop()', 'receives answer to \'iz.stop\''+answer );
+                Msg.debug( 'coreController.iserviceableStop()', 'receives answer to \'iz.stop\'', answer );
             }, ( failure ) => {
                 // an error message is already sent by the called self.api().exports().utils.tcpRequest()
                 //  what more to do ??
@@ -370,55 +373,52 @@ export class coreController {
      * Does its best to advertise the main process of what it will do
      * (but be conscious that it will also close the connection rather soon)
      * @param {string[]|null} args the parameters transmitted after the 'iz.stop' command
+     * @param {Callback} cb the function to be called back to acknowledge the request
      * @returns {Promise} which resolves when the server is terminated
      * Note:
      *  Receiving 'iz.stop' command calls this terminate() function, which has the side effect of.. terminating!
      *  Which sends a SIGTERM signal to this process, and so triggers the signal handler, which itself re-calls
      *  this terminate() function. So, try to prevent a double execution.
      */
-    terminate( args=[] ){
+    terminate( args=[], cb=null ){
         Msg.debug( 'coreController.terminate()' );
-        if( this.ITcpServer.status().status === ITcpServer.s.STOPPING ){
+        const _status = this.ITcpServer.status();
+        if( _status.status === this.api().exports().ITcpServer.s.STOPPING ){
             Msg.debug( 'coreController.terminate() returning as currently stopping' );
             return Promise.resolve( true );
         }
-        if( this.ITcpServer.status().status === ITcpServer.s.STOPPED ){
+        if( _status.status === this.api().exports().ITcpServer.s.STOPPED ){
             Msg.debug( 'coreController.terminate() returning as already stopped' );
             return Promise.resolve( true );
         }
 
         const _name = this.api().service().name();
+        const _module = this.api().service().config().module;
         this._forwardPort = args && args[0] && self.api().exports().utils.isInt( args[0] ) ? args[0] : 0;
 
         const self = this;
 
+        //Msg.debug( self.ITcpServer );
+        //Msg.debug( 'self.ITcpServer.terminate', typeof self.ITcpServer.terminate );
+
         // closing the TCP server
         //  in order the TCP server be closeable, the current connection has to be ended itself
         //  which is done by the promise
-
-        let _promise = Promise.resolve( true );
-
-        if( self._tcpServer ){
-            const _sendCallback = function(){
-                Msg.debug( 'coreController.terminate() callback-answers to the request' );
-                return new Promise(( resolve, reject ) => {
-                    resolve({ name:_name, class:self.constructor.name, pid:process.pid, port:self._tcpPort });
-                });
-            };
-            _promise = _promise
-                .then(() => { return _sendCallback(); })
-                .then(() => { return self.ITcpServer.terminate(); })
-                .then(() => {
-                    // we auto-remove from runfile as late as possible
-                    //  (rationale: no more runfile implies that the service is no more testable and expected to be startable)
-                    this.IRunFile.remove( _name );
-                    Msg.info( _name+' coreController terminating with code '+process.exitCode );
-                    return Promise.resolve( true );
-                    //process.exit();
-                });
-        } else {
-            Msg.warn( 'this.tcpServer is not set!' );
-        }
+        let _promise = Promise.resolve( true )
+            .then(() => {
+                if( cb && typeof cb === 'function' ){
+                    cb({ name:_name, module:_module, class:self.constructor.name, pid:process.pid, port:self._tcpPort });
+                }
+                return self.ITcpServer.terminate();
+            })
+            .then(() => {
+                // we auto-remove from runfile as late as possible
+                //  (rationale: no more runfile implies that the service is no more testable and expected to be startable)
+                self.IRunFile.remove( _name );
+                Msg.info( _name+' coreController terminating with code '+process.exitCode );
+                return Promise.resolve( true)
+                //process.exit();
+            });
 
         return _promise;
     }

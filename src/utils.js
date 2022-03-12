@@ -266,10 +266,10 @@ export const utils = {
                     Msg.error( 'utils.tcpRequest().on(\'error\') ', e.name, e.code, e.message );
                     reject( e.code );
                 });
-                client.on( 'end', ( m ) => {
-                    Msg.debug( 'utils.tcpRequest().on(\'end\'): client connection ended', m );
-                    resolve( true );
-                });
+                //client.on( 'end', ( m ) => {
+                //    Msg.debug( 'utils.tcpRequest().on(\'end\'): client connection ended', m );
+                //    resolve( true );
+                //});
             } catch( e ){
                 Msg.error( 'utils.tcpRequest().catch()', e.name, e.message );
                 reject( e.message );
