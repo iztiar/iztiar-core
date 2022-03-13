@@ -117,7 +117,8 @@ export class coreController {
 
         api.exports().Interface.add( this, api.exports().ITcpServer, {
             _execute: this.itcpserverExecute,
-            _listening: this.itcpserverListening
+            _listening: this.itcpserverListening,
+            _statsUpdated: this.itcpserverStatsUpdated
         });
 
         // unable to handle SIGKILL signal: Error: uv_signal_start EINVAL
@@ -291,6 +292,17 @@ export class coreController {
             self.IRunFile.set( _name, status );
             self.IForkable.advertiseParent( status );
         });
+    }
+
+    /*
+     * Internal stats have been modified
+     * [-implementation Api-]
+     */
+    itcpserverStatsUpdated(){
+        Msg.debug( 'coreController.itcpserverStatsUpdated()' );
+        const _name = this.api().service().name();
+        const _status = this.ITcpServer.status();
+        this.IRunFile.set([ _name, 'ITcpServer' ], _status );
     }
 
     /**

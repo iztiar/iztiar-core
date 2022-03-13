@@ -62,7 +62,7 @@ export class ITcpServer {
      * [-implementation Api-]
      */
     _statsUpdated(){
-        Msg.debug( 'ITcpServer._statsUpdated()' );
+        Msg.debug( 'ITcpServer.statsUpdated()' );
     }
 
     /* *** ***************************************************************************************
@@ -74,6 +74,7 @@ export class ITcpServer {
      * @param {Object} client the client connection
      * @param {Object} obj the object to send to the client as an answer
      * @param {Boolean} close whether to close the client connection
+     * [-Public API-]
      */
     answer( client, obj, close=false ){
         const _msg = JSON.stringify( obj )+'\r\n';
@@ -84,7 +85,7 @@ export class ITcpServer {
         if( close ){
             client.end();
         }
-        this._statsUpdated();
+        this.statsUpdated();
     }
 
     /**
@@ -109,7 +110,7 @@ export class ITcpServer {
             if( self.status().status !== ITcpServer.s.RUNNING ){
                 const _res = { answer:'temporarily refusing connections', reason:self.status().status, timestamp:utils.now()};
                 self.answer( c, _res, true );
-                self._statsUpdated();
+                self.statsUpdated();
             }
 
             c.on( 'data', ( data ) => {
@@ -130,13 +131,13 @@ export class ITcpServer {
                     c.end();
                 }
 
-                self._statsUpdated();
+                self.statsUpdated();
             })
 
             .on( 'close', () => {
                 self._inClosedCount += 1;
                 Msg.debug( 'ITcpServer.create() closing', self._inConnCount, self._inClosedCount );
-                self._statsUpdated();
+                self.statsUpdated();
             })
 
             .on( 'error', ( e ) => {
@@ -157,6 +158,7 @@ export class ITcpServer {
     /**
      * An error handler for implementation classes
      * @param {Error} e exception on TCP server listening
+     * [-Public API-]
      */
     errorHandler( e ){
         Msg.debug( 'ITcpServer:errorHandler()' );
@@ -184,6 +186,7 @@ export class ITcpServer {
      *  command the identified command
      *  args    the arguments found after the command in the input string
      *  object  the object found in 'refs'
+     * [-Public API-]
      */
     findExecuter( words, refs ){
         if( Object.keys( refs ).includes( words[0] ) && refs[words[0]].fn && typeof refs[words[0]].fn === 'function' ){
@@ -203,9 +206,23 @@ export class ITcpServer {
     }
 
     /**
+     * Internal stats have been modified
+     * [-Public API-]
+     */
+    statsUpdated(){
+        const _status = this.status().status;
+        if( _status === ITcpServer.s.STOPPING || _status === ITcpServer.s.STOPPED ){
+            Msg.debug( 'ITcpServer.statsUpdated() not triggering event as status is \''+_status+'\'' );
+        } else {
+            this._statsUpdated();
+        }
+    }
+
+    /**
      * Getter/Setter
      * @param {String} newStatus the status to be set to the ITcpServer
      * @returns {Object} the status of the ITcpServer
+     * [-Public API-]
      */
     status( newStatus ){
         Msg.debug( 'ITcpServer.status()', 'status='+this._status, 'newStatus='+newStatus );
@@ -235,6 +252,7 @@ export class ITcpServer {
     /**
      * Terminate this ITcpServer
      * @returns {Promise} which resolves when the server is actually closed
+     * [-Public API-]
      */
     terminate(){
         Msg.debug( 'ITcpServer.terminate()', this._inConnCount, this._inClosedCount );
