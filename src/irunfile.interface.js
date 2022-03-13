@@ -9,6 +9,8 @@
  *          pids []
  *          ports []
  */
+import deepcopy from 'deepcopy';
+import deepequal from 'deepequal';
 import path from 'path';
 
 import { Msg, utils } from './index.js';
@@ -53,7 +55,6 @@ export class IRunFile {
             if( Object.keys( _json ).length !== 1 ){
                 throw new Error( 'IRunFile.jsonByName() expected one key at level one, found '+Object.keys( _json ));
             }
-            _json.name = Object.keys( _json )[0];
         }
         return _json;
     }
@@ -83,20 +84,33 @@ export class IRunFile {
     }
 
     /**
-     * Set the content of a forkable in the JSON runfile
-     * @param {string} name the name of the service
-     * @param {Object} data the minimal object (aka data interface) to set
-     *  pids {Integer[]} list of running pids
-     *  ports {Integer[]} list of opened ports
-     * @returns {Object} the updated JSON content
-     * @throws Error (but not ENOENT, this being already handled)
+     * Set the all or part of the content of a JSON runfile
+     * @param {string|string[]} names the array of the keys to address the to-be-updated part
+     * @param {Object} data the data to set
+     * @returns {Object} the new full JSON content
+     * @throws {Error} (but not ENOENT, this being already handled)
      */
-    set( name, data ){
-        Msg.debug( 'IRunFile.set()', 'name='+name, 'data='+data );
+    set( names, data ){
+        Msg.debug( 'IRunFile.set()', 'names', names, 'data', data );
+        let _names = [ ...names ];
+        if( !Array.isArray( names )) _names = [ names ];
         let _written = null;
-        const _fname = this.runFile( name );
-        const _orig = this.jsonByFilename( _fname );
-        _written = utils.jsonWriteFileSync( _fname, data, _orig );
+        const _fname = this.runFile( _names[0] );
+        const _orig = this.jsonByFilename( _fname ) || {};
+        let _fullpart = deepcopy( _orig );
+        if( _names.length === 1 ){
+            _fullpart = data;
+        } else {
+            if( Object.keys( _orig )[0] !== _names[0] ){
+                throw new Error( 'IRunFile.set() expecting top key=\''+_names[0]+'\', found=\''+Object.keys( _orig )[0]+'\'' );
+            }
+            if( _names.length === 2 ){
+                _fullpart[_names[0]][_names[1]] = data;
+            } else {
+                throw new Error( 'IRunFile.set() only updates two levels at the moment, found '+_names.length );
+            }
+        }
+        _written = utils.jsonWriteFileSync( _fname, _fullpart, _orig );
         return _written;
     }
 }
