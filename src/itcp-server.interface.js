@@ -42,7 +42,7 @@ export class ITcpServer {
      * Execute a received commands and replies with an answer
      * @param {String[]} words the received command and its arguments
      * @param {Object} client the client connection
-     * @returns {Boolean} true if we knew the command and (at least tried) execute it
+     * @returns {Boolean} true if we knew the command and (at least tried to) execute it
      * [-implementation Api-]
      */
     _execute( words, client ){
@@ -55,6 +55,14 @@ export class ITcpServer {
      */
     _listening(){
         Msg.debug( 'ITcpServer._listening()' );
+    }
+
+    /**
+     * Internal stats have been modified
+     * [-implementation Api-]
+     */
+    _statsUpdated(){
+        Msg.debug( 'ITcpServer._statsUpdated()' );
     }
 
     /* *** ***************************************************************************************
@@ -76,6 +84,7 @@ export class ITcpServer {
         if( close ){
             client.end();
         }
+        this._statsUpdated();
     }
 
     /**
@@ -100,6 +109,7 @@ export class ITcpServer {
             if( self.status().status !== ITcpServer.s.RUNNING ){
                 const _res = { answer:'temporarily refusing connections', reason:self.status().status, timestamp:utils.now()};
                 self.answer( c, _res, true );
+                self._statsUpdated();
             }
 
             c.on( 'data', ( data ) => {
@@ -120,11 +130,13 @@ export class ITcpServer {
                     c.end();
                 }
 
+                self._statsUpdated();
             })
 
             .on( 'close', () => {
                 self._inClosedCount += 1;
                 Msg.debug( 'ITcpServer.create() closing', self._inConnCount, self._inClosedCount );
+                self._statsUpdated();
             })
 
             .on( 'error', ( e ) => {
@@ -204,12 +216,14 @@ export class ITcpServer {
             status: this._status,
             port: this._port,
             in: {
-                conn: this._inConnCount,
+                opened: this._inConnCount,
+                closed: this._inClosedCount,
                 msg: this._inMsgCount,
                 bytes: this._inBytesCount
             },
             out: {
-                conn: this._outConnCount,
+                opened: this._outConnCount,
+                closed: 'unset',
                 msg: this._outMsgCount,
                 bytes: this._outBytesCount
             }
@@ -226,11 +240,11 @@ export class ITcpServer {
         Msg.debug( 'ITcpServer.terminate()', this._inConnCount, this._inClosedCount );
         if( this.status().status === ITcpServer.s.STOPPING ){
             Msg.debug( 'ITcpServer.terminate() returning as already stopping' );
-            return;
+            return Promise.resolve( true );
         }
         if( this.status().status === ITcpServer.s.STOPPED ){
             Msg.debug( 'ITcpServer.terminate() returning as already stopped' );
-            return;
+            return Promise.resolve( true );
         }
 
         // we advertise we are stopping as soon as possible
