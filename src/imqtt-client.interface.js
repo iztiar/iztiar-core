@@ -35,7 +35,7 @@ export class IMqttClient {
 
     _aliveRun(){
         //console.log( 'IMqttClient._aliveRun()', this );
-        Msg.debug( 'IMqttClient._aliveRun()' );
+        //Msg.debug( 'IMqttClient._aliveRun()' );
         if( this._client && this._aliveInterval ){
             const topic = 'iztiar/alive/'+this._name();
             let payload = {
