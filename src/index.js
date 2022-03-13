@@ -1,6 +1,7 @@
 // interfaces
 export * from './icmdline.interface.js';
 export * from './iforkable.interface.js';
+export * from './imqtt-client.interface.js';
 export * from './iplugin-manager.interface.js';
 export * from './irunfile.interface.js';
 export * from './irunnable.interface.js';

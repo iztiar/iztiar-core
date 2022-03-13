@@ -8,7 +8,7 @@
  */
 import path from 'path';
 
-import { IServiceable, coreApi, coreController, Msg, utils } from './index.js';
+import { IForkable, IServiceable, coreApi, coreController, Msg, utils } from './index.js';
 
 export class coreService {
 
@@ -19,6 +19,12 @@ export class coreService {
 
     // got from initialization() from the plugin
     _iServiceable = null;
+
+    /**
+     * @returns {coreService} the part of the configuration which describes the named service
+     */
+    static getService( name ){
+    }
 
     /**
      * Constructor
@@ -44,8 +50,18 @@ export class coreService {
         return this.config().class || ( this._iServiceable ? this._iServiceable.class() : '(undefined class)' );
     }
 
+    /**
+     * @returns {Object} the part of the configuration which describes this service
+     */
     config(){
         return this._config;
+    }
+
+    /**
+     * @returns {Boolean} whether the service is enabled or not
+     */
+    enabled(){
+        return this._config ? ( this._config.enabled ? this._config.enabled : true ) : false;
     }
 
     /**
@@ -160,7 +176,7 @@ export class coreService {
     }
 
     module(){
-        return this.config().module;
+        return this._config ? this.config().module : '';
     }
 
     name(){
@@ -178,19 +194,26 @@ export class coreService {
      *  In order to start any service, one should first check that it doesn't already run, actually try yo start it,
      *  and then check that it gracefully runs.
      *  This function ONLY takes care of the actual startup.
-     *  It is up to the caller to begin with a first check, and end with a later check.
+     *  It is up to the caller to begin with a first check, and end with a final check.
      * Note:
      *  If the service says it is forkable, then the main application takes care of forking a new process
      *  before trying to start the service. We may so execute here in a child forked process
      */
     start(){
         Msg.verbose( 'coreService.start()', 'name='+this._name );
-        let promise = Promise.resolve( true )
+        if( !this.enabled()){
+            throw new Error( 'Service is disabled' );
+        }
 
+        if( IForkable.forkedProcess()){
+            const _title = process.title + '/' + this.name();
+            process.title = _title;
+        }
+
+        let promise = Promise.resolve( true )
         if( this._iServiceable && this._iServiceable.start && typeof this._iServiceable.start === 'function' ){
             promise = promise.then(() => { return this._iServiceable.start(); });
         }
-
         promise = promise
             .then(( res ) => { return Promise.resolve( res )});
 

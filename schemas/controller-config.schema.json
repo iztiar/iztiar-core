@@ -22,15 +22,17 @@
                     "description": "TCP listening port number for internal service management",
                     "default": 24001
                 },
+                "messaging": {
+                    "type": "string",
+                    "description": "the name of the messaging service to which the coreController may connect (should be enough, but not used at the moment)"
+                },
                 "messagingHost": {
                     "type": "string",
-                    "description": "hostname to which the coreController may connect to read from and write to messages bus",
-                    "default": "localhost"
+                    "description": "the hostname to use to connect to the message bus (should be enough, but not used at the moment, only localhost being managed for now)"
                 },
                 "messagingPort": {
                     "type": "integer",
-                    "description": "Messaging port number",
-                    "default": 24003
+                    "description": "the port number to use to connect to the message bus"
                 }
             }
         }

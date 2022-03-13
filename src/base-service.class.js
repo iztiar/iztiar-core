@@ -28,4 +28,18 @@ export class baseService {
     api(){
         return this._api;
     }
+
+    /**
+     * @returns {String} the module name providing the service
+     */
+    module(){
+        return this.api().service().module();
+    }
+
+    /**
+     * @returns {String} the service name
+     */
+    name(){
+        return this.api().service().name();
+    }
 }

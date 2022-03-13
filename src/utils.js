@@ -233,8 +233,9 @@ export const utils = {
     now: function(){
         const date = new Date( Date.now());
         const year = ( '0000'+date.getFullYear()).slice( -4 );
-        const month = ( '00'+date.getMonth()).slice( -2 );
-        const day = ( '00'+date.getDay()).slice( -2 );
+        const mm = 1+date.getMonth();
+        const month = ( '00'+mm).slice( -2 );
+        const day = ( '00'+date.getDate()).slice( -2 );
         const hours = ( '00'+date.getHours()).slice( -2 );
         const mins = ( '00'+date.getMinutes()).slice( -2 );
         const secs = ( '00'+date.getSeconds()).slice( -2 );

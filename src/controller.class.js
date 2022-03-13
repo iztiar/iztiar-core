@@ -72,15 +72,15 @@ export class coreController {
      * Defaults
      */
     static d = {
-        listenPort: 24001,
-        messagingHost: 'localhost',
-        messagingPort: 24003
+        listenPort: 24001
     };
 
     // configuration at construction time
     _tcpPort = 0;
-    _messagingHost = null;
+    _messaging = '';
+    _messagingService = null;
     _messagingPort = 0;
+    _messagingConfig = null;
 
     // when stopping, the port to which answer and forward the received messages
     _forwardPort = 0;
@@ -99,6 +99,12 @@ export class coreController {
 
         api.exports().Interface.add( this, api.exports().IForkable, {
             _terminate: this.iforkableTerminate
+        });
+
+        api.exports().Interface.add( this, api.exports().IMqttClient, {
+            _class: this._class,
+            _module: this.module,
+            _name: this.name
         });
 
         api.exports().Interface.add( this, api.exports().IRunFile, {
@@ -129,10 +135,29 @@ export class coreController {
 
         // must be determined at construction time to be available when initializing IServiceable instance
         this._tcpPort = api.service().config().listenPort || coreController.d.listenPort;
-        this._messagingHost = api.service().config().messagingHost || coreController.d.messagingHost;
-        this._messagingPort = api.service().config().messagingPort || coreController.d.messagingPort;
+
+        // message bus
+        //  the target is to be able to say to which service we should connect (.e.g BrokerOne)
+        //  and then the coreService class should be able to provide us the configuration published by the service.
+        //  No messaging service is planned by default
+        //  for now, we only rely on messagePort - the port number on the localhost
+        this._messaging = api.service().config().messaging;
+        if( this._messaging ){
+            this._messagingService = coreService.getService( this._messaging );
+        }
+        this._messagingPort = api.service().config().messagingPort;
+        if( this._messagingPort ){
+            this._messagingConfig = {
+                host: 'localhost',
+                port: this._messagingPort
+            };
+        }
 
         return this;
+    }
+
+    _class(){
+        return this.constructor.name;
     }
 
     /*
@@ -161,7 +186,7 @@ export class coreController {
      */
     iserviceableClass(){
         Msg.debug( 'coreController.iserviceableClass()' );
-        return this.constructor.name;
+        return this._class();
     }
 
     /*
@@ -216,6 +241,7 @@ export class coreController {
         return this.ITcpServer.create( this._tcpPort )
             .then(() => {
                 Msg.debug( 'coreController.iserviceableStart() tcpServer created' );
+                this.IMqttClient.advertise({ ...this._messagingConfig, reconnectPeriod:5*1000 });
                 return new Promise(() => {});
             });
     }
@@ -315,7 +341,7 @@ export class coreController {
      *  A minimum of structure is so required, described in run-status.schema.json.
      */
     status(){
-        const _serviceName = this.api().service().name();
+        const _serviceName = this.name();
         Msg.debug( 'coreController.status()', 'serviceName='+_serviceName );
         const self = this;
         let status = {};
@@ -333,8 +359,8 @@ export class coreController {
         const _runStatus = function(){
             return new Promise(( resolve, reject ) => {
                 const o = {
-                    module: self.api().service().module(),
-                    class: self.IServiceable.class(),
+                    module: self.module(),
+                    class: self._class(),
                     pids: [ process.pid ],
                     ports: [ self._tcpPort, self._messagingPort ],
                     status: status[_serviceName].ITcpServer.status
@@ -349,7 +375,7 @@ export class coreController {
             return new Promise(( resolve, reject ) => {
                 const o = {
                     listenPort: self._tcpPort,
-                    messagingHost: self._messagingHost | '',
+                    messaging: self._messaging | '',
                     messagingPort: self._messagingPort,
                     // running environment
                     environment: {
@@ -415,9 +441,9 @@ export class coreController {
             return Promise.resolve( true );
         }
 
-        const _name = this.api().service().name();
-        const _module = this.api().service().module();
-        const _class = this.IServiceable.class();
+        const _name = this.name();
+        const _module = this.module();
+        const _class = this._class();
         this._forwardPort = args && args[0] && self.api().exports().utils.isInt( args[0] ) ? args[0] : 0;
 
         const self = this;
@@ -438,6 +464,7 @@ export class coreController {
             .then(() => {
                 // we auto-remove from runfile as late as possible
                 //  (rationale: no more runfile implies that the service is no more testable and expected to be startable)
+                self.IMqttClient.terminate();
                 self.IRunFile.remove( _name );
                 Msg.info( _name+' coreController terminating with code '+process.exitCode );
                 return Promise.resolve( true)
