@@ -124,7 +124,7 @@ export function cliStart( app, name, options={} ){
                     _msg += '(main)';
                     _msg += ' \''+_name+'\'';
                     _msg += ' '+( _runStatus.class || '(undefined class)' );
-                    _msg += ' successfully startup, listening on port '+_runStatus.ports.join( ',' );
+                    _msg += ' successfully startup, listening on port(s) '+_runStatus.ports.join( ',' );
                 } else {
                     _msg += 'unmanaged received event \''+_runStatus.event+'\'';
                 }
