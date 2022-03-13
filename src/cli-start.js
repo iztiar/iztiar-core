@@ -55,10 +55,24 @@ export function cliStart( app, name, options={} ){
                                 if( expected ){
                                     if( status.startable ){
                                         Msg.error( 'Unable to start the service' );
+                                        res.started = false;
+                                        process.exitCode += 1;
+                                    } else if( status.reasons.length > 0 ){
+                                        Msg.warn( 'Service is said started, but exhibits', status.reasons.length,'error message(s)' );
+                                        status.reasons.every(( m ) => {
+                                            Msg.warn( ' '+m );
+                                            return true;
+                                        })
+                                        res.started = false;
                                         process.exitCode += 1;
                                     } else {
+                                        res.started = true;
                                         Msg.out( chalk.green( 'Service(s) \''+_name+'\' successfully started' ));
-                                    }
+                                        const hello = res.iServiceable.helloMessage();
+                                        if( hello ){
+                                            Msg.out( chalk.green( 'Greetings message is « '+hello+' »' ));
+                                        }
+                                                        }
                                 } else {
                                     if( status.startable ){
                                         Msg.info( 'Service is not already running, is startable (fine)' );
@@ -144,13 +158,27 @@ export function cliStart( app, name, options={} ){
                 return Promise.resolve( res );
             }
 
+            // kill the child pid if the startup is not ok
+            const _killIfNeeded = function( res ){
+                //console.log( res );
+                if( res.iServiceable && res.started === false ){
+                    if( result.child ){
+                        Msg.verbose( 'cliStart().killIfNeeded() killing process', result.child.pid );
+                        process.kill( result.child.pid, 'SIGKILL' );
+                        result.iServiceable.cleanupAfterKill();
+                    }
+                }
+                return Promise.resolve( res );
+            }
+
             _promise = _promise
                 .then(( res ) => { return _checkInitialize( res ); })
                 .then(() => { return _checkStatus( result, false ); })
                 .then(() => { return _forkOrStart( result ); })
                 .then(() => { return utils.waitFor( result, _waitIpc, result, 5*1000 ); })
                 .then(() => { return _checkTimeout( result ); })
-                .then(() => { return _checkStatus( result, true ); });
+                .then(() => { return _checkStatus( result, true ); })
+                .then(() => { return _killIfNeeded( result ); });
 
         } else {
             _promise = _promise

@@ -1,0 +1,48 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://github.com/iztiar/iztiar-core/schemas/controller-config.schema.json",
+    "title": "appConfig",
+    "description": "the configuration of the Iztiar application",
+    "type": "object",
+    "properties" : {
+        "core": {
+            "type": "object",
+            "description": "the core configuration",
+            "properties": {
+                "logLevel": {
+                    "type": "string",
+                    "description": "the desired logging level, defaulting to 'INFO', overridable on the command-line"
+                },
+                "consoleLevel": {
+                    "type": "string",
+                    "description": "the desired level of the console verbosity, defaulting to 'NORMAL', overridable on the command-line"
+                }
+            }
+        },
+        "plugins": {
+            "type": "object",
+            "description": "the configuration of the plugins",
+            "patternProperties" : {
+                "^[a-zA-Z][a-zA-Z0-9-_]*$": {
+                    "type": "object",
+                    "description": "the name of the service",
+                    "properties": {
+                        "module": {
+                            "type": "string",
+                            "description": "the name of the module which provides the service, or 'core', mandatory, no default"
+                        },
+                        "class": {
+                            "type": "string",
+                            "description": "the name of the class or type or something inside the module, which qualifies the service type, mandatory if module is 'core'"
+                        },
+                        "enabled": {
+                            "type": "boolean",
+                            "description": "whether the service is enabled or disabled",
+                            "default": true
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

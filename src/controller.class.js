@@ -106,6 +106,7 @@ export class coreController {
         });
 
         api.exports().Interface.add( this, api.exports().IServiceable, {
+            class: this.iserviceableClass,
             cleanupAfterKill: this.iserviceableCleanupAfterKill,
             getCheckStatus: this.iserviceableGetCheckStatus,
             helloMessage: this.iserviceableHelloMessage,
@@ -150,6 +151,16 @@ export class coreController {
     irunfileRunDir(){
         Msg.debug( 'coreController.irunfileRunDir()' );
         return this.api().coreConfig().runDir();
+    }
+
+    /*
+     * @returns {String} the type of the service, not an identifier, rather a qualifier
+     *  For example, the implementation class name is a good choice
+     * [-implementation Api-]
+     */
+    iserviceableClass(){
+        Msg.debug( 'coreController.iserviceableClass()' );
+        return this.constructor.name;
     }
 
     /*
@@ -310,8 +321,8 @@ export class coreController {
         const _runStatus = function(){
             return new Promise(( resolve, reject ) => {
                 const o = {
-                    module: 'core',
-                    class: self.constructor.name,
+                    module: self.api().service().module(),
+                    class: self.IServiceable.class(),
                     pids: [ process.pid ],
                     ports: [ self._tcpPort, self._messagingPort ],
                     status: status[_serviceName].ITcpServer.status
@@ -394,6 +405,7 @@ export class coreController {
 
         const _name = this.api().service().name();
         const _module = this.api().service().module();
+        const _class = this.IServiceable.class();
         this._forwardPort = args && args[0] && self.api().exports().utils.isInt( args[0] ) ? args[0] : 0;
 
         const self = this;
@@ -407,7 +419,7 @@ export class coreController {
         let _promise = Promise.resolve( true )
             .then(() => {
                 if( cb && typeof cb === 'function' ){
-                    cb({ name:_name, module:_module, class:self.constructor.name, pid:process.pid, port:self._tcpPort });
+                    cb({ name:_name, module:_module, class:_class, pid:process.pid, port:self._tcpPort });
                 }
                 return self.ITcpServer.terminate();
             })

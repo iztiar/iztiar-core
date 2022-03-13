@@ -11,26 +11,26 @@
             "properties": {
                 "module": {
                     "type": "string",
-                    "comment": "the name of the module which provides the service, or 'core'"
+                    "description": "the name of the module which provides the service, or 'core'"
                 },
                 "class": {
                     "type": "string",
-                    "comment": "the name of the class or type or something inside the module, which qualifies the service type",
+                    "description": "the name of the class or type or something inside the module, which qualifies the service type",
                     "mandatory": "coreController"
                 },
                 "listenPort": {
                     "type": "integer",
-                    "comment": "TCP listening port number for internal service management",
+                    "description": "TCP listening port number for internal service management",
                     "default": 24001
                 },
                 "messagingHost": {
                     "type": "string",
-                    "comment": "hostname to which the coreController may connect to read from and write to messages bus",
+                    "description": "hostname to which the coreController may connect to read from and write to messages bus",
                     "default": "localhost"
                 },
                 "messagingPort": {
                     "type": "integer",
-                    "comment": "Messaging port number",
+                    "description": "Messaging port number",
                     "default": 24003
                 }
             }

@@ -17,6 +17,7 @@ export class IServiceable {
      * [-implementation Api-]
      */
     class(){
+        // this default implementation returns 'IServiceable' (as expected)
         Msg.debug( 'IServiceable.class()' );
         return this.constructor && this.constructor.name ? this.constructor.name : '';
     }
@@ -81,8 +82,8 @@ export class IServiceable {
         Msg.debug( 'IServiceable.status()' );
         return Promise.resolve({
             name: {
-                module: 'unknown',
-                class: 'unknown',
+                module: 'unset',
+                class: 'unset',
                 pids: [],
                 ports: [],
                 status: null

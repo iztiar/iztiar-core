@@ -34,6 +34,12 @@ export class coreService {
         return this;
     }
 
+    /**
+     * @returns {String} the class defined in the configuration of the service
+     *  The class is only required when configuring a service from the '@iztiar/iztiar-core' core module
+     *  Why coreService.class() returns the configured class
+     *  See IServiceable.class() to get the actual, runtime, class
+     */
     class(){
         return this.config().class || ( this._iServiceable ? this._iServiceable.class() : '(undefined class)' );
     }
@@ -105,8 +111,8 @@ export class coreService {
             _promise = _promise.then(( res ) => { return _initImported( res ); });
 
         // the service is expected to be provided by core
-        } else if( self.config().module === 'core' ){
-            const _class = self.config().class;
+        } else if( self.module() === 'core' ){
+            const _class = self.class();
             switch( _class ){
                 case 'coreController':
                     _promise = _promise.then(( api ) => {
@@ -115,7 +121,7 @@ export class coreService {
                     break;
                 default:
                     _promise = _promise.then(() => {
-                        return Promise.reject( 'coreService.initialize() unknown class \''+self.config().class+'\'' );
+                        return Promise.reject( 'coreService.initialize() unknown class \''+_class+'\'' );
                     });
                     break;
             }
@@ -123,7 +129,7 @@ export class coreService {
         // or we don't know where to get the service from
         } else {
             _promise = _promise.then(() => {
-                return Promise.reject( 'coreService.initialize() unknown module \''+self.config().module+'\'' );
+                return Promise.reject( 'coreService.initialize() unknown module \''+self.module()+'\'' );
             });
         }
 

@@ -129,9 +129,9 @@ export function cliStop( app, name, options={} ){
                     pids.every(( p ) => {
                         Msg.verbose( 'cliStop().checkTimeout() killing process', p );
                         process.kill( p, 'SIGKILL' );
-                        result.iServiceable.cleanupAfterKill();
                         return true;
                     })
+                    result.iServiceable.cleanupAfterKill();
                     resolve( result );
                 } else {
                     resolve( result );
