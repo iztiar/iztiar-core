@@ -1,8 +1,8 @@
 /*
  * ITcpServer interface
  *
- *  A service which implements this ITcpServer interface (aka a TCP server) should at least
- *  be able to handle 'iz.stop' and 'iz.status' commands.
+ *  A service which implements this ITcpServer interface (aka a TCP server) should be able to handle
+ *  'iz.ping', 'iz.status', and 'iz.stop' commands.
  */
 import net from 'net';
 
@@ -225,7 +225,7 @@ export class ITcpServer {
     terminate(){
         Msg.debug( 'ITcpServer.terminate()', this._inConnCount, this._inClosedCount );
         if( this.status().status === ITcpServer.s.STOPPING ){
-            Msg.debug( 'ITcpServer.terminate() returning as currently stopping' );
+            Msg.debug( 'ITcpServer.terminate() returning as already stopping' );
             return;
         }
         if( this.status().status === ITcpServer.s.STOPPED ){
