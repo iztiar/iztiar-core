@@ -15,8 +15,7 @@
                 },
                 "class": {
                     "type": "string",
-                    "description": "the name of the class or type or something inside the module, which qualifies the service type",
-                    "mandatory": "coreController"
+                    "description": "the name of the class or type or something inside the module, which qualifies the service type, should be 'coreController' as provided by 'core'"
                 },
                 "listenPort": {
                     "type": "integer",
