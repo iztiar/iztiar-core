@@ -133,6 +133,7 @@ export const utils = {
         let _json = null;
         try {
             _json = JSON.parse( fs.readFileSync( fname, { encoding: 'utf8' }));
+            Msg.debug( 'utils.jsonReadFileSync()', fname, _json );
         } catch( e ){
             if( e.code === 'ENOENT' ){
                 Msg.debug( 'utils.jsonReadFileSync()', fname+': file not found or not readable' );
@@ -169,12 +170,12 @@ export const utils = {
 
     /**
      * synchronously writes the given non-null object into path
-     *  if the orig object is provided (not null not undefined), then it is compared with the found file
+     *  if the orig object is provided (not null nor undefined), then it is compared with the found file
      *  to make sure if has not been updated since the program has read the file
      * @param {string} fname the full pathname of the file
      * @param {Object} obj the data to be written, expected JSON
      * @param {Object} orig the original data read from this file, to be compared with data which will be read in the disk
-     *  ti make sure there has been no modifications of the file by another process
+     *  ti make sure there has been no modification of the file by another process
      * @returns {Object} the written data
      * @throws {Error}
      */
@@ -191,8 +192,8 @@ export const utils = {
             if( !deepEqual( orig, current )){
                 const _msg = 'utils.jsonWriteFileSync() fname '+fname+' has changed on the disk, refusing the update';
                 Msg.error( _msg );
-                Msg.debug( orig );
-                Msg.debug( current );
+                Msg.debug( 'orig', orig );
+                Msg.debug( 'current', current );
                 throw new Error( _msg );
             }
         }
