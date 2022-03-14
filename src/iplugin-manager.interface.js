@@ -53,34 +53,33 @@ export class IPluginManager {
 
     /**
      * @param {coreConfig} config the filled application configuration
-     * @param {PackageJson} packet the package.json of the main '@iztiar/iztiar-core' module
-     * @returns {coreService[]} the array of enabled services which target this one
+     * @param {PackageJson} packet the package.json of this main '@iztiar/iztiar-core' module
+     * @param {String[]} targeting a list of desired targets (all if empty)
+     * @returns {coreService[]} the array of enabled services
      * [-public API-]
      */
-    getEnabledExt( config, packet ){
+    getEnabledExt( config, packet, targeting=[] ){
         let result = [];
-        const appPlugins = config.plugins();
+        const configuredFeats = config.features();
         const thisName = packet.getName();
         const thisShortName = packet.getShortName();
         let _found = [];
-        // examine the configured services to select a) installed modules b) core services
-        Object.keys( appPlugins ).every(( id ) => {
-            const enabled = appPlugins[id].enabled || true;
+        // examine the configured features to select a) installed modules b) core services
+        Object.keys( configuredFeats ).every(( id ) => {
+            const enabled = configuredFeats[id].enabled || true;
             if( enabled ){
-                if( appPlugins[id].module === 'core' ){
-                    result.push( new coreService( id, appPlugins[id] ));
-                } else if( _found.includes( appPlugins[id].module )){
-                    result.push( new coreService( id, appPlugins[id] ));
+                if( configuredFeats[id].module === 'core' ){
+                    result.push( new coreService( id, configuredFeats[id] ));
+                } else if( _found.includes( configuredFeats[id].module )){
+                    result.push( new coreService( id, configuredFeats[id] ));
                 } else {
-                    const pck = this.getPackageExt( packet, appPlugins[id].module );
+                    const pck = this.getPackageExt( packet, configuredFeats[id].module );
                     if( pck ){
-                        const group = pck.getIztiar() || {};
-                        const target = group.target || null;
-                        if( target ){
-                            if( target == thisName || target === thisShortName ){
-                                result.push( new coreService( id, appPlugins[id], pck ));
-                                _found.push( appPlugins[id].module );
-                            }
+                        const pckGroup = pck.getIztiar() || {};
+                        const pckTarget = pckGroup.target || null;
+                        if( pckTarget ){
+                            result.push( new coreService( id, configuredFeats[id], pck ));
+                            _found.push( configuredFeats[id].module );
                         }
                     }
                 }
@@ -93,15 +92,16 @@ export class IPluginManager {
     /**
      * @param {coreApi} api a coreApi instance
      * @returns {PackageJson[]} the array of installed modules of our Iztiar family (including this one)
+     *  Rationale:
+     *  - the package should be named '@iztiar/iztiar-xxxxxxxxxx'
+     *    as a consequence, the npm package manager will install it besides of this '@iztiar/iztiar-core' module
      * [-public API-]
      */
     getInstalled( api ){
         const parentDir = path.dirname( api.packet().getDir());
-        //const pckName = app.ICore.package().getShortName();
-        //  new RegExp( '^(?!'+pckName+'$)' )
         const regex = [
             new RegExp( '^[^\.]' ),
-            new RegExp( '^'+cliApplication.const.commonName+'-' )
+            new RegExp( '^'+api.commonName()+'-' )
         ];
         let result = [];
         utils.dirScanSync( parentDir, { type:'d', regex:regex }).every(( p ) => {
@@ -122,7 +122,7 @@ export class IPluginManager {
     }
 
     /**
-     * @param {PackageJson} packet the package.json of the main '@iztiar/iztiar-core' module
+     * @param {PackageJson} packet the package.json of this '@iztiar/iztiar-core' module
      * @param {String} name
      * @returns {PackageJson|null} the PackageJson instance for the (installed) module
      * [-public API-]

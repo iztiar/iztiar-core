@@ -11,17 +11,19 @@
             "properties": {
                 "logLevel": {
                     "type": "string",
-                    "description": "the desired logging level, defaulting to 'INFO', overridable on the command-line"
+                    "description": "the desired logging level, overridable on the command-line",
+                    "default": "INFO"
                 },
                 "consoleLevel": {
                     "type": "string",
-                    "description": "the desired level of the console verbosity, defaulting to 'NORMAL', overridable on the command-line"
+                    "description": "the desired level of the console verbosity, overridable on the command-line",
+                    "default": "NORMAL"
                 }
             }
         },
-        "plugins": {
+        "features": {
             "type": "object",
-            "description": "the configuration of the plugins",
+            "description": "the configuration of the features",
             "patternProperties" : {
                 "^[a-zA-Z][a-zA-Z0-9-_]*$": {
                     "type": "object",

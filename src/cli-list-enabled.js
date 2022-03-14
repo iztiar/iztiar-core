@@ -29,6 +29,8 @@ export function cliListEnabled( api, options={} ){
     if( _consoleLevel !== _origLevel ) Msg.consoleLevel( _consoleLevel );
 
     Msg.out( 'Listing enabled Iztiar services for this module' );
+    Msg.warn( 'This command should be modified to work with a \'target\' argument instead of slavishly only looking at core.' );
+    Msg.warn( 'As a consequence, IPluginManager.getEnabled() should be reviewed to manage this \'target\' argument.' );
     Msg.verbose( 'An Iztiar module is identified by its name; its target is qualified from package.json \'iztiar\' group' );
     
     const services = api.pluginManager().getEnabled( api );

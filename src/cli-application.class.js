@@ -80,7 +80,7 @@ export class cliApplication {
         //console.log( 'cliApplication.icmdlineOptions()' );
         return [
             [ '-s|--storage-dir <dir>', 'path to storage directory', coreConfig.getDefaultStorageDir() ],
-            [ '-S|--service <name>', 'name of the service', coreConfig.getDefaultServiceName() ],
+            [ '-S|--service <name>', 'name of the service' ],
             [ '-L|--log-level <level>', 'logging level', coreConfig.getDefaultLogLevel() ],
             [ '-C|--console-level <level>', 'console verbosity', coreConfig.getDefaultConsoleLevel() ]
         ];

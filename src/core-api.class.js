@@ -37,12 +37,12 @@ export class coreApi {
     /**
      * Getter/Setter
      * The setter is called as soon as command-line options have been parsed in order to get the storage directory.
-     * @param {Object} options the command-line option values
-     * @returns {coreConfig} the application configuration instance
+     * @param {coreConfig} o application configuration instance
+     * @returns {coreConfig}
      */
-    config( options ){
-        if( options ){
-            this._config = new coreConfig( options );
+    config( o ){
+        if( o && o instanceof coreConfig ){
+            this._config = o;
         }
         return this._config;
     }
