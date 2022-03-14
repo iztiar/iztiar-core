@@ -21,12 +21,12 @@ export function cliListInstalled( api, options={} ){
     Msg.out( 'Listing installed Iztiar modules' );
     Msg.verbose( 'An Iztiar module is identified by its name; its target is qualified from package.json \'iztiar\' group' );
     
-    const pckInstalled = api.pluginManager().getInstalled( api);
+    const installedModules = api.pluginManager().getInstalled( api);
 
-    let pckDisplay = [];
-    pckInstalled.every(( pck ) => {
+    let displayedMods = [];
+    installedModules.every(( pck ) => {
         const group = pck.getIztiar() || {};
-        pckDisplay.push({
+        displayedMods.push({
             module: pck.getName(),
             version: pck.getVersion(),
             description: pck.getDescription(),
@@ -34,14 +34,14 @@ export function cliListInstalled( api, options={} ){
         });
         return true;
     });
-    if( pckDisplay.length ){
-        Msg.tabular( pckDisplay, { prefix:'  ' });
+    if( displayedMods.length ){
+        Msg.tabular( displayedMods, { prefix:'  ' });
     }
-    const _msg = 'Found '+pckDisplay.length+' installed module(s) targeting '+cliApplication.const.displayName+' family';
+    const _msg = 'Found '+displayedMods.length+' installed module(s) targeting '+cliApplication.const.displayName+' family';
     Msg.out( _msg );
     Logger.info( _msg );
 
     if( _consoleLevel !== _origLevel ) Msg.consoleLevel( _origLevel );
 
-    return Promise.resolve( pckInstalled );
+    return Promise.resolve( installedModules );
 }
