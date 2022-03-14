@@ -4,16 +4,15 @@
  *  Display the list of installed plugins, along with their associated target module.
  *  Returns a Promise resolved with the array of the corresponding PackageJson objects.
  */
-import { coreApplication, Logger, Msg  } from './index.js';
+import { cliApplication, Logger, Msg  } from './index.js';
 
 /**
- * 
- * @param {coreApplication} app the application
+ * @param {coreApi} api a coreApi instance
  * @param {Object} options 
  *  consoleLevel: defaulting to NORMAL
  * @returns {Promise} which resolves to an array of the PackageJson objects for the installed Iztiar modules
  */
-export function cliListInstalled( app, options={} ){
+export function cliListInstalled( api, options={} ){
 
     const _origLevel = Msg.consoleLevel();
     const _consoleLevel = Object.keys( options ).includes( 'consoleLevel' ) ? options.consoleLevel : _origLevel;
@@ -22,13 +21,13 @@ export function cliListInstalled( app, options={} ){
     Msg.out( 'Listing installed Iztiar modules' );
     Msg.verbose( 'An Iztiar module is identified by its name; its target is qualified from package.json \'iztiar\' group' );
     
-    const pckInstalled = app.IPluginManager.getInstalled( app );
+    const pckInstalled = api.pluginManager().getInstalled( api);
 
     let pckDisplay = [];
     pckInstalled.every(( pck ) => {
         const group = pck.getIztiar() || {};
         pckDisplay.push({
-            module: pck.getFullName(),
+            module: pck.getName(),
             version: pck.getVersion(),
             description: pck.getDescription(),
             target: group.target || ''
@@ -38,7 +37,7 @@ export function cliListInstalled( app, options={} ){
     if( pckDisplay.length ){
         Msg.tabular( pckDisplay, { prefix:'  ' });
     }
-    const _msg = 'Found '+pckDisplay.length+' installed module(s) targeting '+coreApplication.const.displayName+' family';
+    const _msg = 'Found '+pckDisplay.length+' installed module(s) targeting '+cliApplication.const.displayName+' family';
     Msg.out( _msg );
     Logger.info( _msg );
 

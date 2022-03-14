@@ -1,11 +1,11 @@
 /*
- * coreApplication singleton
+ * cliApplication singleton
  */
 import path from 'path';
 
-import { ICmdline, IPluginManager, IRunnable, coreConfig, Interface, Msg, PackageJson } from './index.js';
+import { ICmdline, IPluginManager, IRunnable, coreApi, coreConfig, Interface, Msg, PackageJson } from './index.js';
 
-export class coreApplication {
+export class cliApplication {
 
     static _singleton = null;
 
@@ -15,20 +15,17 @@ export class coreApplication {
         copyrightColor: 'yellowBright'
     };
 
-    // the PackageJson object which describes the '@iztiar/iztiar-core' module
-    _package = null;
-
-    // the coreConfig object which describes the filled-up application configuration file
-    _config = null;
+    // a coreApi instance
+    _cApi = null;
 
     /**
-     * @returns {coreApplication} singleton
+     * @returns {cliApplication} singleton
      */
-     constructor(){
-        if( coreApplication._singleton ){
-            return coreApplication._singleton;
+    constructor(){
+        if( cliApplication._singleton ){
+            return cliApplication._singleton;
         }
-        //console.log( 'coreApplication instanciation' );
+        //console.log( 'cliApplication instanciation' );
 
         // need to build LogLevel's const very early!
         Msg.init();
@@ -43,17 +40,21 @@ export class coreApplication {
         Interface.add( this, IPluginManager );
 
         Interface.add( this, IRunnable, {
-            _copyrightColor: coreApplication.irunnableCopyrightColor,
-            _copyrightText: coreApplication.irunnableCopyrightText
+            _copyrightColor: cliApplication.irunnableCopyrightColor,
+            _copyrightText: cliApplication.irunnableCopyrightText
         });
 
-        process.title = coreApplication.const.commonName;
+        // replace the process title (node) by the application name
+        process.title = cliApplication.const.commonName;
 
-        // this coreApplication class definition is stored in /src subdirectory of the module root
-        this.package( new PackageJson( path.dirname( path.dirname( new URL( import.meta.url ).pathname ))));
+        // instanciates a coreApi
+        this._cApi = new coreApi();
+        this._cApi.commonName( cliApplication.const.commonName );
+        this._cApi.packet( new PackageJson( path.dirname( path.dirname( new URL( import.meta.url ).pathname ))));
+        this._cApi.pluginManager( this.IPluginManager );
 
-        coreApplication._singleton = this;
-        return coreApplication._singleton;
+        cliApplication._singleton = this;
+        return cliApplication._singleton;
     }
 
     /*
@@ -76,7 +77,7 @@ export class coreApplication {
      * <-ICmdline implementation->
      */
     icmdlineOptions(){
-        //console.log( 'coreApplication.icmdlineOptions()' );
+        //console.log( 'cliApplication.icmdlineOptions()' );
         return [
             [ '-s|--storage-dir <dir>', 'path to storage directory', coreConfig.getDefaultStorageDir() ],
             [ '-S|--service <name>', 'name of the service', coreConfig.getDefaultServiceName() ],
@@ -104,7 +105,7 @@ export class coreApplication {
      * <-ICmdline implementation->
      */
     icmdlineVersion(){
-        return this.package().getVersion();
+        return this.core().packet().getVersion();
     }
 
     /*
@@ -112,7 +113,7 @@ export class coreApplication {
      * <-IRunnable implementation->
      */
     static irunnableCopyrightColor(){
-        return coreApplication.const.copyrightColor;
+        return cliApplication.const.copyrightColor;
     }
 
     /*
@@ -120,40 +121,16 @@ export class coreApplication {
      * <-IRunnable implementation->
      */
     static irunnableCopyrightText(){
-        let _text = coreApplication.const.displayName+' v '+this.package().getVersion();
+        let _text = cliApplication.const.displayName+' v '+this.core().packet().getVersion();
         _text += '\nCopyright (@) 2020,2021,2022 TheDreamTeam&Consorts (and may the force be with us;))';
         return _text;
     }
 
     /**
-     * @returns {String} the common name of the application
+     * @returns {coreApi} the coreApi instance
+     *  built at construction time, so always there
      */
-    commonName(){
-        return coreApplication.const.commonName;
-    }
-
-    /**
-     * Getter/Setter
-     * The setter is called as soon as command-line options have been parsed in order to get the storage directory.
-     * @param {Object} options the command-line option values
-     * @returns {coreConfig} the application configuration instance
-     */
-    config( options ){
-        if( options ){
-            this._config = new coreConfig( options );
-        }
-        return this._config;
-    }
-
-    /**
-     * Getter/Setter
-     * @param {PackageJson} pck the object which describes the '@iztoar/iztiar-core' module
-     * @returns {PackageJson} the object which describes the '@iztoar/iztiar-core' module
-     */
-    package( pck ){
-        if( pck ){
-            this._package = pck;
-        }
-        return this._package;
+    core(){
+        return this._cApi;
     }
 }

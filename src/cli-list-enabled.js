@@ -14,16 +14,15 @@
  * 
  *  Returns a Promise resolved with the array of the corresponding Plugin objects.
  */
-import { coreApplication, Logger, Msg } from './index.js';
+import { cliApplication, Logger, Msg } from './index.js';
 
 /**
- * 
- * @param {coreApplication} app the application
+ * @param {coreApi} api a coreApi instance
  * @param {Object} options 
  *  consoleLevel: defaulting to NORMAL
  * @returns {Promise} which resolves to an array of coreService enabled services
  */
-export function cliListEnabled( app, options={} ){
+export function cliListEnabled( api, options={} ){
 
     const _origLevel = Msg.consoleLevel();
     const _consoleLevel = Object.keys( options ).includes( 'consoleLevel' ) ? options.consoleLevel : _origLevel;
@@ -32,7 +31,7 @@ export function cliListEnabled( app, options={} ){
     Msg.out( 'Listing enabled Iztiar services for this module' );
     Msg.verbose( 'An Iztiar module is identified by its name; its target is qualified from package.json \'iztiar\' group' );
     
-    const services = app.IPluginManager.getEnabled( app );
+    const services = api.pluginManager().getEnabled( api );
 
     let sceDisplay = [];
     services.every(( s ) => {
@@ -42,7 +41,7 @@ export function cliListEnabled( app, options={} ){
         const group = pck ? pck.getIztiar() : null;
         sceDisplay.push({
             name: s.name(),
-            module: pck ? pck.getFullName() : 'core',
+            module: pck ? pck.getName() : 'core',
             version: pck ? pck.getVersion() : '',
             description: pck ? pck.getDescription() : '',
             enabled: enabled ? 'true':'false',
@@ -53,7 +52,7 @@ export function cliListEnabled( app, options={} ){
     if( sceDisplay.length ){
         Msg.tabular( sceDisplay, { prefix:'  ' });
     }
-    const _msg = 'Found '+sceDisplay.length+' enabled plugin(s) targeting \''+app.package().getFullName()+'\'';
+    const _msg = 'Found '+sceDisplay.length+' enabled plugin(s) targeting \''+api.packet().getName()+'\'';
     Msg.out( _msg );
     Logger.info( _msg );
 

@@ -12,13 +12,13 @@ import { IServiceable, Msg, utils } from './index.js';
 
 /**
  * Stop the named service
- * @param {coreApplication} app the application
+ * @param {coreApi} api a coreApi instance
  * @param {String} name the service name to be started
  * @param {Object} options 
  *  consoleLevel {String} defaulting to current level
  * @returns {Promise} which resolves to the service status
  */
-export function cliStop( app, name, options={} ){
+export function cliStop( api, name, options={} ){
 
     const _origLevel = Msg.consoleLevel();
     const _consoleLevel = Object.keys( options ).includes( 'consoleLevel' ) ? options.consoleLevel : _origLevel;
@@ -143,11 +143,11 @@ export function cliStop( app, name, options={} ){
         }
     };
 
-    const service = app.IPluginManager.byName( app, name );
+    const service = api.pluginManager().byName( api, name );
     let _promise = Promise.resolve( true );
     if( service ){
         _promise = _promise
-            .then(() => { return service.initialize( app ); })
+            .then(() => { return service.initialize( api ); })
             .then(( res ) => { return _checkInitialize( res ); })
             .then(() => { return _checkStatus( result, true ); })
             .then(() => { return _stopService(); })

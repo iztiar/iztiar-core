@@ -23,16 +23,27 @@
                     "default": 24001
                 },
                 "messaging": {
-                    "type": "string",
-                    "description": "the name of the messaging service to which the coreController may connect (should be enough, but not used at the moment)"
-                },
-                "messagingHost": {
-                    "type": "string",
-                    "description": "the hostname to use to connect to the message bus (should be enough, but not used at the moment, only localhost being managed for now)"
-                },
-                "messagingPort": {
-                    "type": "integer",
-                    "description": "the port number to use to connect to the message bus"
+                    "type": "object",
+                    "description": "options for the messaging service",
+                    "properties": {
+                        "service": {
+                            "type": "string",
+                            "description": "the name of the messaging service to which the coreController may connect (should be enough, but not used at the moment)"
+                        },
+                        "host": {
+                            "type": "string",
+                            "description": "the hostname to use to connect to the message bus (should be enough, but not used at the moment, only localhost being managed for now)"
+                        },
+                        "port": {
+                            "type": "integer",
+                            "description": "the port number to use to connect to the message bus"
+                        },
+                        "alivePeriod": {
+                            "type": "integer",
+                            "description": "interval (ms) between two alive publications, defaulting to 1mn",
+                            "default": 60000
+                        }
+                    }
                 }
             }
         }

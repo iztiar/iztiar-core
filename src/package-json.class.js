@@ -39,7 +39,7 @@ export class PackageJson {
     /**
      * @returns {String} the full name of the package
      */
-    getFullName(){
+    getName(){
         return this._json ? this._json.name || '' : '';
     }
 
@@ -61,7 +61,7 @@ export class PackageJson {
      * @returns {String} the name of the package, i.e. the full name minus the organization if present
      */
     getShortName(){
-        const fullname = this.getFullName();
+        const fullname = this.getName();
         const words = fullname.split( '/' );
         return words.length === 1 ? words[0] : words[1];
     }
@@ -70,7 +70,7 @@ export class PackageJson {
      * @returns {String} the organization name if present
      */
     getOrganization(){
-        const fullname = this.getFullName();
+        const fullname = this.getName();
         const words = fullname.split( '/' );
         return words.length === 1 ? '' : words[0].substring( 1 );
     }

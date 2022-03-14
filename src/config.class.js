@@ -26,7 +26,7 @@
  */
 import path from 'path';
 
-import { coreApplication, Logger, Msg, utils } from './index.js';
+import { cliApplication, Logger, Msg, utils } from './index.js';
 
 export class coreConfig {
 
@@ -67,7 +67,7 @@ export class coreConfig {
      * @returns {String} the default storage dir
      */
     static getDefaultStorageDir(){
-        return path.join( '/var/lib', coreApplication.const.commonName );
+        return path.join( '/var/lib', cliApplication.const.commonName );
     }
 
     /**
@@ -91,7 +91,7 @@ export class coreConfig {
 
         this._options = options;
 
-        const _configFname = path.join( options.storageDir, coreConfig._c.configDir, coreApplication.const.commonName+'.json' );
+        const _configFname = path.join( options.storageDir, coreConfig._c.configDir, cliApplication.const.commonName+'.json' );
         this._json = utils.jsonReadFileSync( _configFname );
 
         const _fillupConfig = function( opts, json ){

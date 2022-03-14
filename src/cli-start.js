@@ -11,14 +11,14 @@ import { IForkable, IServiceable, Msg, utils } from './index.js';
 
 /**
  * Start the named service
- * @param {coreApplication} app the application
+ * @param {coreApi} api a coreApi instance
  * @param {String} name the service name to be started
  * @param {Object} options 
  *  consoleLevel {String} defaulting to current level
  *  args {String[]} arguments to pass to forked process, defaulting to process.argv
  * @returns {Promise} which resolves to the service status
  */
-export function cliStart( app, name, options={} ){
+export function cliStart( api, name, options={} ){
 
     const _origLevel = Msg.consoleLevel();
     const _consoleLevel = Object.keys( options ).includes( 'consoleLevel' ) ? options.consoleLevel : _origLevel;
@@ -26,11 +26,11 @@ export function cliStart( app, name, options={} ){
 
     const _args = Object.keys( options ).includes( 'args' ) ? options.args : process.argv;
 
-    const service = app.IPluginManager.byName( app, name );
+    const service = api.pluginManager().byName( api, name );
     let _promise = Promise.resolve( true );
 
     if( service ){
-        _promise = _promise.then(() => { return service.initialize( app ); });
+        _promise = _promise.then(() => { return service.initialize( api ); });
         let result = {};
 
         if( !IForkable.forkedProcess()){

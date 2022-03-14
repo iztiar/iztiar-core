@@ -9,12 +9,12 @@
  *  - IZTIAR_ENV
  *  - IZTIAR_LOGLEVEL
  */
-import { coreApplication } from './index.js';
+import { cliApplication } from './index.js';
 
-const app = new coreApplication();
+const app = new cliApplication();
 //console.log( app );
 
 app.IRunnable.displayCopyright();
 app.ICmdline.parseArgs();
-app.config( app.ICmdline.getOptions());
+app.core().config( app.ICmdline.getOptions());
 app.IRunnable.run( app );

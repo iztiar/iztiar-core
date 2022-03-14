@@ -5,36 +5,6 @@ import pidUsage from 'pidusage';
 
 import { Msg } from './index.js';
 
-//  returns the list of available commands
-function _izHelp( self, reply ){
-    reply.answer = coreController.c;
-    return Promise.resolve( reply );
-}
-
-// ping -> ack: the port is alive
-function _izPing( self, reply ){
-    reply.answer = 'iz.ack';
-    return Promise.resolve( reply );
-}
-
-// returns the full status of the server
-function _izStatus( self, reply ){
-    return self.status()
-        .then(( status ) => {
-            reply.answer = status;
-            return Promise.resolve( reply );
-        });
-}
-
-// terminate the server and its relatives (broker, managed, plugins)
-function _izStop( self, reply ){
-    self.terminate( reply.args, ( res ) => {
-        reply.answer = res;
-        Msg.debug( 'coreController.izStop()', 'replying with', reply );
-        return Promise.resolve( reply );
-    });
-}
-
 export class coreController {
 
     /**
@@ -45,25 +15,25 @@ export class coreController {
      *   > endConnection {Boolean} whether the server should close the client connection
      *      alternative being to wait for the client closes itself its own connection
      */
-     static c = {
+    static c = {
         'iz.help': {
             label: 'returns the list of known commands',
-            fn: _izHelp,
+            fn: coreController._izHelp,
             endConnection: false
         },
         'iz.ping': {
             label: 'ping the service',
-            fn: _izPing,
+            fn: coreController._izPing,
             endConnection: false
         },
         'iz.status': {
             label: 'returns the status of this coreController service',
-            fn: _izStatus,
+            fn: coreController._izStatus,
             endConnection: false
         },
         'iz.stop': {
             label: 'stop this coreController service',
-            fn: _izStop,
+            fn: coreController._izStop,
             endConnection: true
         }
     };
@@ -72,48 +42,76 @@ export class coreController {
      * Defaults
      */
     static d = {
-        listenPort: 24001
+        listenPort: 24001,
+        alivePeriod: 60*1000
     };
 
-    // configuration at construction time
-    _tcpPort = 0;
-    _messaging = '';
-    _messagingService = null;
-    _messagingPort = 0;
-    _messagingConfig = null;
+    //  returns the list of available commands
+    static _izHelp( self, reply ){
+        reply.answer = coreController.c;
+        return Promise.resolve( reply );
+    }
+
+    // ping -> ack: the port is alive
+    static _izPing( self, reply ){
+        reply.answer = 'iz.ack';
+        return Promise.resolve( reply );
+    }
+
+    // returns the full status of the server
+    static _izStatus( self, reply ){
+        return self.status()
+            .then(( status ) => {
+                reply.answer = status;
+                return Promise.resolve( reply );
+            });
+    }
+
+    // terminate the server and its relatives (broker, managed, plugins)
+    static _izStop( self, reply ){
+        self.terminate( reply.args, ( res ) => {
+            reply.answer = res;
+            Msg.debug( 'coreController.izStop()', 'replying with', reply );
+            return Promise.resolve( reply );
+        });
+    }
 
     // when stopping, the port to which answer and forward the received messages
     _forwardPort = 0;
 
     /**
      * @param {coreApi} api the core API as described in core-api.schema.json
-     * @returns {coreController}
+     * @returns {Promise} which resolves to a new coreController
      */
     constructor( api ){
-        api.exports().Interface.extends( this, api.exports().baseService, api );
+        const exports = api.exports();
+        const Interface = exports.Interface;
+
+        Interface.extends( this, exports.baseService, api );
         Msg.debug( 'coreController instanciation' );
 
         //console.log( this );
         //console.log( Object.getPrototypeOf( this ));
         //console.log( this.api());
 
-        api.exports().Interface.add( this, api.exports().IForkable, {
+        Interface.add( this, exports.IForkable, {
             _terminate: this.iforkableTerminate
         });
 
-        api.exports().Interface.add( this, api.exports().IMqttClient, {
+        Interface.add( this, exports.IMqttClient, {
             _class: this._class,
             _module: this.module,
             _name: this.name
         });
 
-        api.exports().Interface.add( this, api.exports().IRunFile, {
+        Interface.add( this, exports.IRunFile, {
             runDir: this.irunfileRunDir
         });
 
-        api.exports().Interface.add( this, api.exports().IServiceable, {
+        Interface.add( this, exports.IServiceable, {
             class: this.iserviceableClass,
             cleanupAfterKill: this.iserviceableCleanupAfterKill,
+            filledConfig: this.iserviceableFilledConfig,
             getCheckStatus: this.iserviceableGetCheckStatus,
             helloMessage: this.iserviceableHelloMessage,
             start: this.iserviceableStart,
@@ -121,7 +119,7 @@ export class coreController {
             stop: this.iserviceableStop
         });
 
-        api.exports().Interface.add( this, api.exports().ITcpServer, {
+        Interface.add( this, exports.ITcpServer, {
             _execute: this.itcpserverExecute,
             _listening: this.itcpserverListening,
             _statsUpdated: this.itcpserverStatsUpdated
@@ -133,31 +131,74 @@ export class coreController {
         //    self.IRunFile.remove( self.name());
         //});
 
-        // must be determined at construction time to be available when initializing IServiceable instance
-        this._tcpPort = api.service().config().listenPort || coreController.d.listenPort;
-
-        // message bus
-        //  the target is to be able to say to which service we should connect (.e.g BrokerOne)
-        //  and then the coreService class should be able to provide us the configuration published by the service.
-        //  No messaging service is planned by default
-        //  for now, we only rely on messagePort - the port number on the localhost
-        this._messaging = api.service().config().messaging;
-        if( this._messaging ){
-            this._messagingService = coreService.getService( this._messaging );
-        }
-        this._messagingPort = api.service().config().messagingPort;
-        if( this._messagingPort ){
-            this._messagingConfig = {
-                host: 'localhost',
-                port: this._messagingPort
-            };
-        }
+        // determine the filled configuration
+        this.config( this._filledConfig())
 
         return this;
     }
 
     _class(){
         return this.constructor.name;
+    }
+
+    /*
+     * @returns {Promise} which resolves to the filled configuration for the service
+     */
+    _filledConfig(){
+        Msg.debug( 'coreController.filledConfig()' );
+        let _config = this.api().service().config();
+        let _filled = { ..._config };
+        if( !_filled.module ){
+            throw new Error( 'coreController.filledConfig() module not found in plugin configuration' );
+        }
+        if( !_filled.class ){
+            throw new Error( 'coreController.filledConfig() class not found in plugin configuration' );
+        }
+        if( !_filled.listenPort ){
+            _filled.listenPort = coreController.d.listenPort;
+        }
+        let _service = null;
+        // if there is no messaging group, then the controller will not connect to the MQTT bus (which would be bad)
+        //  the service should be prefered - not mandatory and no default
+        //  host and port are possible too - not mandatory either and no defaults
+        //  if only a port is specified, then we default to localhost
+        if( Object.keys( _filled ).includes( 'messaging' )){
+            if( !_filled.messaging.alivePeriod ){
+                _filled.messaging.alivePeriod = coreController.d.alivePeriod;
+            }
+            if( Object.keys( _filled.messaging ).includes( 'service' )){
+                _service = this.api().pluginManager().byNameExt( this.api().config(), this.api().packet(), _filled.messaging.service );
+                if( !_service ){
+                    Msg.error( 'coreController.filledConfig() service not found:', _filled.messaging.service );
+                }
+
+            } else if( Object.keys( _filled.messaging ).includes( 'port' )){
+                if( !_filled.messaging.host ){
+                    _filled.messaging.host = 'localhost';
+                }
+            }
+        }
+        let _promise = Promise.resolve( true );
+        if( _service ){
+            _promise = _promise
+                .then(() => { return _service.initialize( this.api()); })
+                .then(( iServiceable ) => {
+                    if( iServiceable ){
+                        return iServiceable.filledConfig();
+                    }
+                })
+                .then(( conf ) => {
+                    if( conf && conf.messaging ){
+                        _filled.messaging.config = conf.messaging;
+                        _filled.messaging.host = conf.messaging.host || 'localhost'; 
+                        _filled.messaging.port = conf.messaging.port;
+                    }
+                })
+        }
+        _promise = _promise
+            .then(() => { return Promise.resolve( _filled ); });
+
+        return _promise;
     }
 
     /*
@@ -176,7 +217,7 @@ export class coreController {
      */
     irunfileRunDir(){
         Msg.debug( 'coreController.irunfileRunDir()' );
-        return this.api().coreConfig().runDir();
+        return this.api().config().runDir();
     }
 
     /*
@@ -196,6 +237,15 @@ export class coreController {
     iserviceableCleanupAfterKill(){
         Msg.debug( 'coreController.iserviceableCleanupAfterKill()' );
         this.IRunFile.remove( this.api().service().name());
+    }
+
+    /*
+     * @returns {Object} the filled configuration for the service
+     * [-implementation Api-]
+     */
+    iserviceableFilledConfig(){
+        Msg.debug( 'coreController.iserviceableFilledConfig()' );
+        return this.config();
     }
 
     /*
@@ -238,12 +288,21 @@ export class coreController {
      */
     iserviceableStart(){
         Msg.debug( 'coreController.iserviceableStart()', 'forkedProcess='+this.api().exports().IForkable.forkedProcess());
-        return this.ITcpServer.create( this._tcpPort )
+        const config = this.config();
+        Msg.debug( config );
+        return Promise.resolve( true )
             .then(() => {
-                Msg.debug( 'coreController.iserviceableStart() tcpServer created' );
-                this.IMqttClient.advertise({ ...this._messagingConfig, reconnectPeriod:5*1000 });
-                return new Promise(() => {});
-            });
+                if( Object.keys( config ).includes( 'listenPort' ) && config.listenPort > 0 ){
+                    this.ITcpServer.create( config.listenPort );
+                }
+            })
+            .then(() => { Msg.debug( 'coreController.iserviceableStart() tcpServer created' ); })
+            .then(() => {
+                if( Object.keys( config ).includes( 'messaging' )){
+                    this.IMqttClient.advertise( config.messaging );
+                }
+            })
+            .then(() => { return new Promise(() => {}); });
     }
 
     /*
@@ -253,7 +312,7 @@ export class coreController {
      */
     iserviceableStatus(){
         Msg.debug( 'coreController.iserviceableStatus()' );
-        this.api().exports().utils.tcpRequest( this._tcpPort, 'iz.status' )
+        this.api().exports().utils.tcpRequest( this.config().listenPort, 'iz.status' )
             .then(( answer ) => {
                 Msg.debug( 'coreController.iserviceableStatus()', 'receives answer to \'iz.status\'', answer );
             }, ( failure ) => {
@@ -269,7 +328,7 @@ export class coreController {
      */
     iserviceableStop(){
         Msg.debug( 'coreController.iserviceableStop()' );
-        this.api().exports().utils.tcpRequest( this._tcpPort, 'iz.stop' )
+        this.api().exports().utils.tcpRequest( this.config().listenPort, 'iz.stop' )
             .then(( answer ) => {
                 Msg.debug( 'coreController.iserviceableStop()', 'receives answer to \'iz.stop\'', answer );
             }, ( failure ) => {
@@ -310,7 +369,7 @@ export class coreController {
         const self = this;
         const _name = this.api().service().name();
         let _msg = 'Hello, I am \''+_name+'\' '+this.constructor.name;
-        _msg += ', running with pid '+process.pid+ ', listening on port '+this._tcpPort;
+        _msg += ', running with pid '+process.pid+ ', listening on port '+this.config().listenPort;
         this.status().then(( status ) => {
             status[_name].event = 'startup';
             status[_name].helloMessage = _msg;
@@ -362,7 +421,7 @@ export class coreController {
                     module: self.module(),
                     class: self._class(),
                     pids: [ process.pid ],
-                    ports: [ self._tcpPort, self._messagingPort ],
+                    ports: [ self.config().listenPort ],
                     status: status[_serviceName].ITcpServer.status
                 };
                 Msg.debug( 'coreController.status()', 'runStatus', o );
@@ -374,7 +433,7 @@ export class coreController {
         const _thisStatus = function(){
             return new Promise(( resolve, reject ) => {
                 const o = {
-                    listenPort: self._tcpPort,
+                    listenPort: self.config().listenPort,
                     messaging: self._messaging | '',
                     messagingPort: self._messagingPort,
                     // running environment
@@ -388,7 +447,7 @@ export class coreController {
                     logfile: self.api().exports().Logger.logFname(),
                     runfile: self.IRunFile.runFile( _serviceName ),
                     storageDir: self.api().exports().coreConfig.storageDir(),
-                    version: self.api().corePackage().getVersion()
+                    version: self.api().packet().getVersion()
                 };
                 Msg.debug( 'coreController.status()', 'controllerStatus', o );
                 status[_serviceName] = { ...status[_serviceName], ...o };
@@ -457,14 +516,14 @@ export class coreController {
         let _promise = Promise.resolve( true )
             .then(() => {
                 if( cb && typeof cb === 'function' ){
-                    cb({ name:_name, module:_module, class:_class, pid:process.pid, port:self._tcpPort });
+                    cb({ name:_name, module:_module, class:_class, pid:process.pid, port:self.config().listenPort });
                 }
                 return self.ITcpServer.terminate();
             })
             .then(() => {
+                self.IMqttClient.terminate();
                 // we auto-remove from runfile as late as possible
                 //  (rationale: no more runfile implies that the service is no more testable and expected to be startable)
-                self.IMqttClient.terminate();
                 self.IRunFile.remove( _name );
                 Msg.info( _name+' coreController terminating with code '+process.exitCode );
                 return Promise.resolve( true)

@@ -1,8 +1,8 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "$id": "https://github.com/iztiar/iztiar-core/schemas/controller-config.schema.json",
-    "title": "coreApi",
-    "description": "the coreApi globally used in the application",
+    "title": "engineApi",
+    "description": "the API provided to each service at initialization time",
     "type": "object",
     "properties": {
         "commonName": {
@@ -20,6 +20,14 @@
         "pluginManager": {
             "type": "IPluginManager",
             "description": "the IPluginManager interface as instanciated by the core application (getter/setter)"
+        },
+        "exports": {
+            "type": "object [Module: null prototype]",
+            "description": "the whole list of the definitions exported by the calling '@iztiar/iztiar-core' core module"
+        },
+        "service": {
+            "type": "coreService",
+            "description": "the instance which describes the service from calling '@iztiar/iztiar-core' core module point of view"
         }
     }
 }

@@ -17,9 +17,8 @@ export class IServiceable {
      * [-implementation Api-]
      */
     class(){
-        // this default implementation returns 'IServiceable' (as expected)
         Msg.debug( 'IServiceable.class()' );
-        return this.constructor && this.constructor.name ? this.constructor.name : '';
+        return '';
     }
 
     /**
@@ -28,6 +27,15 @@ export class IServiceable {
      */
     cleanupAfterKill(){
         Msg.debug( 'IServiceable.cleanupAfterKill()' );
+    }
+
+    /**
+     * @returns {Object} the filled configuration for the service
+     * [-implementation Api-]
+     */
+    filledConfig(){
+        Msg.debug( 'IServiceable.filledConfig()' );
+        return {};
     }
 
     /**
@@ -108,6 +116,7 @@ export class IServiceable {
     /**
      * @param {IServiceable} instance to be checked
      * @returns {Promise} which resolves to true if the instance has been successfully initialized
+     * [-Public API-]
      */
     static successfullyInitialized( instance ){
         return new Promise(( resolve, reject ) => {

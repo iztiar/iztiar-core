@@ -8,7 +8,7 @@
  */
 import path from 'path';
 
-import { IForkable, IServiceable, coreApi, coreController, Msg, utils } from './index.js';
+import { IForkable, IServiceable, coreApi, cliApplication, coreController, Msg, utils } from './index.js';
 
 export class coreService {
 
@@ -19,12 +19,6 @@ export class coreService {
 
     // got from initialization() from the plugin
     _iServiceable = null;
-
-    /**
-     * @returns {coreService} the part of the configuration which describes the named service
-     */
-    static getService( name ){
-    }
 
     /**
      * Constructor
@@ -51,7 +45,7 @@ export class coreService {
     }
 
     /**
-     * @returns {Object} the part of the configuration which describes this service
+     * @returns {Object} the part of the application configuration which describes this service
      */
     config(){
         return this._config;
@@ -65,22 +59,31 @@ export class coreService {
     }
 
     /**
+     * @param {coreApi} api the coreApi
+     * @returns {Promise} which resolves to the filled configuration of the service
+     */
+    filledConfig( api ){
+        let _promise = Promise.resolve( true )
+            .then(() => { return this.initialize( api ); })
+            .then(( res ) => { return res.filledConfig(); })
+    }
+
+    /**
      * dynamically load and initialize the default function of the plugin
-     * @param {coreApplication} app the application
-     *  At the time, only core package and core config are set
-     *  We complete here with this service and
+     * @param {coreApi} core a coreApi instance
      * @returns {Promise} which resolves to the IServiceable which must be returned by the default function
      * @throws {Error} if IServiceable is not set
      */
-    initialize( app ){
+    initialize( core ){
         Msg.verbose( 'coreService.initialize()', 'name='+this._name );
         const self = this;
         const pck = self.package();
 
-        // cf. core-api.schema.json
-        let api = new coreApi();
-        api.corePackage( app.package());
-        api.coreConfig( app.config());
+        // cf. engine-api.schema.json
+        let api = new engineApi();
+        api.packet( core.packet());
+        api.config( core.config());
+        api.pluginManager( core.pluginManager());
         api.service( self );
 
         // import all what this @iztiar/iztiar-core exports
@@ -117,11 +120,11 @@ export class coreService {
 
         // chain all that together
         let _promise = Promise.resolve( true )
-            .then(() => { return _corePromise( app.package()); })
+            .then(() => { return _corePromise( api.packet()); })
             .then(( coreExports ) => { return _apiPromise( coreExports ); });
 
-        // external package to be dynamically imported
-        // the package must define a default export which must be a function which must return a IServiceable instance
+        // external module to be dynamically imported
+        // the module must define a default export which must be a function which must return a Promise which must resolve to a IServiceable instance
         if( pck ){
             _promise = _promise.then(() => { return _importPromise( pck ); });
             _promise = _promise.then(( res ) => { return _initImported( res ); });
@@ -131,9 +134,7 @@ export class coreService {
             const _class = self.class();
             switch( _class ){
                 case 'coreController':
-                    _promise = _promise.then(( api ) => {
-                        return Promise.resolve( self._iServiceable = new coreController( api ).IServiceable );
-                    });
+                    _promise = _promise.then(( api ) => { return self._iServiceable = new coreController( api ).IServiceable; });
                     break;
                 default:
                     _promise = _promise.then(() => {
@@ -152,6 +153,7 @@ export class coreService {
         // at the end, either we have rejected the promise, or it must be resolved with a IServiceable
         _promise = _promise.then(( success ) => {
             if( success && success instanceof IServiceable ){
+                //console.log( 'coreService.initialize()', 'name='+this.name(), success );
                 return Promise.resolve( success );
             } else {
                 return Promise.reject( 'IServiceable expected, '+success+' received: rejected' );
@@ -240,6 +242,8 @@ export class coreService {
         const self = this;
         //console.log( this );
         //console.log( this._iServiceable );
+        //console.log( self._iServiceable.getCheckStatus );
+        //console.log( typeof self._iServiceable.getCheckStatus );
 
         // the returned object which will resolve the promise
         let result = {};
@@ -255,9 +259,6 @@ export class coreService {
 
         // first ask the IServiceable to provide its own status check (must conform to check-status.schema.json)
         const _serviceablePromise = function(){
-            //console.log( self._iServiceable );
-            //console.log( self._iServiceable.getCheckStatus );
-            //console.log( typeof self._iServiceable.getCheckStatus );
             return self._iServiceable.getCheckStatus()
                 .then(( res ) => {
                     result = { ...res };

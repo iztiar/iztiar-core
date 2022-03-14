@@ -87,8 +87,10 @@ export class IMqttClient {
      *  port {Integer} the port number
      *  connectPeriod {Integer} the connect retry period in ms, default to 60*1000
      *  alivePeriod {Integer} the interval to refresh the alive status, defaults to 60*1000
+     * [-Public API-]
      */
     advertise( options={} ){
+        Msg.debug( 'IMqttClient.advertise()', options );
         const self = this;
 
         // for now, we only connect to a local broker
@@ -113,6 +115,7 @@ export class IMqttClient {
 
     /**
      * When the server is asker for terminating, also close the MQTT connection
+     * [-Public API-]
      */
     terminate(){
         if( this._client ){

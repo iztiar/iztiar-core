@@ -10,6 +10,7 @@ export class baseService {
 
     // construction
     _api = null;
+    _config = null;
 
     /**
      * @param {coreApi} api the core API as described in core-api.schema.json
@@ -27,6 +28,18 @@ export class baseService {
      */
     api(){
         return this._api;
+    }
+
+    /**
+     * Getter/Setter
+     * @returns {Object} the filled config built at construction time
+     */
+    config( conf ){
+        if( conf && Object.keys( conf ).length ){
+            this._config = conf;
+            Msg.debug( this.name(), 'filledConfiguration', conf );
+        }
+        return this._config;
     }
 
     /**

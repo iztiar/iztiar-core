@@ -9,13 +9,13 @@ import { IServiceable, Msg } from './index.js';
 
 /**
  * Get the status of the named service
- * @param {coreApplication} app the application
+ * @param {coreApi} api a coreApi instance
  * @param {String} name the service name to be started
  * @param {Object} options 
  *  consoleLevel {String} defaulting to current level
  * @returns {Promise} which resolves to the service status
  */
-export function cliStatus( app, name, options={} ){
+export function cliStatus( api, name, options={} ){
 
     const _origLevel = Msg.consoleLevel();
     const _consoleLevel = Object.keys( options ).includes( 'consoleLevel' ) ? options.consoleLevel : _origLevel;
@@ -23,7 +23,7 @@ export function cliStatus( app, name, options={} ){
 
     Msg.out( 'Getting the status of \''+name+'\' service' );
 
-    const service = app.IPluginManager.byName( app, name );
+    const service = api.pluginManager().byName( api, name );
     let _promise = Promise.resolve( true );
     let result = {};
 
@@ -35,7 +35,7 @@ export function cliStatus( app, name, options={} ){
 
     if( service ){
         _promise = _promise
-            .then(() => { return service.initialize( app ); })
+            .then(() => { return service.initialize( api ); })
             .then(( res ) => { return _checkInitialize( res ); })
             .then(( res ) => { return service.status(); })
             .then(( res ) => {

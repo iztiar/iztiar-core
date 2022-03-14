@@ -1,7 +1,7 @@
 /*
  * IRunnable interface
  *
- *  Implemented by coreApplication only, so a singleton.
+ *  Implemented by cliApplication only, so a singleton.
  */
 import chalk from 'chalk';
 import path from 'path';
@@ -68,19 +68,22 @@ export class IRunnable {
 
     /**
      * run the requested action
-     * @param {coreApplication} app the application instance
+     * @param {cliApplication} app the application instance
      *  The action must return a Promise, so that we will wait for its resolution (or rejection)
      *  Exit code must be set by the action in process.exitCode
      * [-public API-]
      */
     run( app ){
         const action = app.ICmdline.getAction();
+        const core = app.core();
+        const config = core.config();
+        const common = core.commonName();
         Msg.startup( action, {
-            appname: app.commonName(),
-            fname: path.join( app.config().logDir(), app.commonName()+'.log' ),
-            level: app.config().logLevel(),
+            appname: common,
+            fname: path.join( config.logDir(), common+'.log' ),
+            level: config.logLevel(),
             process: IForkable.forkedProcess(),
-            console: app.config().consoleLevel()
+            console: config.consoleLevel()
         });
         //console.log( 'IRunnable.run() action='+action );
         let promise = null;
@@ -88,19 +91,19 @@ export class IRunnable {
         try {
             switch( action ){
                 case 'start':
-                    promise = cliStart( app, app.ICmdline.getOptions().service );
+                    promise = cliStart( core, app.ICmdline.getOptions().service );
                     break;
                 case 'status':
-                    promise = cliStatus( app, app.ICmdline.getOptions().service );
+                    promise = cliStatus( core, app.ICmdline.getOptions().service );
                     break;
                 case 'stop':
-                    promise = cliStop( app, app.ICmdline.getOptions().service );
+                    promise = cliStop( core, app.ICmdline.getOptions().service );
                     break;
                 case 'list-enabled':
-                    promise = cliListEnabled( app );
+                    promise = cliListEnabled( core );
                     break;
                 case 'list-installed':
-                    promise = cliListInstalled( app );
+                    promise = cliListInstalled( core );
                     break;
                 default:
                     break;

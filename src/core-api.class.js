@@ -1,38 +1,48 @@
 /*
  * coreApi class
+ *
+ *  A coreApi object is instanciated at application startup.
+ *  It holds some globally useable datas, and will be later part of the engineApi object.
  */
-import { coreConfig, coreService, PackageJson } from './index.js';
+import { IPluginManager, coreConfig, PackageJson } from './index.js';
 
 export class coreApi {
 
-    /*
-     * object instances coming from the coreApplication
-     */
-    // the PackageJson object which describes the '@iztiar/iztiar-core' module
-    _package = null;
+    // the common name of the application
+    _cname = null;
 
     // the coreConfig object from the application configuration file
+    //  this object is filled for application configuration data
+    //  but left unchanged, as read from configuration, for features
     _config = null;
 
-    /*
-     * all the definitions exported by the '@iztiar/iztiar-core' module
-     *  gathered from [package.json].main (src/index.js)
-     */
-    _exports = null;
+    // the PackageJson object which describes the '@iztiar/iztiar-core' application module
+    _package = null;
 
-    /*
-     * the coreService itself from '@iztiar/iztiar-core' point of view
-     */
-    _service = null;
+    // the IPluginManager interface instance
+    _pluginManager = null;
 
     /**
      * Getter/Setter
-     * @param {coreConfig} o the coreConfig object from the application configuration file
-     * @returns {coreConfig}
+     * @param {String} o the common name of the application
+     * @returns {String}
      */
-    coreConfig( o ){
-        if( o && o instanceof coreConfig ){
-            this._config = o;
+    commonName( o ){
+        if( o && typeof o === 'string' && o.length ){
+            this._cname = o;
+        }
+        return this._cname;
+    }
+
+    /**
+     * Getter/Setter
+     * The setter is called as soon as command-line options have been parsed in order to get the storage directory.
+     * @param {Object} options the command-line option values
+     * @returns {coreConfig} the application configuration instance
+     */
+    config( options ){
+        if( options ){
+            this._config = new coreConfig( options );
         }
         return this._config;
     }
@@ -42,7 +52,7 @@ export class coreApi {
      * @param {PackageJson} o the PackageJson object which describes the '@iztiar/iztiar-core' module
      * @returns {PackageJson}
      */
-    corePackage( o ){
+    packet( o ){
         if( o && o instanceof PackageJson ){
             this._package = o;
         }
@@ -51,49 +61,13 @@ export class coreApi {
 
     /**
      * Getter/Setter
-     * @param {*} o the Msg interface instance
-     * @returns {*}
+     * @param {IPluginManager} o the IPluginManager interface as instanciated by the core applcation
+     * @returns {IPluginManager}
      */
-    exports( o ){
-        if( o ){
-            this._exports = o;
+    pluginManager( o ){
+        if( o && o instanceof IPluginManager ){
+            this._pluginManager = o;
         }
-        return this._exports;
-    }
-
-    /**
-     * Getter/Setter
-     * @param {coreService} o the coreService for this plugin
-     * @returns {coreService}
-     */
-    service( o ){
-        if( o && o instanceof coreService ){
-            this._service = o;
-        }
-        return this._service;
-    }
-
-    /**
-     * Getter/Setter
-     * @param {coreConfig} o the coreConfig object from the service
-     * @returns {coreConfig}
-     */
-    serviceConfig( o ){
-        if( o && o instanceof coreConfig ){
-            this._service.config( o );
-        }
-        return this._service.config();
-    }
-
-    /**
-     * Getter/Setter
-     * @param {PackageJson} o the PackageJson object which describes the plugin
-     * @returns {PackageJson}
-     */
-    servicePackage( o ){
-        if( o && o instanceof PackageJson ){
-            this._service.package( o );
-        }
-        return this._service.package();
+        return this._pluginManager;
     }
 }
