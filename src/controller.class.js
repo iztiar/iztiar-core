@@ -58,9 +58,6 @@ export class coreController {
         },
         'helloMessage': function( o, cap ){
             return o.IRunFile.get( o.feature().name(), cap );
-        },
-        'tcpServer': function( o ){
-            return o.IRunFile.get( o.feature().name(), 'ITcpServer' );
         }
     };
 
