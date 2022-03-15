@@ -105,6 +105,8 @@ export class Interface {
      */
     static extends( instance, defClass ){
         const args = [ ...arguments ].slice( 2 );
+        //console.log( 'Interface.extends', args );
+        //console.log( 'Interface.extends', arguments );
 
         /*
         const _base = new defClass( args );

@@ -35,6 +35,16 @@ export class IRunFile {
 
     /**
      * @param {string} name the name of the service
+     * @param {string} key the desired (second-level) key
+     * @returns {Object|null} the content of the specified key
+     */
+    get( name, key ){
+        const _json = this.jsonByName( name );
+        return _json && _json[name][key] ? _json[name][key] : null;
+    }
+
+    /**
+     * @param {string} name the name of the service
      * @returns {Object} the content of the run file, or null
      * @throws {Error}
      */

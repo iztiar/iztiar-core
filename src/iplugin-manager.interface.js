@@ -3,7 +3,7 @@
  */
 import path from 'path';
 
-import { cliApplication, coreService, PackageJson, utils } from './index.js';
+import { featureCard, PackageJson, utils } from './index.js';
 
 export class IPluginManager {
 
@@ -18,7 +18,8 @@ export class IPluginManager {
     /**
      * @param {coreApi} api a coreApi instance
      * @param {String} name the name of the instance of the plugin
-     * @returns {coreService|null} the named service
+     * @returns {featureCard|null} the named service
+     * [-public API-]
      */
     byName( api, name ){
         return this.byNameExt( api.config(), api.packet(), name );
@@ -28,7 +29,8 @@ export class IPluginManager {
      * @param {coreConfig} config the filled application configuration
      * @param {PackageJson} packet the package.json of the main '@iztiar/iztiar-core' module
      * @param {String} name the name of the instance of the plugin
-     * @returns {coreService|null} the named service
+     * @returns {featureCard|null} the named service
+     * [-public API-]
      */
     byNameExt( config, packet, name ){
         let found = null;
@@ -44,7 +46,7 @@ export class IPluginManager {
 
     /**
      * @param {coreApi} api a coreApi instance
-     * @returns {coreService[]} the array of enabled services which target this one
+     * @returns {featureCard[]} the array of enabled services which target this one
      * [-public API-]
      */
     getEnabled( api ){
@@ -55,7 +57,7 @@ export class IPluginManager {
      * @param {coreConfig} config the filled application configuration
      * @param {PackageJson} packet the package.json of this main '@iztiar/iztiar-core' module
      * @param {String[]} targeting a list of desired targets (all if empty)
-     * @returns {coreService[]} the array of enabled services
+     * @returns {featureCard[]} the array of enabled services
      * [-public API-]
      */
     getEnabledExt( config, packet, targeting=[] ){
@@ -69,16 +71,16 @@ export class IPluginManager {
             const enabled = configuredFeats[id].enabled || true;
             if( enabled ){
                 if( configuredFeats[id].module === 'core' ){
-                    result.push( new coreService( id, configuredFeats[id] ));
+                    result.push( new featureCard( id, configuredFeats[id] ));
                 } else if( _found.includes( configuredFeats[id].module )){
-                    result.push( new coreService( id, configuredFeats[id] ));
+                    result.push( new featureCard( id, configuredFeats[id] ));
                 } else {
                     const pck = this.getPackageExt( packet, configuredFeats[id].module );
                     if( pck ){
                         const pckGroup = pck.getIztiar() || {};
                         const pckTarget = pckGroup.target || null;
                         if( pckTarget ){
-                            result.push( new coreService( id, configuredFeats[id], pck ));
+                            result.push( new featureCard( id, configuredFeats[id], pck ));
                             _found.push( configuredFeats[id].module );
                         }
                     }

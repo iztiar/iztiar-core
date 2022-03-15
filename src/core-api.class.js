@@ -36,7 +36,7 @@ export class coreApi {
 
     /**
      * Getter/Setter
-     * The setter is called as soon as command-line options have been parsed in order to get the storage directory.
+     * The setter is called as soon as command-line options have been parsed
      * @param {coreConfig} o application configuration instance
      * @returns {coreConfig}
      */

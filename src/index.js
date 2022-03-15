@@ -15,12 +15,12 @@ export * from './config.class.js';
 export * from './core-api.class.js';
 export * from './controller.class.js';
 export * from './engine-api.class.js';
+export * from './feature-card.class.js';
 export * from './interface.class.js';
 export * from './log-level.class.js';
 export * from './logger.class.js';
 export * from './msg.class.js';
 export * from './package-json.class.js';
-export * from './service.class.js';
 
 // others
 export * from './utils.js';

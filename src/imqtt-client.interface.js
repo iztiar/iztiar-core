@@ -41,6 +41,7 @@ export class IMqttClient {
             let payload = {
                 module: this._module(),
                 class: this._class(),
+                capabilities: this._capabilities(),
                 timestamp: utils.now()
             }
             Msg.debug( 'IMqttClient._alive() publishing', topic, payload );
@@ -51,6 +52,14 @@ export class IMqttClient {
     /* *** ***************************************************************************************
        *** The implementation API, i.e; the functions the implementation may want to implement ***
        *** *************************************************************************************** */
+
+    /**
+     * @returns {String[]} the array of service capabilities
+     * [-implementation Api-]
+     */
+    _capabilities(){
+        return [];
+    }
 
     /**
      * @returns {String} the name of the implementation class

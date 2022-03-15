@@ -76,32 +76,42 @@ export class coreController {
         });
     }
 
+    /**
+     * The provided capabilities
+     */
+    static caps = {
+        'checkStatus': function( o ){
+            return o._checkStatus();
+        },
+        'helloMessage': function( o, cap ){
+            return o.IRunFile.get( o.feature().name(), cap );
+        }
+    };
+
     // when stopping, the port to which answer and forward the received messages
     _forwardPort = 0;
 
     /**
-     * @param {coreApi} api the core API as described in core-api.schema.json
+     * @param {engineApi} api the engine API as described in engine-api.schema.json
+     * @param {featureCard} card a description of this feature
      * @returns {Promise} which resolves to a new coreController
      */
-    constructor( api ){
+    constructor( api, card ){
         const exports = api.exports();
         const Interface = exports.Interface;
 
-        Interface.extends( this, exports.baseService, api );
+        Interface.extends( this, exports.baseService, api, card );
         Msg.debug( 'coreController instanciation' );
-
-        //console.log( this );
-        //console.log( Object.getPrototypeOf( this ));
-        //console.log( this.api());
 
         Interface.add( this, exports.IForkable, {
             _terminate: this.iforkableTerminate
         });
 
         Interface.add( this, exports.IMqttClient, {
+            _capabilities: this._capabilities,
             _class: this._class,
-            _module: this.module,
-            _name: this.name
+            _module: this.feature().module,
+            _name: this._name
         });
 
         Interface.add( this, exports.IRunFile, {
@@ -109,11 +119,11 @@ export class coreController {
         });
 
         Interface.add( this, exports.IServiceable, {
+            capabilities: this._capabilities,
             class: this.iserviceableClass,
-            cleanupAfterKill: this.iserviceableCleanupAfterKill,
-            filledConfig: this.iserviceableFilledConfig,
-            getCheckStatus: this.iserviceableGetCheckStatus,
-            helloMessage: this.iserviceableHelloMessage,
+            config: this.iserviceableConfig,
+            get: this.iserviceableGet,
+            killed: this.iserviceableKilled,
             start: this.iserviceableStart,
             status: this.iserviceableStatus,
             stop: this.iserviceableStop
@@ -131,10 +141,39 @@ export class coreController {
         //    self.IRunFile.remove( self.name());
         //});
 
-        // determine the filled configuration
-        this.config( this._filledConfig())
+        let _promise = Promise.resolve( true )
+            .then(() => { return this._filledConfig(); })
+            .then(( o ) => { this.config( o ); })
+            .then(() => { return Promise.resolve( this ); });
+    
+        return _promise;
+    }
 
-        return this;
+    /*
+     * @returns {String[]} the array of service capabilities
+     * [-implementation Api-]
+     */
+    _capabilities(){
+        return Object.keys( coreController.caps );
+    }
+
+    /*
+     * @returns {Promise} which must resolve to an object conform to check-status.schema.json
+     * [-implementation Api-]
+     */
+    _checkStatus(){
+        Msg.debug( 'coreController._checkStatus()' );
+        const _name = this.feature().name();
+        const _json = this.IRunFile.jsonByName( _name );
+        let o = { startable: false, reasons: [], pids: [], ports: [] };
+        if( _json && _json[_name] ){
+            o.pids = [ ..._json[_name].pids ];
+            o.ports = [ _json[_name].listenPort ];
+            o.startable = o.pids.length === 0 && o.ports.length === 0;
+        } else {
+            o.startable = true;
+        }
+        return Promise.resolve( o );
     }
 
     _class(){
@@ -142,12 +181,13 @@ export class coreController {
     }
 
     /*
-     * @returns {Promise} which resolves to the filled configuration for the service
+     * @returns {Promise} which resolves to the filled (runtime) configuration for this service
      */
     _filledConfig(){
         Msg.debug( 'coreController.filledConfig()' );
-        let _config = this.api().service().config();
+        let _config = this.feature().config();
         let _filled = { ..._config };
+        _filled.featuredConfig = {};
         if( !_filled.module ){
             throw new Error( 'coreController.filledConfig() module not found in plugin configuration' );
         }
@@ -157,19 +197,19 @@ export class coreController {
         if( !_filled.listenPort ){
             _filled.listenPort = coreController.d.listenPort;
         }
-        let _service = null;
+        let _feat = null;
         // if there is no messaging group, then the controller will not connect to the MQTT bus (which would be bad)
-        //  the service should be prefered - not mandatory and no default
+        //  the feature should be preferred - not mandatory and no default
         //  host and port are possible too - not mandatory either and no defaults
         //  if only a port is specified, then we default to localhost
         if( Object.keys( _filled ).includes( 'messaging' )){
             if( !_filled.messaging.alivePeriod ){
                 _filled.messaging.alivePeriod = coreController.d.alivePeriod;
             }
-            if( Object.keys( _filled.messaging ).includes( 'service' )){
-                _service = this.api().pluginManager().byNameExt( this.api().config(), this.api().packet(), _filled.messaging.service );
-                if( !_service ){
-                    Msg.error( 'coreController.filledConfig() service not found:', _filled.messaging.service );
+            if( Object.keys( _filled.messaging ).includes( 'feature' )){
+                _feat = this.api().pluginManager().byNameExt( this.api().config(), this.api().packet(), _filled.messaging.feature );
+                if( !_feat ){
+                    Msg.error( 'coreController.filledConfig() feature not found:', _filled.messaging.feature );
                 }
 
             } else if( Object.keys( _filled.messaging ).includes( 'port' )){
@@ -179,17 +219,17 @@ export class coreController {
             }
         }
         let _promise = Promise.resolve( true );
-        if( _service ){
+        if( _feat ){
             _promise = _promise
-                .then(() => { return _service.initialize( this.api()); })
+                .then(() => { return _feat.initialize( this.api()); })
                 .then(( iServiceable ) => {
-                    if( iServiceable ){
-                        return iServiceable.filledConfig();
+                    if( iServiceable && iServiceable instanceof this.api().exports().IServiceable ){
+                        return iServiceable.config();
                     }
                 })
                 .then(( conf ) => {
                     if( conf && conf.messaging ){
-                        _filled.messaging.config = conf.messaging;
+                        _filled.featuredConfig[_filled.messaging.feature] = conf.messaging;
                         _filled.messaging.host = conf.messaging.host || 'localhost'; 
                         _filled.messaging.port = conf.messaging.port;
                     }
@@ -199,6 +239,11 @@ export class coreController {
             .then(() => { return Promise.resolve( _filled ); });
 
         return _promise;
+    }
+
+    // for whatever reason, this doesn't work the same than module() function fromIMqttClient point of view
+    _name(){
+        return this.feature().name();
     }
 
     /*
@@ -221,7 +266,7 @@ export class coreController {
     }
 
     /*
-     * @returns {String} the type of the service, not an identifier, rather a qualifier
+     * @returns {String} the type of the feature, not an identifier, rather a qualifier
      *  For example, the implementation class name is a good choice
      * [-implementation Api-]
      */
@@ -231,54 +276,36 @@ export class coreController {
     }
 
     /*
-     * If the service had to be SIGKILL'ed to be stoppped, then gives it an opportunity to make some cleanup
+     * @returns {Object} the filled configuration for the feature
      * [-implementation Api-]
      */
-    iserviceableCleanupAfterKill(){
-        Msg.debug( 'coreController.iserviceableCleanupAfterKill()' );
-        this.IRunFile.remove( this.api().service().name());
-    }
-
-    /*
-     * @returns {Object} the filled configuration for the service
-     * [-implementation Api-]
-     */
-    iserviceableFilledConfig(){
-        Msg.debug( 'coreController.iserviceableFilledConfig()' );
+    iserviceableConfig(){
+        Msg.debug( 'coreController.iserviceableConfig()' );
         return this.config();
     }
 
     /*
-     * @returns {Promise} which must resolve to an object conform to check-status.schema.json
+     * @param {String} cap the desired capability name
+     * @returns {Object} the capability characterics 
      * [-implementation Api-]
      */
-    iserviceableGetCheckStatus(){
-        Msg.debug( 'coreController.iserviceableGetCheckStatus()' );
-        const _name = this.api().service().name();
-        const _json = this.IRunFile.jsonByName( _name );
-        let o = { startable: false, reasons: [], pids: [], ports: [] };
-        if( _json && _json[_name] ){
-            o.pids = [ ..._json[_name].pids ];
-            o.ports = [ _json[_name].listenPort ];
-            o.startable = o.pids.length === 0 && o.ports.length === 0;
+    iserviceableGet( cap ){
+        Msg.debug( 'coreController.iserviceableGet() cap='+cap );
+        if( Object.keys( coreController.caps ).includes( cap )){
+            return coreController.caps[cap]( this, cap );
         } else {
-            o.startable = true;
+            Msg.error( 'coreController unknown capability \''+cap+'\'' );
+            return null;
         }
-        Msg.debug( 'coreController.iserviceableGetCheckStatus() resolves with', o );
-        return Promise.resolve( o );
     }
 
     /*
-     * @returns {String} the helloMessage from the runfile (if any)
+     * If the service had to be SIGKILL'ed to be stoppped, then gives it an opportunity to make some cleanup
      * [-implementation Api-]
      */
-    iserviceableHelloMessage(){
-        const _name = this.api().service().name();
-        const _json = this.IRunFile.jsonByName( _name );
-        if( _json && _json[_name].helloMessage ){
-            return _json[_name].helloMessage;
-        }
-        return null;
+    iserviceableKilled(){
+        Msg.debug( 'coreController.iserviceableKilled()' );
+        this.IRunFile.remove( this.feature().name());
     }
 
     /*
@@ -289,7 +316,6 @@ export class coreController {
     iserviceableStart(){
         Msg.debug( 'coreController.iserviceableStart()', 'forkedProcess='+this.api().exports().IForkable.forkedProcess());
         const config = this.config();
-        Msg.debug( config );
         return Promise.resolve( true )
             .then(() => {
                 if( Object.keys( config ).includes( 'listenPort' ) && config.listenPort > 0 ){
@@ -367,7 +393,7 @@ export class coreController {
     itcpserverListening(){
         Msg.debug( 'coreController.itcpserverListening()' );
         const self = this;
-        const _name = this.api().service().name();
+        const _name = this.feature().name();
         let _msg = 'Hello, I am \''+_name+'\' '+this.constructor.name;
         _msg += ', running with pid '+process.pid+ ', listening on port '+this.config().listenPort;
         this.status().then(( status ) => {
@@ -385,7 +411,7 @@ export class coreController {
      */
     itcpserverStatsUpdated(){
         Msg.debug( 'coreController.itcpserverStatsUpdated()' );
-        const _name = this.api().service().name();
+        const _name = this.feature().name();
         const _status = this.ITcpServer.status();
         this.IRunFile.set([ _name, 'ITcpServer' ], _status );
     }
@@ -400,7 +426,7 @@ export class coreController {
      *  A minimum of structure is so required, described in run-status.schema.json.
      */
     status(){
-        const _serviceName = this.name();
+        const _serviceName = this.feature().name();
         Msg.debug( 'coreController.status()', 'serviceName='+_serviceName );
         const self = this;
         let status = {};
@@ -418,7 +444,7 @@ export class coreController {
         const _runStatus = function(){
             return new Promise(( resolve, reject ) => {
                 const o = {
-                    module: self.module(),
+                    module: self.feature().module(),
                     class: self._class(),
                     pids: [ process.pid ],
                     ports: [ self.config().listenPort ],
@@ -500,8 +526,8 @@ export class coreController {
             return Promise.resolve( true );
         }
 
-        const _name = this.name();
-        const _module = this.module();
+        const _name = this.feature().name();
+        const _module = this.feature().module();
         const _class = this._class();
         this._forwardPort = args && args[0] && self.api().exports().utils.isInt( args[0] ) ? args[0] : 0;
 

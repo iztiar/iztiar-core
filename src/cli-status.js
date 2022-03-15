@@ -29,7 +29,7 @@ export function cliStatus( api, name, options={} ){
 
     // service.Initialize() must resolve with a IServiceable instance
     const _checkInitialize = function( res ){
-        return IServiceable.successfullyInitialized( res )
+        return IServiceable.isIServiceable( res )
             .then(( success ) => { result.iServiceable = success ?  { ...res } : null; });
     };
 

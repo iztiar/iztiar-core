@@ -29,11 +29,11 @@ export function cliStop( api, name, options={} ){
 
     // service.Initialize() must resolve with a IServiceable instance
     const _checkInitialize = function( res ){
-        return IServiceable.successfullyInitialized( res )
+        return IServiceable.isIServiceable( res )
             .then(( success ) => { result.iServiceable = success ?  { ...res } : null; });
     };
 
-    // coreService.status() promise resolves as { reasons, startable, pids, ports, status }
+    // featureCard.status() promise resolves as { reasons, startable, pids, ports, status }
     //  we are only interested here to the 'startable' attribute which is only true if the JSON runfile is empty or not present
     const _checkStatus = function( res, expected ){
         if( res.iServiceable && ( !res.status || !res.status.startable )){
@@ -131,7 +131,7 @@ export function cliStop( api, name, options={} ){
                         process.kill( p, 'SIGKILL' );
                         return true;
                     })
-                    result.iServiceable.cleanupAfterKill();
+                    result.iServiceable.killed();
                     resolve( result );
                 } else {
                     resolve( result );

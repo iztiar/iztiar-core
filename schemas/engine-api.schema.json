@@ -11,7 +11,7 @@
         },
         "config": {
             "type": "coreConfig",
-            "description": "the configuration instance filled-up (for the application) from <configDir>/iztiar.json core configuration file (getter/setter)"
+            "description": "the filled-up application configuration instance from <configDir>/iztiar.json core configuration file (getter/setter)"
         },
         "packet": {
             "type": "PackageJson",
@@ -24,10 +24,6 @@
         "exports": {
             "type": "object [Module: null prototype]",
             "description": "the whole list of the definitions exported by the calling '@iztiar/iztiar-core' core module"
-        },
-        "service": {
-            "type": "coreService",
-            "description": "the instance which describes the service from calling '@iztiar/iztiar-core' core module point of view"
         }
     }
 }

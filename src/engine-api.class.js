@@ -1,7 +1,10 @@
 /*
  * engineApi class
+ *
+ *  An instance of this class is passed at initialization time to every module default export function.
+ *  The schema is described in engine-api.schema.json
  */
-import { coreApi, coreService } from './index.js';
+import { coreApi } from './index.js';
 
 export class engineApi extends coreApi {
 
@@ -9,8 +12,19 @@ export class engineApi extends coreApi {
     //  gathered from [package.json].main (src/index.js)
     _exports = null;
 
-    // the coreService itself from '@iztiar/iztiar-core' point of view
-    _service = null;
+    /**
+     * Constructor
+     * @param {coreApi} core a coreApi instance
+     * @returns {engineApi}
+     */
+    constructor( core ){
+        super();
+        this.commonName( core.commonName());
+        this.config( core.config());
+        this.packet( core.packet());
+        this.pluginManager( core.pluginManager());
+        return this;
+    }
 
     /**
      * Getter/Setter
@@ -22,17 +36,5 @@ export class engineApi extends coreApi {
             this._exports = o;
         }
         return this._exports;
-    }
-
-    /**
-     * Getter/Setter
-     * @param {coreService} o the coreService for this plugin
-     * @returns {coreService}
-     */
-    service( o ){
-        if( o && o instanceof coreService ){
-            this._service = o;
-        }
-        return this._service;
     }
 }

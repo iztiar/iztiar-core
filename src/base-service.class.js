@@ -10,21 +10,23 @@ export class baseService {
 
     // construction
     _api = null;
+    _feature = null;
     _config = null;
 
     /**
-     * @param {coreApi} api the core API as described in core-api.schema.json
+     * @param {engineApi} api the engine API as described in engine-api.schema.json
+     * @param {featureCard} card the instance which describes this feature
      * @returns {baseService}
      */
-     constructor( api ){
-        Msg.debug( 'baseService instanciation' );
-        //console.log( api );
+     constructor( api, card ){
+        Msg.debug( 'baseService instanciation', 'engineApi:', api, 'featureCard:', card );
         this._api = api;
+        this._feature = card;
         return this;
     }
 
     /**
-     * @returns {coreApi} the whole core API object provided by the core at initialization time
+     * @returns {engineApi} api the engine API as described in engine-api.schema.json
      */
     api(){
         return this._api;
@@ -36,23 +38,16 @@ export class baseService {
      */
     config( conf ){
         if( conf && Object.keys( conf ).length ){
+            Msg.debug( 'baseService.config()', 'name='+this.feature().name(), conf );
             this._config = conf;
-            Msg.debug( this.name(), 'filledConfiguration', conf );
         }
         return this._config;
     }
 
     /**
-     * @returns {String} the module name providing the service
+     * @returns {featureCard} card the instance which describes this feature
      */
-    module(){
-        return this.api().service().module();
-    }
-
-    /**
-     * @returns {String} the service name
-     */
-    name(){
-        return this.api().service().name();
+    feature(){
+        return this._feature;
     }
 }

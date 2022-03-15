@@ -11,11 +11,11 @@
             "properties": {
                 "module": {
                     "type": "string",
-                    "description": "the name of the module which provides the service, or 'core'"
+                    "description": "'core', mandatory"
                 },
                 "class": {
                     "type": "string",
-                    "description": "the name of the class or type or something inside the module, which qualifies the service type, should be 'coreController' as provided by 'core'"
+                    "description": "'coreController', mandatory"
                 },
                 "listenPort": {
                     "type": "integer",
@@ -24,15 +24,15 @@
                 },
                 "messaging": {
                     "type": "object",
-                    "description": "options for the messaging service",
+                    "description": "options for the messaging service, must be at least present to try to connect to this service",
                     "properties": {
-                        "service": {
+                        "feature": {
                             "type": "string",
-                            "description": "the name of the messaging service to which the coreController may connect (should be enough, but not used at the moment)"
+                            "description": "the name of the messaging feature to which the coreController may connect (the preferred configuration)"
                         },
                         "host": {
                             "type": "string",
-                            "description": "the hostname to use to connect to the message bus (should be enough, but not used at the moment, only localhost being managed for now)"
+                            "description": "the hostname to use to connect to the message bus (only localhost being managed for now)"
                         },
                         "port": {
                             "type": "integer",

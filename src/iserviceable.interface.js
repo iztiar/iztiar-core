@@ -12,8 +12,19 @@ export class IServiceable {
        *** *************************************************************************************** */
 
     /**
+     * @returns {String[]} the array of service capabilities
+     * [-implementation Api-]
+     */
+    capabilities(){
+        Msg.debug( 'IServiceable.capabilities()' );
+        return [];
+    }
+
+    /**
      * @returns {String} the type of the service, not an identifier, rather a qualifier
      *  For example, the implementation class name is a good choice
+     *  This method is also called from featureCard.class() to provide the actual runtime class name.
+     *  So you probably want rather use the featureCard.class() methid which is always available.
      * [-implementation Api-]
      */
     class(){
@@ -22,43 +33,30 @@ export class IServiceable {
     }
 
     /**
-     * If the service had to be SIGKILL'ed to be stoppped, then gives it an opportunity to make some cleanup
-     * [-implementation Api-]
-     */
-    cleanupAfterKill(){
-        Msg.debug( 'IServiceable.cleanupAfterKill()' );
-    }
-
-    /**
      * @returns {Object} the filled configuration for the service
      * [-implementation Api-]
      */
-    filledConfig(){
-        Msg.debug( 'IServiceable.filledConfig()' );
+    config(){
+        Msg.debug( 'IServiceable.config()' );
         return {};
     }
 
     /**
-     * @returns {Promise} which must resolve to an object conform to check-status.schema.json
-     *  This will be used by coreService.status() to know which pids and ports to check
+     * If the service had to be SIGKILL'ed to be stoppped, then gives it an opportunity to make some cleanup
      * [-implementation Api-]
      */
-    getCheckStatus(){
-        Msg.debug( 'IServiceable.getCheckStatus()' );
-        return Promise.resolve({
-            startable: false,
-            reasons: [ 'not implemented' ],
-            pids: [],
-            ports: []
-        });
+    killed(){
+        Msg.debug( 'IServiceable.killed()' );
     }
 
     /**
-     * @returns {String} the helloMessage from the runfile (if any)
+     * @param {String} cap the desired capability name
+     * @returns {Object|null} the capability characteristics 
      * [-implementation Api-]
      */
-    helloMessage(){
-         return null;
+    get( cap ){
+        Msg.debug( 'IServiceable.get() cap='+cap );
+        return null;
     }
 
     /**
@@ -71,13 +69,18 @@ export class IServiceable {
     }
 
     /**
-     * Start the service
+     * Start the service (and just that)
+     * Notes:
+     *  - If the service must start in its own process, then the calling application must have taken care of forking the ad-hoc
+     *    process before calling this method.
+     *  - This method is not expected to check that the service is not running before to start, and not expected either to check
+     *    that the service is rightly running after that.
      * @returns {Promise}
      * [-implementation Api-]
      */
     start(){
         Msg.verbose( 'IServiceable.start()' );
-        return Promise.resolve( true );
+        return Promise.resolve( false );
     }
 
     /**
@@ -112,17 +115,4 @@ export class IServiceable {
     /* *** ***************************************************************************************
        *** The public API, i.e; the API anyone may call to access the interface service        ***
        *** *************************************************************************************** */
-
-    /**
-     * @param {IServiceable} instance to be checked
-     * @returns {Promise} which resolves to true if the instance has been successfully initialized
-     * [-Public API-]
-     */
-    static successfullyInitialized( instance ){
-        return new Promise(( resolve, reject ) => {
-            const _res = instance && instance instanceof IServiceable;
-            Msg.verbose( 'IServiceable.successfullyInitialized()', _res );
-            resolve( _res );
-        })
-    }
 }
