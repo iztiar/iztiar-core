@@ -30,13 +30,15 @@ Initializing development environment
   (contrarily to github, npmjs doesn't accept to publish twice the same version, so we have to tag the publish version, and then bump the version number...)
 
     1. locally
-        $ git tag -am "Releasing v0.0.0" v0.0.0
+        $ git checkout master
+        $ git merge vx.x.x
+        $ git tag -am "Releasing vx.x.x" vx.x.x
         $ git push && git push --tags
         $ npm publish --access public
 
     2. then, locally
+        $ git checkout -b vy.y.y
         $ vi package.json
           bumping version number
-        $ git branch -b v0.0.0 <new version>
-        $ git commit -am "Bump version number"
+        $ git commit -am "Bump version number post-release"
 
