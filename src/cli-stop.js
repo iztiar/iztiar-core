@@ -151,8 +151,10 @@ export function cliStop( api, name, options={} ){
                         return true;
                     })
                     feature.iServiceable().killed();
+                    res.next = STAT;
                     resolve( result );
                 } else {
+                    res.next = STAT;
                     resolve( result );
                 }
             });
