@@ -33,6 +33,8 @@ export class featureCard {
      * @throws {Error}
      */
     constructor( name, config, packet=null ){
+        //console.log( 'featureCard constructor', 'name='+name, config );
+
         if( !name || typeof name !== 'string' || !name.length ){
             throw new Error( 'featureCard(): feature name is not set');
         }
@@ -75,16 +77,6 @@ export class featureCard {
      */
     enabled(){
         return Object.keys( this._config ).includes( 'enabled' ) ? this._config.enabled : true;
-    }
-
-    /**
-     * @param {coreApi} core a coreApi instance
-     * @returns {Promise} which resolves to the filled configuration of the feature
-     */
-    filledConfig( core ){
-        return Promise.resolve( true )
-            .then(() => { return this.initialize( core ); })
-            .then(( iServiceable ) => { return iServiceable.config(); })
     }
 
     /**
