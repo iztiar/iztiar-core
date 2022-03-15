@@ -3,7 +3,7 @@
  */
 import path from 'path';
 
-import { featureCard, PackageJson, utils } from './index.js';
+import { featureCard, Msg, PackageJson, utils } from './index.js';
 
 export class IPluginManager {
 
@@ -70,7 +70,9 @@ export class IPluginManager {
         Object.keys( configuredFeats ).every(( id ) => {
             const enabled = configuredFeats[id].enabled || true;
             if( enabled ){
-                if( configuredFeats[id].module === 'core' ){
+                if( !Object.keys( configuredFeats[id] ).includes( 'module' )){
+                    Msg.error( 'IPluginManager.getEnabled() feature \''+id+'\' doesn\' have a \'module\' key (though mandatory)' );
+                } else if( configuredFeats[id].module === 'core' ){
                     result.push( new featureCard( id, configuredFeats[id] ));
                 } else if( _found.includes( configuredFeats[id].module )){
                     result.push( new featureCard( id, configuredFeats[id] ));
