@@ -46,11 +46,11 @@ export function cliStart( api, name, options={} ){
         .then(() => { return feature.initialize( api ); })
         .then(( iServiceable ) => {
             if( iServiceable && iServiceable instanceof IServiceable ){
-                result.next = STAT;
                 Msg.verbose( name+': iServiceable sucessfully initialized' );
+                result.next = STAT;
             } else {
-                result.next = END;
                 Msg.verbose( name+': initialization failed' );
+                result.next = END;
             }
         });
 
@@ -64,6 +64,7 @@ export function cliStart( api, name, options={} ){
         // coreService.status() promise resolves as { reasons, startable, pids, ports, status }
         //  we are only interested here to the 'startable' attribute which is only true if the JSON runfile is empty or not present
         const _checkStatus = function( res, expected ){
+            Msg.debug( 'cliStart()._checkStatus()', 'next='+res.next, 'expected='+expected );
             if( res.next === STAT ){
                 const _name = feature.name();
                 return feature.status()
@@ -74,6 +75,7 @@ export function cliStart( api, name, options={} ){
                                     Msg.error( 'Unable to start the feature' );
                                     res.next = END;
                                     process.exitCode += 1;
+
                                 } else if( status.reasons.length > 0 ){
                                     Msg.warn( 'Service is said started, but exhibits', status.reasons.length,'error message(s)' );
                                     status.reasons.every(( m ) => {
@@ -82,6 +84,7 @@ export function cliStart( api, name, options={} ){
                                     })
                                     res.next = KILL;
                                     process.exitCode += 1;
+
                                 } else {
                                     res.started = true;
                                     Msg.out( chalk.green( 'Service(s) \''+_name+'\' successfully started' ));
@@ -95,9 +98,11 @@ export function cliStart( api, name, options={} ){
                                 if( status.startable ){
                                     Msg.info( 'Service is not already running, is startable (fine)' );
                                     res.next = START;
+
                                 } else if( status.reasons.length === 0 ){
                                     Msg.out( chalk.green( 'Service \''+_name+'\' is already running (fine). Gracefully exiting.' ));
                                     res.next = END;
+
                                 } else {
                                     Msg.warn( 'Service is said running, but exhibits', status.reasons.length,'error message(s), is not startable' );
                                     status.reasons.every(( m ) => {
@@ -118,6 +123,7 @@ export function cliStart( api, name, options={} ){
 
         // resolves to the child process or to the startup result
         const _forkOrStart = function( res ){
+            Msg.debug( 'cliStart()._forkOrStart()', 'next='+res.next );
             if( res.next === START ){
                 return new Promise(( resolve, reject ) => {
                     if( feature.isForkable()){
@@ -172,6 +178,7 @@ export function cliStart( api, name, options={} ){
 
         // emit a warning if we didn't have received the IPC startup message
         const _checkTimeout = function( res ){
+            Msg.debug( 'cliStart()._checkTimeout()', 'next='+res.next );
             if( res.next === START ){
                 if( !res.waitFor ){
                     Msg.warn( 'Timeout expired before the reception of the startup IPC message' );
@@ -183,7 +190,7 @@ export function cliStart( api, name, options={} ){
 
         // kill the child pid if the startup is not ok
         const _killIfNeeded = function( res ){
-            //console.log( res );
+            Msg.debug( 'cliStart()._killIfNeeded()', 'next='+res.next );
             if( res.next === KILL ){
                 if( result.child ){
                     Msg.verbose( 'cliStart().killIfNeeded() killing process', result.child.pid );

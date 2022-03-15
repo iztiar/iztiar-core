@@ -124,12 +124,12 @@ export class featureCard {
                 .then(( extImported ) => {
                     if( typeof extImported.default === 'function' ){
                         return extImported.default( api, self )
-                            .then(( o ) => { return self._iServiceable = o; });
                     } else {
                         throw new Error( 'featureCard.initialize()', _name, 'doesn\'t export a default function' );
                     }
-                });
-        };
+                })
+                .then(( o ) => { return self._iServiceable = o; });
+            };
 
         // or import the requested class from 'core' module
         //  and tries to initialize it

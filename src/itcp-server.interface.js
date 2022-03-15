@@ -102,9 +102,8 @@ export class ITcpServer {
         const self = this;
 
         this._tcpServer = net.createServer(( c ) => {
-            Msg.debug( 'ITcpServer.create() incoming connection' );
             self._inConnCount += 1;
-            Msg.debug( 'ITcpServer.create() opening', self._inConnCount, self._inClosedCount );
+            Msg.debug( 'ITcpServer new incoming connection', 'inConnCount='+self._inConnCount, 'inCloseCount='+self._inClosedCount );
 
             // refuse all connections if the server is not 'running'
             if( self.status().status !== ITcpServer.s.RUNNING ){

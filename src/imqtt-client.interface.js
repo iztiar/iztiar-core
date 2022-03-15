@@ -24,7 +24,7 @@ export class IMqttClient {
 
     _aliveInstall( options={} ){
         //console.log( 'IMqttClient._aliveInstall()', this._client );
-        Msg.debug( 'IMqttClient._aliveInstall()', this._client );
+        Msg.debug( 'IMqttClient._aliveInstall()', 'this._client is '+( this._client ? 'set':'unset' ));
         if( !this._aliveInterval ){
             Msg.debug( 'IMqttClient.advertise() installing aliveInterval' );
             this._alivePeriod = options.alivePeriod || IMqttClient.d.alivePeriod;

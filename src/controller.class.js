@@ -46,6 +46,24 @@ export class coreController {
         alivePeriod: 60*1000
     };
 
+    /**
+     * The provided capabilities
+     */
+     static caps = {
+        'checkStatus': function( o ){
+            return o._checkStatus();
+        },
+        'controller': function( o ){
+            return o.IRunFile.get( o.feature().name(), 'helloMessage' );
+        },
+        'helloMessage': function( o, cap ){
+            return o.IRunFile.get( o.feature().name(), cap );
+        },
+        'tcpServer': function( o ){
+            return o.IRunFile.get( o.feature().name(), 'ITcpServer' );
+        }
+    };
+
     //  returns the list of available commands
     static _izHelp( self, reply ){
         reply.answer = coreController.c;
@@ -75,18 +93,6 @@ export class coreController {
             return Promise.resolve( reply );
         });
     }
-
-    /**
-     * The provided capabilities
-     */
-    static caps = {
-        'checkStatus': function( o ){
-            return o._checkStatus();
-        },
-        'helloMessage': function( o, cap ){
-            return o.IRunFile.get( o.feature().name(), cap );
-        }
-    };
 
     // when stopping, the port to which answer and forward the received messages
     _forwardPort = 0;

@@ -22,8 +22,6 @@ export function cliStatus( api, name, options={} ){
     const _consoleLevel = Object.keys( options ).includes( 'consoleLevel' ) ? options.consoleLevel : _origLevel;
     if( _consoleLevel !== _origLevel ) Msg.consoleLevel( _consoleLevel );
 
-    Msg.out( 'Getting the status of \''+name+'\' service' );
-
     const feature = api.pluginManager().byName( api, name );
 
     if( !feature || !( feature instanceof featureCard )){
@@ -32,6 +30,7 @@ export function cliStatus( api, name, options={} ){
         return Promise.resolve( false );
     }
 
+    Msg.out( 'Getting the status of \''+name+'\' service' );
     let result = {};
 
     let _promise = Promise.resolve( true )
@@ -43,7 +42,7 @@ export function cliStatus( api, name, options={} ){
                 Msg.verbose( name+': initialization failed' );
             }
         })
-        .then(( res ) => { return feature.status(); })
+        .then(() => { return feature.status(); })
         .then(( res ) => {
 
             if( res.startable ){
