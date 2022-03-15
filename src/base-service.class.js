@@ -19,7 +19,7 @@ export class baseService {
      * @returns {baseService}
      */
      constructor( api, card ){
-        Msg.debug( 'baseService instanciation', 'engineApi:', api, 'featureCard:', card );
+        Msg.debug( 'baseService instanciation', 'engineApi:', api, 'featureCard:', card, 'count='+arguments.length );
         this._api = api;
         this._feature = card;
         return this;
