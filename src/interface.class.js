@@ -22,7 +22,7 @@ export class Interface {
 
         // attach a new instance of the interface to the object
         //console.log( new iface());
-        const ifaceInstance = new ifaceClass();
+        const ifaceInstance = new ifaceClass( instance );
         const name = ifaceInstance.constructor.name;
         instance[name] = ifaceInstance;
 
