@@ -15,26 +15,15 @@ export class coreController {
      *   > endConnection {Boolean} whether the server should close the client connection
      *      alternative being to wait for the client closes itself its own connection
      */
-    static c = {
-        'iz.help': {
-            label: 'returns the list of known commands',
-            fn: coreController._izHelp,
-            endConnection: false
-        },
-        'iz.ping': {
-            label: 'ping the service',
-            fn: coreController._izPing,
-            endConnection: false
-        },
+    static verbs = {
         'iz.status': {
             label: 'returns the status of this coreController service',
-            fn: coreController._izStatus,
-            endConnection: false
+            fn: coreController._izStatus
         },
         'iz.stop': {
             label: 'stop this coreController service',
             fn: coreController._izStop,
-            endConnection: true
+            end: true
         }
     };
 
@@ -45,12 +34,6 @@ export class coreController {
         listenPort: 24001,
         alivePeriod: 60*1000
     };
-
-    //  returns the list of available commands
-    static _izHelp( self, reply ){
-        reply.answer = coreController.c;
-        return Promise.resolve( reply );
-    }
 
     // returns the full status of the server
     static _izStatus( self, reply ){
@@ -122,9 +105,9 @@ export class coreController {
         });
 
         Interface.add( this, exports.ITcpServer, {
-            _execute: this.itcpserverExecute,
             _listening: this.itcpserverListening,
-            _statsUpdated: this.itcpserverStatsUpdated
+            _statsUpdated: this.itcpserverStatsUpdated,
+            _verbs: this.itcpserverVerbs
         });
 
         // unable to handle SIGKILL signal: Error: uv_signal_start EINVAL
@@ -334,26 +317,6 @@ export class coreController {
     }
 
     /*
-     * Execute a received commands and replies with an answer
-     * @param {String[]} words the received command and its arguments
-     * @param {Object} client the client connection
-     * @returns {Boolean} true if we knew the command and (at least tried) execute it
-     * [-implementation Api-]
-     */
-    itcpserverExecute( words, client ){
-        const self = this;
-        let reply = this.ITcpServer.findExecuter( words, coreController.c );
-        //console.log( reply );
-        if( reply ){
-            reply.obj.fn( this, reply.answer )
-                .then(( result ) => {
-                    self.ITcpServer.answer( client, result, reply.obj.endConnection );
-                });
-        }
-        return reply;
-    }
-
-    /*
      * What to do when this ITcpServer is ready listening ?
      *  -> write the runfile before advertising parent to prevent a race condition when writing the file
      *  -> send the current service status
@@ -383,6 +346,15 @@ export class coreController {
         const _name = this.feature().name();
         const _status = this.ITcpServer.status();
         this.IRunFile.set([ _name, 'ITcpServer' ], _status );
+    }
+
+    /*
+     * @returns {Object[]} the list of implemented commands provided by the interface implementation
+     *  cf. tcp-server-command.schema.json
+     * [-implementation Api-]
+     */
+    itcpserverVerbs(){
+        return coreController.verbs;
     }
 
     /**
