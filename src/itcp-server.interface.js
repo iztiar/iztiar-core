@@ -19,30 +19,32 @@ export class ITcpServer {
         STOPPED: 'stopped'
     };
 
-    static c = {
+    static verbs = {
         'iz.capability': {
             label: 'invoke the named capability (as first argument)',
-            fn: ITcpServer._izCapability,
-            endConnection: false
+            fn: ITcpServer._izCapability
+        },
+        'iz.help': {
+            label: 'returns the list of known commands',
+            fn: ITcpServer._izHelp
         },
         'iz.ping': {
             label: 'ping the service',
-            fn: ITcpServer._izPing,
-            endConnection: false
+            fn: ITcpServer._izPing
         }
     };
 
     // invoke a capability
-    static _izCapability( self, reply ){
+    static _izCapability( instance, reply ){
         let _promise = Promise.resolve( true );
-        if( self._instance && self._instance.ICapability ){
+        if( instance.ICapability ){
             if( reply.args.length ){
                 _promise = _promise
-                    .then(() => { return self._instance.ICapability.invoke( reply.args[0] ); })
+                    .then(() => { return instance.ICapability.invoke( reply.args[0] ); })
                     .then(( res ) => { reply.answer = res; });
             } else {
                 _promise = _promise
-                    .then(() => { reply.answer = self._instance.ICapability.get(); });
+                    .then(() => { reply.answer = instance.ICapability.get(); });
             }
         } else {
             _promise = _promise
@@ -52,8 +54,17 @@ export class ITcpServer {
         return _promise;
     }
 
+    // display the list of known verbs
+    static _izHelp( instance, reply ){
+        reply.answer = {
+            ...ITcpServer.verbs,
+            ...instance.ITcpServer._verbs()
+        }
+        return Promise.resolve( reply );
+    }
+
     // ping -> ack: the port is alive
-    static _izPing( self, reply ){
+    static _izPing( instance, reply ){
         reply.answer = 'iz.ack';
         return Promise.resolve( reply );
     }
@@ -93,17 +104,6 @@ export class ITcpServer {
        *** *************************************************************************************** */
 
     /**
-     * Execute a received commands and replies with an answer
-     * @param {String[]} words the received command and its arguments
-     * @param {Object} client the client connection
-     * @returns {Boolean} true if we knew the command and (at least tried to) execute it
-     * [-implementation Api-]
-     */
-    _execute( words, client ){
-        return false;
-    }
-
-    /**
      * What to do when this ITcpServer is ready listening ?
      * [-implementation Api-]
      */
@@ -117,6 +117,15 @@ export class ITcpServer {
      */
     _statsUpdated(){
         Msg.debug( 'ITcpServer.statsUpdated()' );
+    }
+
+    /**
+     * @returns {Object[]} the list of implemented commands provided by the interface implementation
+     *  cf. tcp-server-command.schema.json
+     * [-implementation Api-]
+     */
+    _verbs(){
+        return {};
     }
 
     /* *** ***************************************************************************************
@@ -175,19 +184,20 @@ export class ITcpServer {
                 const _words = _bufferStr.split( /\s+/ );
 
                 try {
-                    // first try to manage the commands we answer ourselves
-                    let _reply = self.findExecuter( _words, ITcpServer.c );
-                    if( _reply ){
-                        _reply.obj.fn( self, _reply.answer )
-                            .then(( res ) => { self.answer( c, res, _reply.obj.endConnection ); });
-
-                    // else ask to the implementation
-                    } else if( !self._execute( _words, c )){
-                        Msg.error( 'ITcpServer.onData() unknown command', _words[0] );
-                        c.end();
+                    let _reply = {
+                        verb: _words[0],
+                        args: [ ..._words ].splice( 1 ),
+                        timestamp: utils.now(),
+                        answer: null
+                    };
+                    if( !self.execute( _words, c, _reply, ITcpServer.verbs ) && !self.execute( _words, c, _reply, self._verbs())){
+                        const _msg = 'ITcpServer error: unknown verb \''+_words[0]+'\'';
+                        Msg.error( _msg );
+                        _reply.answer = _msg;
+                        this.answer( c, _reply, true );
                     }
                 } catch( e ){
-                    Msg.error( 'ITcpServer..execute()', e.name, e.message );
+                    Msg.error( 'ITcpServer.execute()', e.name, e.message );
                     c.end();
                 }
 
@@ -239,30 +249,24 @@ export class ITcpServer {
     }
 
     /**
-     * Identifies the command received on the TCP communication port
+     * Execute the command if the verb is found in the provided referentiel
      * @param {String[]} words the received string command and parameters
-     * @param {Object[]} refs the commands known by the derived class
-     * @returns {Object|null}
-     *  command the identified command
-     *  args    the arguments found after the command in the input string
-     *  object  the object found in 'refs'
+     * @param {Object} client the client tcp connnection
+     * @param {Object} reply the prepared reply
+     * @param {Object} ref the known verbs
+     * @returns {Boolean} whether the verb has been found (and executed or at least tried to be executed)
      * [-Public API-]
      */
-    findExecuter( words, refs ){
-        if( Object.keys( refs ).includes( words[0] ) && refs[words[0]].fn && typeof refs[words[0]].fn === 'function' ){
-            const _command = words[0];
-            const _args = words.splice( 1 );
-            return {
-                answer: {
-                    command: _command,
-                    args: _args,
-                    timestamp: utils.now(),
-                    answer: null
-                },
-                obj: refs[_command]
-            };
+    execute( words, client, reply, ref ){
+        const _verb = words[0];
+        const _found = Object.keys( ref ).includes( _verb );
+        if( _found ){
+            if( ref[_verb].fn && typeof ref[_verb].fn === 'function' ){
+                ref[_verb].fn( this._instance, reply )
+                    .then(( res ) => { this.answer( client, res, ref[_verb].end || false ); });
+            }
         }
-        return null;
+        return _found;
     }
 
     /**
