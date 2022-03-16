@@ -1,24 +1,29 @@
 /*
  * IServiceable interface
  *
- *  The interface to be implemented by the running services to be managed by Iztiar
+ *  The interface to be implemented by the running services to be managed by Iztiar.
+ *  This also acts as a proxy to ICapability interface (that should also be implemented by the way).
  */
 import { Msg } from './index.js';
 
 export class IServiceable {
 
+    _instance = null;
+
+    /**
+     * Constructor
+     * @param {*} instance the implementation instance
+     * @returns {IServiceable}
+     */
+    constructor( instance ){
+        Msg.debug( 'IServiceable instanciation' );
+        this._instance = instance;
+        return this;
+    }
+
     /* *** ***************************************************************************************
        *** The implementation API, i.e; the functions the implementation may want to implement ***
        *** *************************************************************************************** */
-
-    /**
-     * @returns {String[]} the array of service capabilities
-     * [-implementation Api-]
-     */
-    capabilities(){
-        Msg.debug( 'IServiceable.capabilities()' );
-        return [];
-    }
 
     /**
      * @returns {String} the type of the service, not an identifier, rather a qualifier
@@ -47,16 +52,6 @@ export class IServiceable {
      */
     killed(){
         Msg.debug( 'IServiceable.killed()' );
-    }
-
-    /**
-     * @param {String} cap the desired capability name
-     * @returns {Object|null} the capability characteristics 
-     * [-implementation Api-]
-     */
-    get( cap ){
-        Msg.debug( 'IServiceable.get() cap='+cap );
-        return null;
     }
 
     /**
@@ -115,4 +110,17 @@ export class IServiceable {
     /* *** ***************************************************************************************
        *** The public API, i.e; the API anyone may call to access the interface service        ***
        *** *************************************************************************************** */
+
+    /**
+     * @param {String} cap the desired capability name
+     * @returns {Object|null} the capability characteristics 
+     * [-Public API-]
+     */
+    get( cap ){
+        Msg.debug( 'IServiceable.get() cap='+cap );
+        if( this._instance && this._instance.ICapability ){
+            return this._instance.ICapability.invoke( cap );
+        }
+        return null;
+    }
 }
