@@ -46,10 +46,10 @@ export function cliStart( api, name, options={} ){
         .then(() => { return feature.initialize( api ); })
         .then(( iServiceable ) => {
             if( iServiceable && iServiceable instanceof IServiceable ){
-                Msg.verbose( name+': iServiceable sucessfully initialized' );
+                Msg.verbose( name+' iServiceable sucessfully initialized' );
                 result.next = STAT;
             } else {
-                Msg.verbose( name+': initialization failed' );
+                Msg.verbose( name+' initialization failed' );
                 result.next = END;
             }
         });

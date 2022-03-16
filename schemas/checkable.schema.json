@@ -1,8 +1,8 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://github.com/iztiar/iztiar-core/schemas/check-status.schema.json",
-    "title": "checkStatus",
-    "description": "the content of the object to be provided by the IServiceable to let check if a service is up and running",
+    "$id": "https://github.com/iztiar/iztiar-core/schemas/checkable.schema.json",
+    "title": "checkable",
+    "description": "the content of the object to be provided by the ICheckable.get() to let check if a service is up and running",
     "type": "object",
     "properties": {
         "startable": {
@@ -11,7 +11,7 @@
         },
         "reasons": {
             "type": "string[]",
-            "description": "if the service is running, then the list of detected errors, must be empty if startable"
+            "description": "if the service is said running, then the list of detected errors, must be empty if startable"
         },
         "pids": {
             "type": "integer[]",
@@ -19,7 +19,7 @@
         },
         "ports": {
             "type": "integer[]",
-            "description": "list of TCP ports which must been checked against 'iz.ping' and 'iz.status' commands, must be empty if startable"
+            "description": "list of TCP ports which must been checked against 'iz.ping' command, must be empty if startable"
         }
     }
 }
