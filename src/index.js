@@ -1,4 +1,5 @@
 // interfaces
+export * from './icapability.interface.js';
 export * from './icmdline.interface.js';
 export * from './iforkable.interface.js';
 export * from './imqtt-client.interface.js';
