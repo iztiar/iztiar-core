@@ -1,0 +1,25 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://github.com/iztiar/iztiar-core/schemas/tcp-server-reply.schema.json",
+    "title": "tcpServerReply",
+    "description": "The description of the reply object provided by the ITcpServer interface to the verb execution functions",
+    "type": "object",
+    "properties": {
+        "verb": {
+            "type": "string",
+            "description": "the received verb (the first word of the received string)"
+        },
+        "args": {
+            "type": "string[]",
+            "description": "the received arguments, i.e. the space-separated words of the received string, but the first"
+        },
+        "timestamp": {
+            "type": "timestamp",
+            "description": "the current timestamp"
+        },
+        "answer": {
+            "type": "object",
+            "description": "the answer, initially empty, to be provided by the execution function"
+        }
+    }
+}
