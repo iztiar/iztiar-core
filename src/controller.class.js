@@ -374,12 +374,12 @@ export class coreController {
         status[_serviceName] = {};
         // ITcpServer
         const _tcpServerPromise = function(){
-            return new Promise(( resolve, reject ) => {
-                const o = self.ITcpServer.status();
-                Msg.debug( 'coreController.status()', 'ITcpServer', o );
-                status[_serviceName].ITcpServer = { ...o };
-                resolve( status );
-            });
+            return self.ITcpServer.status()
+                .then(( res ) => {
+                    Msg.debug( 'coreController.status()', 'ITcpServer', res );
+                    status[_serviceName].ITcpServer = { ...res };
+                    return Promise.resolve( status );
+                });
         };
         // run-status.schema.json
         const _runStatus = function(){

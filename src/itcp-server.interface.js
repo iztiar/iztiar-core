@@ -93,7 +93,7 @@ export class ITcpServer {
 
         // add a 'tcpServer' capability to the implementation
         if( instance.ICapability ){
-            instance.ICapability.add( 'tcpServer', ( o ) => { return Promise.resolve( o.ITcpServer.status()); });
+            instance.ICapability.add( 'tcpServer', ( o ) => { return o.ITcpServer.status(); });
         }
 
         return this;
@@ -285,7 +285,7 @@ export class ITcpServer {
     /**
      * Getter/Setter
      * @param {String} newStatus the status to be set to the ITcpServer
-     * @returns {Object} the status of the ITcpServer
+     * @returns {Promise} which resolves to the status of the ITcpServer
      * [-Public API-]
      */
     status( newStatus ){
@@ -310,7 +310,7 @@ export class ITcpServer {
             }
         };
         //Msg.debug( 'ITcpServer.status()', o );
-        return o;
+        return Promise.resolve( o );
     }
 
     /**
