@@ -307,14 +307,14 @@ export class featureCard {
                     utils.tcpRequest( port, 'iz.status' )
                         .then(( res ) => {
                             //console.log( 'iz.status returns', res );
-                            let _answeredName = null;
-                            let _answeredPids = [];
-                            let _answeredClass = null;
-                            let _errs = 0;
-                            if( res ){
-                                _answeredName = Object.keys( res.answer )[0];
-                                _answeredPids = [ ...res.answer[_answeredName].pids ];
-                                _answeredClass = res.answer[_answeredName].class;
+                            if( !res || Object.keys( res ).includes( 'reason' ) || typeof res.answer !== 'object' ){
+                                _cerr( 'statusOf request rejected', res );
+                                resolve( false );
+                            } else {
+                                let _errs = 0;
+                                const _answeredName = Object.keys( res.answer )[0];
+                                const _answeredPids = [ ...res.answer[_answeredName].pids ];
+                                const _answeredClass = res.answer[_answeredName].class;
                                 // check the answered feature name
                                 if( _answeredName !== self.name()){
                                     _errs += 1;
@@ -348,9 +348,6 @@ export class featureCard {
                                     _cinfo( 'statusOf answers', _local );
                                     resolve( true );
                                 }
-                            } else {
-                                _cerr( 'statusOf request rejected' );
-                                resolve( false );
                             }
                         }, ( rej ) => {
                             _cerr( 'statusOf request rejected' );
