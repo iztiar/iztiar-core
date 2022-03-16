@@ -2,7 +2,6 @@
  * IMqttClient interface
  */
 import mqtt from 'mqtt';
-import net from 'net';
 
 import { Msg, utils } from './index.js';
 
@@ -13,12 +12,19 @@ export class IMqttClient {
         alivePeriod: 60*1000
     };
 
+    _instance = null;
     _client = null;
     _aliveInterval = null;
     _alivePeriod = null;
 
-    constructor(){
+    /**
+     * Constructor
+     * @param {*} instance the implementation instance
+     * @returns {IMqttClient}
+     */
+   constructor( instance ){
         Msg.debug( 'IMqttClient instanciation' );
+        this._instance = instance;
         return this;
     }
 
@@ -49,17 +55,17 @@ export class IMqttClient {
         }
     }
 
+    _capabilities(){
+        let _caps = [];
+        if( this._instance && this._instance.ICapability ){
+            _caps = this._instance.ICapability.get();
+        }
+        return _caps
+    }
+
     /* *** ***************************************************************************************
        *** The implementation API, i.e; the functions the implementation may want to implement ***
        *** *************************************************************************************** */
-
-    /**
-     * @returns {String[]} the array of service capabilities
-     * [-implementation Api-]
-     */
-    _capabilities(){
-        return [];
-    }
 
     /**
      * @returns {String} the name of the implementation class
