@@ -195,7 +195,7 @@ export function cliStart( api, name, options={} ){
                 if( result.child ){
                     Msg.verbose( 'cliStart().killIfNeeded() killing process', result.child.pid );
                     process.kill( result.child.pid, 'SIGKILL' );
-                    result.iServiceable.cleanupAfterKill();
+                    feature.iServiceable().killed();
                 }
             }
             return Promise.resolve( res );
