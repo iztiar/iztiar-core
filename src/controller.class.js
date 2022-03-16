@@ -46,30 +46,9 @@ export class coreController {
         alivePeriod: 60*1000
     };
 
-    /**
-     * The provided capabilities
-     */
-     static caps = {
-        'checkStatus': function( o ){
-            return o._checkStatus();
-        },
-        'controller': function( o ){
-            return o.IRunFile.get( o.feature().name(), 'helloMessage' );
-        },
-        'helloMessage': function( o, cap ){
-            return o.IRunFile.get( o.feature().name(), cap );
-        }
-    };
-
     //  returns the list of available commands
     static _izHelp( self, reply ){
         reply.answer = coreController.c;
-        return Promise.resolve( reply );
-    }
-
-    // ping -> ack: the port is alive
-    static _izPing( self, reply ){
-        reply.answer = 'iz.ack';
         return Promise.resolve( reply );
     }
 
@@ -106,12 +85,24 @@ export class coreController {
         Interface.extends( this, exports.baseService, api, card );
         Msg.debug( 'coreController instanciation' );
 
+        // first interface to be added, so that other interfaces may take advantage of that
+        Interface.add( this, exports.ICapability );
+
+        this.ICapability.add(
+            'checkStatus', ( o ) => { return o._checkStatus(); }
+        );
+        this.ICapability.add(
+            'controller', ( o ) => { return Promise.resolve( o.IRunFile.get( o.feature().name(), 'helloMessage' )); }
+        );
+        this.ICapability.add(
+            'helloMessage', ( o, cap ) => { return Promise.resolve( o.IRunFile.get( o.feature().name(), cap )); }
+        );
+
         Interface.add( this, exports.IForkable, {
             _terminate: this.iforkableTerminate
         });
 
         Interface.add( this, exports.IMqttClient, {
-            _capabilities: this._capabilities,
             _class: this._class,
             _module: this.feature().module,
             _name: this._name
@@ -122,10 +113,8 @@ export class coreController {
         });
 
         Interface.add( this, exports.IServiceable, {
-            capabilities: this._capabilities,
             class: this.iserviceableClass,
             config: this.iserviceableConfig,
-            get: this.iserviceableGet,
             killed: this.iserviceableKilled,
             start: this.iserviceableStart,
             status: this.iserviceableStatus,
@@ -150,14 +139,6 @@ export class coreController {
             .then(() => { return Promise.resolve( this ); });
     
         return _promise;
-    }
-
-    /*
-     * @returns {String[]} the array of service capabilities
-     * [-implementation Api-]
-     */
-    _capabilities(){
-        return Object.keys( coreController.caps );
     }
 
     /*
@@ -285,21 +266,6 @@ export class coreController {
     iserviceableConfig(){
         Msg.debug( 'coreController.iserviceableConfig()' );
         return this.config();
-    }
-
-    /*
-     * @param {String} cap the desired capability name
-     * @returns {Object} the capability characterics 
-     * [-implementation Api-]
-     */
-    iserviceableGet( cap ){
-        Msg.debug( 'coreController.iserviceableGet() cap='+cap );
-        if( Object.keys( coreController.caps ).includes( cap )){
-            return coreController.caps[cap]( this, cap );
-        } else {
-            Msg.error( 'coreController unknown capability \''+cap+'\'' );
-            return null;
-        }
     }
 
     /*
