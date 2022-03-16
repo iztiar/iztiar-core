@@ -57,7 +57,7 @@ export function cliStatus( api, name, options={} ){
                 Msg.out( chalk.green( 'Service \''+name+'\' is confirmed up and running' ));
                 const hello = feature.iServiceable().get( 'helloMessage' );
                 if( hello ){
-                    Msg.out( chalk.green( 'Greetings message is « '+hello+' »' ));
+                    hello.then(( res ) => { Msg.out( chalk.green( 'Greetings message is « '+res+' »' )); });
                 }
             }
 
