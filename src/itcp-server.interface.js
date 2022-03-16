@@ -2,7 +2,9 @@
  * ITcpServer interface
  *
  *  A service which implements this ITcpServer interface (aka a TCP server) should be able to handle
- *  'iz.ping', 'iz.status', and 'iz.stop' commands.
+ *  'iz.status' and 'iz.stop' commands.
+ * 
+ *  This interface natively handles and answers to 'iz.ping' commands.
  */
 import net from 'net';
 
@@ -17,6 +19,46 @@ export class ITcpServer {
         STOPPED: 'stopped'
     };
 
+    static c = {
+        'iz.capability': {
+            label: 'invoke the named capability (as first argument)',
+            fn: ITcpServer._izCapability,
+            endConnection: false
+        },
+        'iz.ping': {
+            label: 'ping the service',
+            fn: ITcpServer._izPing,
+            endConnection: false
+        }
+    };
+
+    // invoke a capability
+    static _izCapability( self, reply ){
+        let _promise = Promise.resolve( true );
+        if( self._instance && self._instance.ICapability ){
+            if( reply.args.length ){
+                _promise = _promise
+                    .then(() => { return self._instance.ICapability.invoke( reply.args[0] ); })
+                    .then(( res ) => { reply.answer = res; });
+            } else {
+                _promise = _promise
+                    .then(() => { reply.answer = self._instance.ICapability.get(); });
+            }
+        } else {
+            _promise = _promise
+                .then(() => { reply.answer = 'Error: instance doesn\'t implement ICapability interface'; });
+        }
+        _promise = _promise.then(() => { return Promise.resolve( reply ); });
+        return _promise;
+    }
+
+    // ping -> ack: the port is alive
+    static _izPing( self, reply ){
+        reply.answer = 'iz.ack';
+        return Promise.resolve( reply );
+    }
+
+    _instance = null;
     _status = null;
     _tcpServer = null;
     _port = 0;
@@ -28,9 +70,21 @@ export class ITcpServer {
     _outMsgCount = 0;
     _outBytesCount = 0;
 
-    constructor(){
+    /**
+     * Constructor
+     * @param {*} instance the implementation instance
+     * @returns {ITcpServer}
+     */
+    constructor( instance ){
         Msg.debug( 'ITcpServer instanciation' );
+        this._instance = instance;
         this._status = ITcpServer.s.STOPPED;
+
+        // add a 'tcpServer' capability to the implementation
+        if( instance.ICapability ){
+            instance.ICapability.add( 'tcpServer', ( o ) => { return Promise.resolve( o.ITcpServer.status()); });
+        }
+
         return this;
     }
 
@@ -121,12 +175,19 @@ export class ITcpServer {
                 const _words = _bufferStr.split( /\s+/ );
 
                 try {
-                    if( !self._execute( _words, c )){
-                        Msg.error( 'ITcpServer.create() unknown command', _words[0] );
+                    // first try to manage the commands we answer ourselves
+                    let _reply = self.findExecuter( _words, ITcpServer.c );
+                    if( _reply ){
+                        _reply.obj.fn( self, _reply.answer )
+                            .then(( res ) => { self.answer( c, res, _reply.obj.endConnection ); });
+
+                    // else ask to the implementation
+                    } else if( !self._execute( _words, c )){
+                        Msg.error( 'ITcpServer.onData() unknown command', _words[0] );
                         c.end();
                     }
                 } catch( e ){
-                    Msg.error( 'ITcpServer.create().execute()', e.name, e.message );
+                    Msg.error( 'ITcpServer..execute()', e.name, e.message );
                     c.end();
                 }
 
@@ -135,7 +196,7 @@ export class ITcpServer {
 
             .on( 'close', () => {
                 self._inClosedCount += 1;
-                Msg.debug( 'ITcpServer.create() closing', self._inConnCount, self._inClosedCount );
+                Msg.debug( 'ITcpServer closing connection', 'inConnCount='+self._inConnCount, 'inCloseCount='+self._inClosedCount );
                 self.statsUpdated();
             })
 
