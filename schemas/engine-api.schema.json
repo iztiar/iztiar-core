@@ -1,6 +1,6 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://github.com/iztiar/iztiar-core/schemas/controller-config.schema.json",
+    "$id": "https://github.com/iztiar/iztiar-core/schemas/engine-api.schema.json",
     "title": "engineApi",
     "description": "the API provided to each service at initialization time",
     "type": "object",

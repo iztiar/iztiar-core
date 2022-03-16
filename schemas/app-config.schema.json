@@ -1,6 +1,6 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://github.com/iztiar/iztiar-core/schemas/controller-config.schema.json",
+    "$id": "https://github.com/iztiar/iztiar-core/schemas/app-config.schema.json",
     "title": "appConfig",
     "description": "the configuration of the Iztiar application",
     "type": "object",

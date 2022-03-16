@@ -1,6 +1,6 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://github.com/iztiar/iztiar-core/schemas/controller-config.schema.json",
+    "$id": "https://github.com/iztiar/iztiar-core/schemas/core-api.schema.json",
     "title": "coreApi",
     "description": "the coreApi globally used in the application",
     "type": "object",
