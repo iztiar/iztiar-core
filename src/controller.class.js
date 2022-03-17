@@ -417,12 +417,12 @@ export class coreController {
         // pidUsage
         const _pidPromise = function(){
             return pidUsage( process.pid )
-                .then(( pidRes ) => {
+                .then(( res ) => {
                     const o = {
-                        cpu: pidRes.cpu,
-                        memory: pidRes.memory,
-                        ctime: pidRes.ctime,
-                        elapsed: pidRes.elapsed
+                        cpu: res.cpu,
+                        memory: res.memory,
+                        ctime: res.ctime,
+                        elapsed: res.elapsed
                     };
                     Msg.debug( 'coreController.status()', 'pidUsage', o );
                     status.pidUsage = { ...o };
@@ -455,21 +455,23 @@ export class coreController {
      *  this terminate() function. So, try to prevent a double execution.
      */
     terminate( args=[], cb=null ){
-        Msg.debug( 'coreController.terminate()' );
-        const _status = this.ITcpServer.status();
-        if( _status.status === this.api().exports().ITcpServer.s.STOPPING ){
-            Msg.debug( 'coreController.terminate() returning as currently stopping' );
-            return Promise.resolve( true );
-        }
-        if( _status.status === this.api().exports().ITcpServer.s.STOPPED ){
-            Msg.debug( 'coreController.terminate() returning as already stopped' );
-            return Promise.resolve( true );
-        }
+        const exports = this.api().exports();
+        exports.Msg.debug( 'coreController.terminate()' );
+        this.ITcpServer.status().then(( res ) => {
+            if( res.status === exports.ITcpServer.s.STOPPING ){
+                exports.Msg.debug( 'coreController.terminate() returning as currently stopping' );
+                return Promise.resolve( true );
+            }
+            if( res.status === exports.ITcpServer.s.STOPPED ){
+                exports.Msg.debug( 'coreController.terminate() returning as already stopped' );
+                return Promise.resolve( true );
+            }
+        });
 
         const _name = this.feature().name();
         const _module = this.feature().module();
         const _class = this._class();
-        this._forwardPort = args && args[0] && self.api().exports().utils.isInt( args[0] ) ? args[0] : 0;
+        this._forwardPort = args && args[0] && exports.utils.isInt( args[0] ) ? args[0] : 0;
 
         const self = this;
 
@@ -491,7 +493,7 @@ export class coreController {
                 // we auto-remove from runfile as late as possible
                 //  (rationale: no more runfile implies that the service is no more testable and expected to be startable)
                 self.IRunFile.remove( _name );
-                Msg.info( _name+' coreController terminating with code '+process.exitCode );
+                exports.Msg.info( _name+' coreController terminating with code '+process.exitCode );
                 return Promise.resolve( true)
                 //process.exit();
             });
