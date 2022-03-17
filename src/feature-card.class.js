@@ -13,7 +13,7 @@
 import path from 'path';
 import { memoryUsage } from 'process';
 
-import { IForkable, IServiceable, coreApi, checkable, coreController, engineApi, Msg, utils } from './index.js';
+import { IForkable, IServiceable, coreApi, Checkable, coreController, engineApi, Msg, utils } from './index.js';
 
 export class featureCard {
 
@@ -234,7 +234,7 @@ export class featureCard {
         //console.log( typeof self._iServiceable.getCheckStatus );
 
         // the returned object which will resolve the promise
-        let result = new checkable();
+        let result = new Checkable();
         result.alive = { pids:[], ports:[] };
 
         // using promises here happens to be rather conterproductive as the functions are already mainly used inside of Promises

@@ -3,10 +3,10 @@
  *
  *  Is the implementation checkable ?
  * 
- *  Everyone, and in particular every implemented interface, is allowed to add() here a new checkable.
+ *  Everyone, and for example every implemented interface, is allowed to add() here a new checkable event.
  *  Each of the returned checkable will then be tested in sequence when requiring a feature status.
  */
-import { checkable, Msg } from './index.js';
+import { Checkable, Msg } from './index.js';
 
 export class ICheckable {
 
@@ -51,7 +51,7 @@ export class ICheckable {
      * [-Public API-]
      */
     run(){
-        let _result = new checkable();
+        let _result = new Checkable();
         let _promise = Promise.resolve( _result );
         this._checkables.every(( o ) => {
             if( o.fn && typeof o.fn === 'function' ){

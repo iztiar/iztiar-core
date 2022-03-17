@@ -126,7 +126,7 @@ export class IServiceable {
     }
 
     /**
-     * @returns {Promise|null} which resolves to the merged checkable object resulting of all checkable set 
+     * @returns {Promise|null} which resolves to the merged Checkable object resulting of all checkable set 
      * [-Public API-]
      */
     getCheckable(){

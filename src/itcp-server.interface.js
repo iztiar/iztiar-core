@@ -107,7 +107,7 @@ export class ITcpServer {
             Interface.add( instance, ICheckable );
         }
         instance.ICheckable.add(() => {
-            let res = new exports.checkable();
+            let res = new exports.Checkable();
             //console.log( 'about to provide a checkable from itcp-server', self._tcpServer, self._port );
             if( self._port ){
                 res.startable = false;

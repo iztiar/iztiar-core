@@ -1,7 +1,7 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "$id": "https://github.com/iztiar/iztiar-core/schemas/checkable.schema.json",
-    "title": "checkable",
+    "title": "Checkable",
     "description": "the content of the object to be provided by the ICheckable.get() to let check if a service is up and running",
     "type": "object",
     "properties": {

@@ -1,10 +1,10 @@
 /*
- * checkable class
+ * Checkable class
  *
  * Returns an object conform to checkable.schema.json
  */
 
-export class checkable {
+export class Checkable {
     startable = true;
     reasons = [];
     pids = [];
@@ -12,19 +12,18 @@ export class checkable {
 
     /**
      * Merge another checkable with this object
-     * @param {checkable} o
-     * @returns {checkable}
+     * @param {Checkable} o
+     * @returns {Checkable}
      * @throws {Error} if o is not a checkable
      */
     merge( o ){
-        if( o && o instanceof checkable ){
+        if( o && o instanceof Checkable ){
             this.startable &= o.startable;
             this.reasons = [ ...this.reasons, ...o.reasons ];
             this.pids = [ ...this.pids, ...o.pids ];
             this.ports = [ ...this.ports, ...o.ports ];
             return this;
         }
-        console.log( o );
-        throw new Error( 'checkable.merge() not a checkable instance' );
+        throw new Error( 'Checkable.merge() not a Checkable instance', o );
     }
 }

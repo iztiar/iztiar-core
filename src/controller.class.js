@@ -132,8 +132,8 @@ export class coreController {
         Msg.debug( 'coreController._checkStatus()' );
         const _name = this.feature().name();
         const _json = this.IRunFile.jsonByName( _name );
-        const checkable = this.api().exports().checkable;
-        let o = new checkable();
+        const Checkable = this.api().exports().Checkable;
+        let o = new Checkable();
         if( _json && _json[_name] ){
             o.pids = [ ..._json[_name].pids ];
             o.ports = [ _json[_name].listenPort ];
