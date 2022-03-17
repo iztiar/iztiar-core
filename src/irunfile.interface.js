@@ -10,7 +10,6 @@
  *          ports []
  */
 import deepcopy from 'deepcopy';
-import deepequal from 'deepequal';
 import path from 'path';
 
 import { Msg, utils } from './index.js';
@@ -111,7 +110,7 @@ export class IRunFile {
         if( _names.length === 1 ){
             _fullpart = data;
         } else {
-            if( Object.keys( _orig )[0] !== _names[0] ){
+            if( Object.keys( _orig ).length > 0 && Object.keys( _orig )[0] !== _names[0] ){
                 throw new Error( 'IRunFile.set() expecting top key=\''+_names[0]+'\', found=\''+Object.keys( _orig )[0]+'\'' );
             }
             if( _names.length === 2 ){

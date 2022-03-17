@@ -88,7 +88,7 @@ export function cliStart( api, name, options={} ){
                                 } else {
                                     res.started = true;
                                     Msg.out( chalk.green( 'Service(s) \''+_name+'\' successfully started' ));
-                                    const hello = feature.iServiceable().get( 'helloMessage' );
+                                    const hello = feature.iServiceable().getCapability( 'helloMessage' );
                                     if( hello ){
                                         hello.then(( res ) => { Msg.out( chalk.green( 'Greetings message is « '+res+' »' )); });
                                     }

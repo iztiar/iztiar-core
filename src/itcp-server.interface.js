@@ -87,14 +87,34 @@ export class ITcpServer {
      * @returns {ITcpServer}
      */
     constructor( instance ){
+        const exports = instance.api().exports();
+        const Interface = exports.Interface;
+        const ICheckable = exports.ICheckable;
+        const Msg = exports.Msg;
+
         Msg.debug( 'ITcpServer instanciation' );
         this._instance = instance;
         this._status = ITcpServer.s.STOPPED;
+        const self = this;
 
         // add a 'tcpServer' capability to the implementation
         if( instance.ICapability ){
             instance.ICapability.add( 'tcpServer', ( o ) => { return o.ITcpServer.status(); });
         }
+
+        // if not already done, make sure the instance implements a ICheckable interface
+        if( !instance.ICheckable ){
+            Interface.add( instance, ICheckable );
+        }
+        instance.ICheckable.add(() => {
+            let res = new exports.checkable();
+            //console.log( 'about to provide a checkable from itcp-server', self._tcpServer, self._port );
+            if( self._port ){
+                res.startable = false;
+                res.ports = [ self._port ];
+            }
+            return Promise.resolve( res );
+        });
 
         return this;
     }
@@ -142,7 +162,7 @@ export class ITcpServer {
     answer( client, obj, close=false ){
         const _msg = JSON.stringify( obj )+'\r\n';
         client.write( _msg );
-        Msg.info( 'server answers to new incoming connection with', obj );
+        Msg.info( 'server answers to request with', obj );
         this._outMsgCount += 1;
         this._outBytesCount += _msg.length;
         if( close ){
@@ -169,11 +189,13 @@ export class ITcpServer {
             Msg.debug( 'ITcpServer new incoming connection', 'inConnCount='+self._inConnCount, 'inCloseCount='+self._inClosedCount );
 
             // refuse all connections if the server is not 'running'
-            if( self.status().status !== ITcpServer.s.RUNNING ){
-                const _res = { answer:'temporarily refusing connections', reason:self.status().status, timestamp:utils.now()};
-                self.answer( c, _res, true );
-                self.statsUpdated();
-            }
+            self.status().then(( res ) => {
+                if( res.status !== ITcpServer.s.RUNNING ){
+                    const _res = { answer:'temporarily refusing connections', status:res.status, timestamp:utils.now() };
+                    Msg.debug( 'ITcpServer refuses new connection as status='+res.status+' while expected is '+ITcpServer.s.RUNNING );
+                    self.answer( c, _res, true );
+                }
+            });
 
             c.on( 'data', ( data ) => {
                 //console.log( data );
@@ -240,12 +262,14 @@ export class ITcpServer {
         //    return;
         //}
         // not very sure this is a good idea !?
-        if( this.status().status !== ITcpServer.s.STOPPING ){
-            Msg.info( 'auto-killing on '+e.code+' error' );
-            this.status( ITcpServer.s.STOPPING );
-            process.kill( process.pid, 'SIGTERM' );
-            //process.kill( process.pid, 'SIGKILL' ); // if previous is not enough ?
-        }
+        this.status().then(( res ) => {
+            if( res.status !== ITcpServer.s.STOPPING ){
+                Msg.info( 'auto-killing on '+e.code+' error' );
+                this.status( ITcpServer.s.STOPPING );
+                process.kill( process.pid, 'SIGTERM' );
+                //process.kill( process.pid, 'SIGKILL' ); // if previous is not enough ?
+            }
+        });
     }
 
     /**
@@ -274,12 +298,13 @@ export class ITcpServer {
      * [-Public API-]
      */
     statsUpdated(){
-        const _status = this.status().status;
-        if( _status === ITcpServer.s.STOPPING || _status === ITcpServer.s.STOPPED ){
-            Msg.debug( 'ITcpServer.statsUpdated() not triggering event as status is \''+_status+'\'' );
-        } else {
-            this._statsUpdated();
-        }
+        this.status().then(( res ) => {
+            if( res.status === ITcpServer.s.STOPPING || res.status === ITcpServer.s.STOPPED ){
+                Msg.debug( 'ITcpServer.statsUpdated() not triggering event as status is \''+res.status+'\'' );
+            } else {
+                this._statsUpdated();
+            }
+        })
     }
 
     /**
@@ -320,14 +345,16 @@ export class ITcpServer {
      */
     terminate(){
         Msg.debug( 'ITcpServer.terminate()', this._inConnCount, this._inClosedCount );
-        if( this.status().status === ITcpServer.s.STOPPING ){
-            Msg.debug( 'ITcpServer.terminate() returning as already stopping' );
-            return Promise.resolve( true );
-        }
-        if( this.status().status === ITcpServer.s.STOPPED ){
-            Msg.debug( 'ITcpServer.terminate() returning as already stopped' );
-            return Promise.resolve( true );
-        }
+        this.status().then(( res ) => {
+            if( res.status === ITcpServer.s.STOPPING ){
+                Msg.debug( 'ITcpServer.terminate() returning as already stopping' );
+                return Promise.resolve( true );
+            }
+            if( res.status === ITcpServer.s.STOPPED ){
+                Msg.debug( 'ITcpServer.terminate() returning as already stopped' );
+                return Promise.resolve( true );
+            }
+        });
 
         // we advertise we are stopping as soon as possible
         this.status( ITcpServer.s.STOPPING );

@@ -11,8 +11,9 @@
  *  - is installed.
  */
 import path from 'path';
+import { memoryUsage } from 'process';
 
-import { IForkable, IServiceable, coreApi, coreController, engineApi, Msg, utils } from './index.js';
+import { IForkable, IServiceable, coreApi, checkable, coreController, engineApi, Msg, utils } from './index.js';
 
 export class featureCard {
 
@@ -211,7 +212,7 @@ export class featureCard {
      * @param {Object} options
      *  -
      * @returns {Promise} which eventually resolves to an Object conform to (or extending) run-status.schema.json
-     *  // the check-status.schema.json content
+     *  // the checkable.schema.json content
      *  reasons: []               array of error messages (one per found error), length=0 means that feature is full ok, up and running
      *  startable: true|false     whether the feature could be started, i.e. only if the runfile is empty or not present
      *  pids: []                  array of requested pids
@@ -233,7 +234,8 @@ export class featureCard {
         //console.log( typeof self._iServiceable.getCheckStatus );
 
         // the returned object which will resolve the promise
-        let result = {};
+        let result = new checkable();
+        result.alive = { pids:[], ports:[] };
 
         // using promises here happens to be rather conterproductive as the functions are already mainly used inside of Promises
         const _cinfo = function(){
@@ -245,19 +247,29 @@ export class featureCard {
         }
 
         // first ask the IServiceable to provide its own status check (must conform to check-status.schema.json)
-        const _serviceablePromise = function(){
-            return self.iServiceable().get( 'checkStatus' )
+        const _checkablePromise = function(){
+            return self.iServiceable().getCheckable()
                 .then(( res ) => {
                     if( res ){
-                        result = { ...res };
-                        result.alive = {
-                            pids: [],
-                            ports: []
-                        };
+                        //console.log( 'getCheckable', res );
+                        result.merge( res );
                     }
                     return Promise.resolve( result );
                 });
-        }
+        };
+
+        // first ask the IServiceable to provide its own status check (must conform to check-status.schema.json)
+        const _serviceablePromise = function(){
+            return self.iServiceable().getCapability( 'checkStatus' )
+                .then(( res ) => {
+                    if( res ){
+                        //console.log( 'checkStatus res', res );
+                        result.merge( res );
+                        //console.log( 'checkStatus merged', result );
+                    }
+                    return Promise.resolve( result );
+                });
+        };
 
         // check if this pid is alive, resolving with true|false
         const _pidAlivePromise = function( pid ){
@@ -359,6 +371,7 @@ export class featureCard {
 
         // let chain and check
         let promise = Promise.resolve( true );
+        promise = promise.then(() => { return _checkablePromise() });
         promise = promise.then(() => { return _serviceablePromise() });
         promise = promise.then(() => {
             let subProms = Promise.resolve( true );

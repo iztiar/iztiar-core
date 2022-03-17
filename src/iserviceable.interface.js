@@ -2,7 +2,8 @@
  * IServiceable interface
  *
  *  The interface to be implemented by the running services to be managed by Iztiar.
- *  This also acts as a proxy to ICapability interface (that should also be implemented by the way).
+ *  This also acts as a proxy to ICapability, ICheckable interfaces
+ *  (that would also take advantage of being implemented by the way).
  */
 import { Msg } from './index.js';
 
@@ -116,10 +117,22 @@ export class IServiceable {
      * @returns {Object|null} the capability characteristics 
      * [-Public API-]
      */
-    get( cap ){
-        Msg.debug( 'IServiceable.get() cap='+cap );
+    getCapability( cap ){
+        Msg.debug( 'IServiceable.getCapability() cap='+cap );
         if( this._instance && this._instance.ICapability ){
             return this._instance.ICapability.invoke( cap );
+        }
+        return null;
+    }
+
+    /**
+     * @returns {Promise|null} which resolves to the merged checkable object resulting of all checkable set 
+     * [-Public API-]
+     */
+    getCheckable(){
+        Msg.debug( 'IServiceable.getCheckable()' );
+        if( this._instance && this._instance.ICheckable ){
+            return this._instance.ICheckable.run();
         }
         return null;
     }
