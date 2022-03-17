@@ -80,7 +80,7 @@ export class IPluginManager {
                     const pck = this.getPackageExt( packet, configuredFeats[id].module );
                     if( pck ){
                         const pckGroup = pck.getIztiar() || {};
-                        const pckTarget = pckGroup.target || null;
+                        const pckTarget = pckGroup.targets || null;
                         if( pckTarget ){
                             result.push( new featureCard( id, configuredFeats[id], pck ));
                             _found.push( configuredFeats[id].module );

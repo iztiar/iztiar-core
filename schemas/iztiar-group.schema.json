@@ -1,0 +1,33 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://github.com/iztiar/iztiar-core/schemas/iztiar-group.schema.json",
+    "title": "iztiarGroup",
+    "description": "the semantic of the iztiar group in the package.json for a plugin",
+    "type": "object",
+    "properties" : {
+        "iztiar": {
+            "type": "object",
+            "description": "the key which specifies the group for plugin use",
+            "properties": {
+                "targets": {
+                    "type": "object",
+                    "description": "what are the targets of this plugin",
+                    "properties": {
+                        "byName": {
+                            "type": "string[]",
+                            "description": "the full name (of '@iztiar/iztiar-xxx' form) of the targeted plugins"
+                        },
+                        "byFeature": {
+                            "type": "string[]",
+                            "description": "the features this plugin targets"
+                        },
+                        "byCapabiilty": {
+                            "type": "string[]",
+                            "description": "the capabilities this plugin targets"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
