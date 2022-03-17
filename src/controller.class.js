@@ -442,10 +442,21 @@ export class coreController {
                     return Promise.resolve( status );
                 });
         };
+        // capabilities
+        const _capabilities = function(){
+            let _caps = [];
+            if( self.ICapability ){
+                _caps = self.ICapability.get();
+            }
+            Msg.debug( 'coreBroker.status()', 'capabilities', _caps );
+            status.capabilities = _caps;
+            return Promise.resolve( status );
+        };
         return Promise.resolve( true )
             .then(() => { return _runStatus(); })
             .then(() => { return _thisStatus(); })
             .then(() => { return _pidPromise(); })
+            .then(() => { return _capabilities(); })
             .then(() => { return this.IStatus ? this.IStatus.run( status ) : status; })
             .then(( res ) => {
                 let featureStatus = {};
