@@ -89,7 +89,6 @@ export class ITcpServer {
     constructor( instance ){
         const exports = instance.api().exports();
         const Interface = exports.Interface;
-        const ICheckable = exports.ICheckable;
         const Msg = exports.Msg;
 
         Msg.debug( 'ITcpServer instanciation' );
@@ -103,20 +102,57 @@ export class ITcpServer {
         }
 
         // if not already done, make sure the instance implements a ICheckable interface
-        if( !instance.ICheckable ){
-            Interface.add( instance, ICheckable );
-        }
-        instance.ICheckable.add(() => {
-            let res = new exports.Checkable();
-            //console.log( 'about to provide a checkable from itcp-server', self._tcpServer, self._port );
-            if( self._port ){
-                res.startable = false;
-                res.ports = [ self._port ];
-            }
-            return Promise.resolve( res );
-        });
+        //  and define a new checkable event
+        const ICheckable = exports.ICheckable;
+        if( !instance.ICheckable ) Interface.add( instance, ICheckable );
+        instance.ICheckable.add( self._newCheckable );
+
+        // if not already done, make sure the instance implements a IStatus interface
+        //  and define a new status part
+        const IStatus = exports.IStatus;
+        if( !instance.IStatus ) Interface.add( instance, IStatus );
+        instance.IStatus.add( self._statusPart );
 
         return this;
+    }
+
+    // @returns {Checkable} adapted to current ITcpServer
+    //  note that this is only useful in the forked process
+    _newCheckable( instance ){
+        const Checkable = instance.api().exports().Checkable;
+        let res = new Checkable();
+        const self = instance ? instance : this;
+        if( self._port ){
+            res.startable = false;
+            res.ports = [ self._port ];
+        }
+        return Promise.resolve( res );
+    }
+
+    // @returns {Promise} which resolves to the status part for the ITcpServer
+    _statusPart( instance ){
+        Msg.debug( 'ITcpServer.statusPart()', 'instance '+( instance ? 'set':'unset' ));
+        const self = instance ? instance.ITcpServer : this;
+        const o = {
+            ITcpServer: {
+                status: self._status,
+                port: self._port,
+                in: {
+                    opened: self._inConnCount,
+                    closed: self._inClosedCount,
+                    msg: self._inMsgCount,
+                    bytes: self._inBytesCount
+                },
+                out: {
+                    opened: self._outConnCount,
+                    closed: 'unset',
+                    msg: self._outMsgCount,
+                    bytes: self._outBytesCount
+                }
+            }
+        };
+        //Msg.debug( 'ITcpServer.status()', o );
+        return Promise.resolve( o );
     }
 
     /* *** ***************************************************************************************
@@ -125,17 +161,19 @@ export class ITcpServer {
 
     /**
      * What to do when this ITcpServer is ready listening ?
+     * @param {Object} status of the ITcpServer
      * [-implementation Api-]
      */
-    _listening(){
+    _listening( status ){
         Msg.debug( 'ITcpServer._listening()' );
     }
 
     /**
      * Internal stats have been modified
+     * @param {Object} status of the ITcpServer
      * [-implementation Api-]
      */
-    _statsUpdated(){
+    _statsUpdated( status ){
         Msg.debug( 'ITcpServer.statsUpdated()' );
     }
 
@@ -240,8 +278,7 @@ export class ITcpServer {
 
         return new Promise(( resolve, reject ) => {
             self._tcpServer.listen( port, '0.0.0.0', () => {
-                self.status( ITcpServer.s.RUNNING );
-                self._listening();
+                self.status( ITcpServer.s.RUNNING ).then(( res ) => { self._listening( res ); });
                 resolve( true );
             });
         });
@@ -302,7 +339,7 @@ export class ITcpServer {
             if( res.status === ITcpServer.s.STOPPING || res.status === ITcpServer.s.STOPPED ){
                 Msg.debug( 'ITcpServer.statsUpdated() not triggering event as status is \''+res.status+'\'' );
             } else {
-                this._statsUpdated();
+                this._statsUpdated( res );
             }
         })
     }
@@ -317,25 +354,8 @@ export class ITcpServer {
         Msg.debug( 'ITcpServer.status()', 'status='+this._status, 'newStatus='+newStatus );
         if( newStatus && typeof newStatus === 'string' && newStatus.length && Object.values( ITcpServer.s ).includes( newStatus )){
             this._status = newStatus;
-        }
-        const o = {
-            status: this._status,
-            port: this._port,
-            in: {
-                opened: this._inConnCount,
-                closed: this._inClosedCount,
-                msg: this._inMsgCount,
-                bytes: this._inBytesCount
-            },
-            out: {
-                opened: this._outConnCount,
-                closed: 'unset',
-                msg: this._outMsgCount,
-                bytes: this._outBytesCount
-            }
-        };
-        //Msg.debug( 'ITcpServer.status()', o );
-        return Promise.resolve( o );
+        }       
+        return this._statusPart().then(( res ) => { return Promise.resolve( res.ITcpServer ); });
     }
 
     /**

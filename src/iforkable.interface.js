@@ -89,7 +89,7 @@ export class IForkable {
         let _args = args ? [ ...args ] : [ ...process.argv ];
         _args.shift();
         _args.shift();
-        Msg.debug( 'IForkable::fork()', 'forking with path='+_path, 'args', _args );
+        Msg.verbose( 'IForkable::fork()', 'forking with path='+_path, 'args', _args );
         let _env = { ...process.env };
         _env[IForkable._forkedVar()] = forkable; // this says to the child that it has been forked
         let _options = {

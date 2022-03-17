@@ -222,7 +222,10 @@ export class featureCard {
      *  alive.ports: []           array of alive ports
      *  status: JSON object       full status returned by the feature
      * Note:
-     *  This method requires that the feature provide the 'checkStatus' capability.
+     *  This method takes advantage of the 'checkStatus' capability.
+     * Note:
+     *  As a reminder, if the feature is forkable, then its status cannot be directly requested.
+     *  Getting the status from a forkable requires either getting an answer of an ITcpServer, or reading some runfile somewhere.
      * @throws {Error}
      */
     status( options={} ){

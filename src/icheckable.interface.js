@@ -18,7 +18,7 @@ export class ICheckable {
      * @param {*} instance the implementation instance
      * @returns {ICheckable}
      */
-     constructor( instance ){
+    constructor( instance ){
         Msg.debug( 'ICheckable instanciation' );
         this._instance = instance;
         return this;

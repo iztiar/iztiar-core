@@ -8,6 +8,7 @@ export * from './iplugin-manager.interface.js';
 export * from './irunfile.interface.js';
 export * from './irunnable.interface.js';
 export * from './iserviceable.interface.js';
+export * from './istatus.interface.js';
 export * from './itcp-server.interface.js';
 
 // classes

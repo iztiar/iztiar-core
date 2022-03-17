@@ -321,9 +321,10 @@ export class coreController {
      * What to do when this ITcpServer is ready listening ?
      *  -> write the runfile before advertising parent to prevent a race condition when writing the file
      *  -> send the current service status
+     * @param {Object} tcpServerStatus
      * [-implementation Api-]
      */
-    itcpserverListening(){
+    itcpserverListening( tcpServerStatus ){
         Msg.debug( 'coreController.itcpserverListening()' );
         const self = this;
         const _name = this.feature().name();
@@ -332,7 +333,8 @@ export class coreController {
         this.status().then(( status ) => {
             status[_name].event = 'startup';
             status[_name].helloMessage = _msg;
-            status[_name].status = this.ITcpServer.status().status;
+            status[_name].status = 'running';
+            //console.log( 'itcpserverListening() status', status );
             self.IRunFile.set( _name, status );
             self.IForkable.advertiseParent( status );
         });
@@ -340,13 +342,13 @@ export class coreController {
 
     /*
      * Internal stats have been modified
+     * @param {Object} status of the ITcpServer
      * [-implementation Api-]
      */
-    itcpserverStatsUpdated(){
+    itcpserverStatsUpdated( status ){
         Msg.debug( 'coreController.itcpserverStatsUpdated()' );
         const _name = this.feature().name();
-        const _status = this.ITcpServer.status();
-        this.IRunFile.set([ _name, 'ITcpServer' ], _status );
+        this.IRunFile.set([ _name, 'ITcpServer' ], status );
     }
 
     /*
@@ -372,16 +374,6 @@ export class coreController {
         Msg.debug( 'coreController.status()', 'serviceName='+_serviceName );
         const self = this;
         let status = {};
-        status[_serviceName] = {};
-        // ITcpServer
-        const _tcpServerPromise = function(){
-            return self.ITcpServer.status()
-                .then(( res ) => {
-                    Msg.debug( 'coreController.status()', 'ITcpServer', res );
-                    status[_serviceName].ITcpServer = { ...res };
-                    return Promise.resolve( status );
-                });
-        };
         // run-status.schema.json
         const _runStatus = function(){
             return new Promise(( resolve, reject ) => {
@@ -390,10 +382,10 @@ export class coreController {
                     class: self._class(),
                     pids: [ process.pid ],
                     ports: [ self.config().listenPort ],
-                    status: status[_serviceName].ITcpServer.status
+                    //status: status[_serviceName].ITcpServer.status
                 };
                 Msg.debug( 'coreController.status()', 'runStatus', o );
-                status[_serviceName] = { ...status[_serviceName], ...o };
+                status = { ...status, ...o };
                 resolve( status );
             });
         };
@@ -418,7 +410,7 @@ export class coreController {
                     version: self.api().packet().getVersion()
                 };
                 Msg.debug( 'coreController.status()', 'controllerStatus', o );
-                status[_serviceName] = { ...status[_serviceName], ...o };
+                status = { ...status, ...o };
                 resolve( status );
             });
         };
@@ -433,15 +425,21 @@ export class coreController {
                         elapsed: pidRes.elapsed
                     };
                     Msg.debug( 'coreController.status()', 'pidUsage', o );
-                    status[_serviceName].pidUsage = { ...o };
+                    status.pidUsage = { ...o };
                     return Promise.resolve( status );
                 });
         };
         return Promise.resolve( true )
-            .then(() => { return _tcpServerPromise(); })
             .then(() => { return _runStatus(); })
             .then(() => { return _thisStatus(); })
-            .then(() => { return _pidPromise(); });
+            .then(() => { return _pidPromise(); })
+            .then(() => { return this.IStatus ? this.IStatus.run( status ) : status; })
+            .then(( res ) => {
+                let featureStatus = {};
+                featureStatus[_serviceName] = res;
+                //console.log( 'coreController.status() featureStatus', featureStatus );
+                return Promise.resolve( featureStatus );
+            });
     }
 
     /**
