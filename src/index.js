@@ -1,5 +1,6 @@
 // interfaces
 export * from './icapability.interface.js';
+export * from './icheckable.interface.js';
 export * from './icmdline.interface.js';
 export * from './iforkable.interface.js';
 export * from './imqtt-client.interface.js';
@@ -11,6 +12,7 @@ export * from './itcp-server.interface.js';
 
 // classes
 export * from './base-service.class.js';
+export * from './checkable.class.js';
 export * from './cli-application.class.js';
 export * from './config.class.js';
 export * from './core-api.class.js';
