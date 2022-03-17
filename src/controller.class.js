@@ -328,7 +328,7 @@ export class coreController {
         Msg.debug( 'coreController.itcpserverListening()' );
         const self = this;
         const _name = this.feature().name();
-        let _msg = 'Hello, I am \''+_name+'\' '+this.constructor.name;
+        let _msg = 'Hello, I am \''+_name+'\' '+this._class();
         _msg += ', running with pid '+process.pid+ ', listening on port '+this.config().listenPort;
         this.status().then(( status ) => {
             status[_name].event = 'startup';
