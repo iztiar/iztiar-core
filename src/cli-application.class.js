@@ -82,7 +82,8 @@ export class cliApplication {
             [ '-s|--storage-dir <dir>', 'path to storage directory', coreConfig.getDefaultStorageDir() ],
             [ '-S|--service <name>', 'name of the service' ],
             [ '-L|--log-level <level>', 'logging level', coreConfig.getDefaultLogLevel() ],
-            [ '-C|--console-level <level>', 'console verbosity', coreConfig.getDefaultConsoleLevel() ]
+            [ '-C|--console-level <level>', 'console verbosity', coreConfig.getDefaultConsoleLevel() ],
+            [ '-D|--no-daemon', 'doesn\'t fork even if configured for' ]
         ];
     }
 
