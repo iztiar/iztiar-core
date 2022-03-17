@@ -44,14 +44,26 @@ export class IMqttClient {
         //Msg.debug( 'IMqttClient._aliveRun()' );
         if( this._client && this._aliveInterval ){
             const topic = 'iztiar/alive/'+this._name();
-            let payload = {
-                module: this._module(),
-                class: this._class(),
-                capabilities: this._capabilities(),
-                timestamp: utils.now()
-            }
-            Msg.debug( 'IMqttClient._alive() publishing', topic, payload );
-            this._client.publish( topic, JSON.stringify( payload ));
+            let _payload = null;
+            this._status()
+                .then(( res ) => {
+                    if( res ){
+                        return res;
+                    } else {
+                        return this._stdPayload();
+                    }
+                })
+                .then(( res ) => {
+                    if( res ){
+                        _payload = res;
+                    } else {
+                        _payload = {};
+                    }
+                })
+                .then(() => {
+                    Msg.debug( 'IMqttClient._alive() publishing', topic, _payload );
+                    this._client.publish( topic, JSON.stringify( _payload ));
+                });
         }
     }
 
@@ -61,6 +73,16 @@ export class IMqttClient {
             _caps = this._instance.ICapability.get();
         }
         return _caps
+    }
+
+    // the standard payload which is published by default
+    _stdPayload(){
+        return Promise.resolve({
+            module: this._module(),
+            class: this._class(),
+            capabilities: this._capabilities(),
+            timestamp: utils.now()
+        });
     }
 
     /* *** ***************************************************************************************
@@ -89,6 +111,16 @@ export class IMqttClient {
      */
     _name(){
         return null;
+    }
+
+    /**
+     * @returns {Promise} which resolves to the status of the service
+     * This is the first tested option when publishing an 'alive' message
+     * If not iplemented by the instance, then we default to the standard payload
+     * [-implementation Api-]
+     */
+    _status(){
+        return Promise.resolve( null );
     }
 
     /* *** ***************************************************************************************
