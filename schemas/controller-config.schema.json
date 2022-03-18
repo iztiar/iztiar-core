@@ -17,6 +17,11 @@
                     "type": "string",
                     "description": "'coreController', mandatory"
                 },
+                "enabled": {
+                    "type": "boolean",
+                    "description": "whether the service is enabled or disabled",
+                    "default": true
+                },
                 "listenPort": {
                     "type": "integer",
                     "description": "TCP listening port number for internal service management",
