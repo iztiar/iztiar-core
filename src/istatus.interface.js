@@ -53,10 +53,9 @@ export class IStatus {
         let _promise = Promise.resolve( status );
         this._status.every(( o ) => {
             if( o.fn && typeof o.fn === 'function' ){
-                _promise = _promise.then(() => {
-                    return o.fn( this._instance, ...o.args );
-                })
-                _promise = _promise.then(( res ) => { return { ...status, ...res }; });
+                _promise = _promise
+                    .then(() => { return o.fn( this._instance, ...o.args ); })
+                    .then(( res ) => { return status = { ...status, ...res }; });
             }
             return true;
         });

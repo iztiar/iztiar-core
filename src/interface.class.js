@@ -6,8 +6,19 @@
  * 
  * To be called from the implementing constructor.
  */
+import { Msg } from './index.js';
 
 export class Interface {
+
+    static _statusPart( instance ){
+        Msg.debug( 'Interface.statusPart()', 'instance '+( instance ? 'set':'unset' ));
+        const o = {
+            Interfaces: instance.Interfaces
+        };
+        //Msg.debug( 'Interface.statusPart()', o );
+        return Promise.resolve( o );
+    }
+
     /**
      * @param {Object} instance the instance of the class which wants implement the interface
      * @param {Class} ifaceClass the class which defines the interface
@@ -46,6 +57,22 @@ export class Interface {
             }
             return true;
         });
+
+        // register the new interface against the instance
+        let first = false;
+        if( !instance.Interfaces ){
+            instance.Interfaces = [];
+            first = true;
+        }
+        instance.Interfaces.push( name );
+
+        // let the interfaces be published with the class status (only once)
+        if( first && instance.api && typeof instance.api === 'function' ){
+            const IStatus = instance.api().exports().IStatus;
+            if( !instance.IStatus ) Interface.add( instance, IStatus );
+            instance.IStatus.add( Interface._statusPart );
+    
+        }
 
         return instance;
     }
