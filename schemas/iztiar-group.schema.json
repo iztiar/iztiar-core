@@ -7,23 +7,25 @@
     "properties" : {
         "iztiar": {
             "type": "object",
-            "description": "the key which specifies the group for plugin use",
-            "properties": {
-                "targets": {
+            "description": "the key which specifies the group for Iztiar usage",
+            "properties" : {
+                "features": {
                     "type": "object",
-                    "description": "what are the targets of this plugin",
-                    "properties": {
-                        "byName": {
-                            "type": "string[]",
-                            "description": "the full name (of '@iztiar/iztiar-xxx' form) of the targeted plugins"
-                        },
-                        "byFeature": {
-                            "type": "string[]",
-                            "description": "the features this plugin targets"
-                        },
-                        "byCapabiilty": {
-                            "type": "string[]",
-                            "description": "the capabilities this plugin targets"
+                    "description": "the list of the features the plugin provides",
+                    "patternProperties" : {
+                        "^[a-zA-Z][a-zA-Z0-9-_]*$": {
+                            "type": "object",
+                            "description": "the name you are giving to the feature",
+                            "properties": {
+                                "type": {
+                                    "type": "string",
+                                    "description": "the type of this feature"
+                                },
+                                "class": {
+                                    "type": "string",
+                                    "description": "the class name which implements this feature"
+                                }
+                            }
                         }
                     }
                 }

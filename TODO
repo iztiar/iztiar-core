@@ -64,7 +64,9 @@
 
    60 2022- 3-18 reorganize src/ sources to classes/ and interfaces/ subdirectories, due to the growing count of files
 
-   61
+   61 2022- 3-18 use rotatelogs + limit the size of the logs
+
+   62
 
 -------------------------------------------------------------------------------------------
  Done

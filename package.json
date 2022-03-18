@@ -39,5 +39,19 @@
   "engines": {
     "node": ">12.x"
   },
-  "iztiar": {}
+  "iztiar": {
+    "features": {
+      "controller": {
+        "type": "service",
+        "class": "coreController"
+      },
+      "cli": {
+        "type": "cli",
+        "class": "cliApplication"
+      },
+      "core": {
+        "type": "core"
+      }
+    }
+  }
 }

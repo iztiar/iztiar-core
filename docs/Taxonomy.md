@@ -35,6 +35,26 @@ Environments are meant to be self-content, and __do not communicate between each
 
 Besides of `NODE_ENV` variable which is rather limited, Iztiar honors the `IZTIAR_ENV` variable which can be used to suit your own needs.
 
+- Feature
+
+As the name says, a feature is anything which provides something (hope valuable) to the Iztiar family: a new UI, a new broker, another gateway, a new set of colors, a new implementation of an interface, an add-on for a particular class, and so on.
+
+Iztiar distinguishes between two types of features:
+
+    - a feature which runs in its own process, aka a service in the system sens, aka a daemon
+
+        Examples of such features are `coreController`, `coreBroker`, ...
+        Iztiar uses the term `service` to qualify such a feature.
+
+    - a (sub-) feature which rather acts as an add-on to another feature.
+
+        Examples of such features are `pidUsage`, ...
+        Iztiar uses the term `add-on` to qualify such a feature.
+
+So, Iztiar may be extended with services and add-ons which both provide new features, or replace or add something to existing ones.
+
+The features provided by a plugin SHOULD be advertised in the `package.json` file of the corresponding module. See our [package.json](./package.json.md) documentation for more information on that.
+
 - Gateway
 
 A gateway is something which manages some devices of the same nature. Common example of gateways are protocol gateways which manage a given protocol, e.g. Z-Wave gateway, Zigbee gateway, MySensors gateway, RFXCom gateway, and so on.
