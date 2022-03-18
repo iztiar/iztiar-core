@@ -5,13 +5,12 @@
  *  - from the (unfilled) configuration for this feature
  *  - from the package.json of the external module (unless module is 'core').
  *
- *  A featureCard acts as a proxy to an Iztiar module which:
- *  - provides a named feature
+ *  A featureCard acts as a proxy to an Iztiar plugin which:
+ *  - provides one or more named feature(s)
  *  - is configured and not disabled in the main application configuration file
  *  - is installed.
  */
 import path from 'path';
-import { memoryUsage } from 'process';
 
 import { IForkable, IServiceable, coreApi, Checkable, coreController, engineApi, Msg, utils } from './index.js';
 
@@ -48,9 +47,11 @@ export class featureCard {
         if( config.module === 'core' && ( !config.class || typeof config.class !== 'string' || !config.class.length )){
             throw new Error( 'featureCard(): feature class is not set though this is mandatory for \'core\' features' );
         }
+
         this._name = name;
         this._config = config;
         this._package = packet;
+
         return this;
     }
 

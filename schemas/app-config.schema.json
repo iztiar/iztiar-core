@@ -42,26 +42,26 @@
                             "description": "whether the service is enabled or disabled",
                             "default": true
                         },
-                        "features": {
+                        "add-ons": {
                             "type": "object",
                             "description": "some features to be added to this one",
                             "patternProperties" : {
                                 "^[a-zA-Z][a-zA-Z0-9-_]*$": {
                                     "type": "object",
-                                    "description": "the name (in this file) of the feature",
+                                    "description": "the name of the feature, unique inside of the 'add-ons' group",
                                     "properties": {
                                         "module": {
                                             "type": "string",
-                                            "description": "the name of the module which provides the service, or 'core', mandatory, no default"
-                                        },
-                                        "class": {
-                                            "type": "string",
-                                            "description": "the name of the class or type or something inside the module, which qualifies the service type, mandatory if module is 'core'"
+                                            "description": "the name of the module which provides the feature, or 'core', mandatory, no default"
                                         },
                                         "enabled": {
                                             "type": "boolean",
-                                            "description": "whether the service is enabled or disabled",
+                                            "description": "whether the add-on feature is enabled or disabled",
                                             "default": true
+                                        },
+                                        "targets": {
+                                            "type": "string[]",
+                                            "description": "the list of classes to be extended by this add-on"
                                         }
                                     }
                                 }

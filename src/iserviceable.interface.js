@@ -30,7 +30,12 @@ export class IServiceable {
      * @returns {String} the type of the service, not an identifier, rather a qualifier
      *  For example, the implementation class name is a good choice
      *  This method is also called from featureCard.class() to provide the actual runtime class name.
-     *  So you probably want rather use the featureCard.class() methid which is always available.
+     *  So you probably want rather use the featureCard.class() method which is always available.
+     *  Note:
+     *      Depending of the module rules, the class may or may not be specified in the application configuration
+     *      file (for now, only 'core' requires that the class be specified).
+     *      So we strongy advise that a plugin implement this method to provide some valuable information
+     *      to the application, other plugins, the administrator itself...
      * [-implementation Api-]
      */
     class(){

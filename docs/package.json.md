@@ -43,7 +43,7 @@ You SHOULD specify:
 
         If it is specified, then the core application will check the package compatibility against the `@iztiar/iztiar-core` running version
 
-If your plugin provides a (sub-) feature, i.e. is not an autonomous service, then you MAY also specify the plugin(s) you are targeting. Iztiar will take care of verifying each target version you specify here.
+If your plugin provides a add-on feature, i.e. is not a service one, then you MAY also specify the plugin(s) you are targeting. Iztiar will take care of verifying each target version you specify here.
 
 ### iztiar
 
@@ -59,17 +59,17 @@ List here all the features provided by your package.
 
     The `type` key qualifies the feature the module provides. This let us have a code as generic as possible.
 
-    For example, a service may be started, stopped, tested, but not an addon.
+    For example, a service may be started, stopped, tested, but not an add-on.
 
     Known types are:
 
     - service: a feature which runs in its own process (aka a daemon)
-    - addon: a feature which adds something to another feature
+    - add-on: a feature which adds something to another feature
     - cli: a command-line interface
     - core: only used for now by the `@iztiar/iztiar-core` module
 
 ##### class
 
-    The `class` key identifies the class name which implements the feature. This is useful, for example for an addon, to know which class it must target if it wants extend your class.
+    The `class` key identifies the class name which implements the feature. This is useful, for example for an add-on, to know which class it must target if it wants extend your class.
 
     If you do not provide information about the clas, then it will be a bit difficult to extend it, and so to provide some more features.
