@@ -25,25 +25,12 @@ export function cliListInstalled( api, options={} ){
 
     let displayedMods = [];
 
-    const _addDisplayed = function( pck, target, i ){
-        displayedMods.push({
-            module: i ? '' : pck.getName(),
-            version: i ? '' : pck.getVersion(),
-            description: i ? '' : pck.getDescription(),
-            targets: target || ''
-        });
-    };
-
     installedModules.every(( pck ) => {
-        const group = pck.getIztiar() || {};
-        const targets = group && group.targets ? group.targets : [];
-        if( targets.length ){
-            for( let i=0 ; i<targets.length ; ++i ){
-                _addDisplayed( pck, targets[i], i );
-            }
-        } else {
-            _addDisplayed( pck );
-        }
+        displayedMods.push({
+            module: pck.getName(),
+            version: pck.getVersion(),
+            description: pck.getDescription()
+        });
         return true;
     });
 

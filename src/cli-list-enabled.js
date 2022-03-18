@@ -29,45 +29,30 @@ export function cliListEnabled( api, options={} ){
     if( _consoleLevel !== _origLevel ) Msg.consoleLevel( _consoleLevel );
 
     Msg.out( 'Listing enabled Iztiar services for this module' );
-    Msg.warn( 'This command should be modified to work with a \'target\' argument instead of slavishly only looking at core.' );
-    Msg.warn( 'As a consequence, IPluginManager.getEnabled() should be reviewed to manage this \'target\' argument.' );
     Msg.verbose( 'An Iztiar module is identified by its name; its target(s) is(are) qualified from package.json \'iztiar\' group' );
     
     const features = api.pluginManager().getEnabled( api );
     let displayedCards = [];
-
-    const _addDisplayed = function( c, pck, target, i ){
-        displayedCards.push({
-            name: i ? '' : c.name(),
-            module: i ? '' : c.module(),
-            version: i ? '' : pck.getVersion(),
-            description: i ? '' : pck.getDescription(),
-            enabled: i ? '' : c.enabled() ? 'true':'false',
-            targets: target || ''
-        });
-    }
 
     features.every(( c ) => {
         let pck = c.packet();
         if( !pck ){
             pck = api.packet();
         }
-        const group = pck.getIztiar();
-        const targets = group && group.targets ? group.targets : [];
-        if( targets.length ){
-            for( let i=0 ; i<targets.length ; ++i ){
-                _addDisplayed( c, pck, targets[i], i );
-            }
-        } else {
-            _addDisplayed( c, pck );
-        }
+        displayedCards.push({
+            name: c.name(),
+            module: c.module(),
+            version: pck.getVersion(),
+            description: pck.getDescription(),
+            enabled: c.enabled() ? 'true':'false'
+        });
         return true;
     });
 
     if( displayedCards.length ){
         Msg.tabular( displayedCards, { prefix:'  ' });
     }
-    const _msg = 'Found '+features.length+' enabled feature(s) targeting \''+api.packet().getName()+'\'';
+    const _msg = 'Found '+features.length+' enabled feature(s)';
     Msg.out( _msg );
     Logger.info( _msg );
 

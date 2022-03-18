@@ -56,15 +56,12 @@ export class IPluginManager {
     /**
      * @param {coreConfig} config the filled application configuration
      * @param {PackageJson} packet the package.json of this main '@iztiar/iztiar-core' module
-     * @param {String[]} targeting a list of desired targets (all if empty)
      * @returns {featureCard[]} the array of enabled services
      * [-public API-]
      */
-    getEnabledExt( config, packet, targeting=[] ){
+    getEnabledExt( config, packet ){
         let result = [];
         const configuredFeats = config.features();
-        const thisName = packet.getName();
-        const thisShortName = packet.getShortName();
         let _found = [];
         // examine the configured features to select a) installed modules b) core services
         Object.keys( configuredFeats ).every(( id ) => {
@@ -79,12 +76,8 @@ export class IPluginManager {
                 } else {
                     const pck = this.getPackageExt( packet, configuredFeats[id].module );
                     if( pck ){
-                        const pckGroup = pck.getIztiar() || {};
-                        const pckTarget = pckGroup.targets || null;
-                        if( pckTarget ){
-                            result.push( new featureCard( id, configuredFeats[id], pck ));
-                            _found.push( configuredFeats[id].module );
-                        }
+                        result.push( new featureCard( id, configuredFeats[id], pck ));
+                        _found.push( configuredFeats[id].module );
                     }
                 }
             }
