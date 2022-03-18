@@ -61,6 +61,7 @@ export class IMqttClient {
                     }
                 })
                 .then(() => {
+                    _payload.timestamp = utils.now();
                     Msg.debug( 'IMqttClient._alive() publishing', topic, _payload );
                     this._client.publish( topic, JSON.stringify( _payload ));
                 });
@@ -81,7 +82,6 @@ export class IMqttClient {
             module: this._module(),
             class: this._class(),
             capabilities: this._capabilities(),
-            timestamp: utils.now()
         });
     }
 
