@@ -47,8 +47,10 @@
 
    52 2022- 3-16 core should specify which node version it is compatible with
       2022- 3-17 this is done, but ignored at the moment
+                 so this item becomes : check the engines/node minimal version specify
 
    53 2022- 3-16 plugin should specify which core version they are compatible with
+      2022- 3-18 this is planned in the package.json.md documentation - to be honored
 
    54 2022- 3-17 honor --no-daemon option
 
@@ -66,7 +68,9 @@
 
    61 2022- 3-18 use rotatelogs + limit the size of the logs
 
-   62
+   62 2022- 3-18 use lowdb to manage run files
+
+   63
 
 -------------------------------------------------------------------------------------------
  Done
