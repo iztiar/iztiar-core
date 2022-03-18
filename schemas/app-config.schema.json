@@ -27,7 +27,7 @@
             "patternProperties" : {
                 "^[a-zA-Z][a-zA-Z0-9-_]*$": {
                     "type": "object",
-                    "description": "the name of the service",
+                    "description": "the name of the feature",
                     "properties": {
                         "module": {
                             "type": "string",
@@ -41,6 +41,31 @@
                             "type": "boolean",
                             "description": "whether the service is enabled or disabled",
                             "default": true
+                        },
+                        "features": {
+                            "type": "object",
+                            "description": "some features to be added to this one",
+                            "patternProperties" : {
+                                "^[a-zA-Z][a-zA-Z0-9-_]*$": {
+                                    "type": "object",
+                                    "description": "the name (in this file) of the feature",
+                                    "properties": {
+                                        "module": {
+                                            "type": "string",
+                                            "description": "the name of the module which provides the service, or 'core', mandatory, no default"
+                                        },
+                                        "class": {
+                                            "type": "string",
+                                            "description": "the name of the class or type or something inside the module, which qualifies the service type, mandatory if module is 'core'"
+                                        },
+                                        "enabled": {
+                                            "type": "boolean",
+                                            "description": "whether the service is enabled or disabled",
+                                            "default": true
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }
