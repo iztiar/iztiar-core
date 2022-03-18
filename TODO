@@ -62,9 +62,9 @@
 
    58 2022- 3-17 review iztiar-group.schema.json to better describes the byFeature and byCapability datas
 
-   59 2022- 3-17 change service command-line option with feature ?
+   60 2022- 3-18 reorganize src/ sources to classes/ and interfaces/ subdirectories, due to the growing count of files
 
-   60
+   61
 
 -------------------------------------------------------------------------------------------
  Done
@@ -199,6 +199,9 @@
 
    51 2022- 2-11 coreBroker should be just a plugin
       2022- 3-16 done as of v0.4.0
+
+   59 2022- 3-17 change service command-line option with feature ?
+      2022- 3-18 nope, service is good as it also talks about daemon
 
 -------------------------------------------------------------------------------------------
  P. Wieser - Created on 2022, Jan. 29th
