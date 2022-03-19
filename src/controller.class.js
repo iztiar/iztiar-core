@@ -65,7 +65,7 @@ export class coreController {
         const exports = api.exports();
         const Interface = exports.Interface;
 
-        Interface.extends( this, exports.baseService, api, card );
+        Interface.extends( this, exports.baseProvider, api, card );
         Msg.debug( 'coreController instanciation' );
 
         // first interface to be added, so that other interfaces may take advantage of that
@@ -96,13 +96,13 @@ export class coreController {
             runDir: this.irunfileRunDir
         });
 
-        Interface.add( this, exports.IServiceable, {
-            class: this.iserviceableClass,
-            config: this.iserviceableConfig,
-            killed: this.iserviceableKilled,
-            start: this.iserviceableStart,
-            status: this.iserviceableStatus,
-            stop: this.iserviceableStop
+        Interface.add( this, exports.IFeatureProvider, {
+            class: this.ifeatureproviderClass,
+            config: this.ifeatureproviderConfig,
+            killed: this.ifeatureproviderKilled,
+            start: this.ifeatureproviderStart,
+            status: this.ifeatureproviderStatus,
+            stop: this.ifeatureproviderStop
         });
 
         Interface.add( this, exports.ITcpServer, {
@@ -119,7 +119,7 @@ export class coreController {
 
         let _promise = Promise.resolve( true )
             .then(() => { return this._filledConfig(); })
-            .then(( o ) => { this.config( o ); })
+            .then(( o ) => { this.IFeatureProvider.config( o ); })
             .then(() => { return Promise.resolve( this ); });
     
         return _promise;
@@ -191,9 +191,9 @@ export class coreController {
         if( _feat ){
             _promise = _promise
                 .then(() => { return _feat.initialize( this.api()); })
-                .then(( iServiceable ) => {
-                    if( iServiceable && iServiceable instanceof this.api().exports().IServiceable ){
-                        return iServiceable.config();
+                .then(( iFeatureProvider ) => {
+                    if( iFeatureProvider && iFeatureProvider instanceof this.api().exports().IFeatureProvider ){
+                        return iFeatureProvider.config();
                     }
                 })
                 .then(( conf ) => {
@@ -251,8 +251,8 @@ export class coreController {
      *  For example, the implementation class name is a good choice
      * [-implementation Api-]
      */
-    iserviceableClass(){
-        Msg.debug( 'coreController.iserviceableClass()' );
+    ifeatureproviderClass(){
+        Msg.debug( 'coreController.ifeatureproviderClass()' );
         return this._class();
     }
 
@@ -260,8 +260,8 @@ export class coreController {
      * @returns {Object} the filled configuration for the feature
      * [-implementation Api-]
      */
-    iserviceableConfig(){
-        Msg.debug( 'coreController.iserviceableConfig()' );
+    ifeatureproviderConfig(){
+        Msg.debug( 'coreController.ifeatureproviderConfig()' );
         return this.config();
     }
 
@@ -269,8 +269,8 @@ export class coreController {
      * If the service had to be SIGKILL'ed to be stoppped, then gives it an opportunity to make some cleanup
      * [-implementation Api-]
      */
-    iserviceableKilled(){
-        Msg.debug( 'coreController.iserviceableKilled()' );
+    ifeatureproviderKilled(){
+        Msg.debug( 'coreController.ifeatureproviderKilled()' );
         this.IRunFile.remove( this.feature().name());
     }
 
@@ -279,8 +279,8 @@ export class coreController {
      * @returns {Promise} which never resolves
      * [-implementation Api-]
      */
-    iserviceableStart(){
-        Msg.debug( 'coreController.iserviceableStart()', 'forkedProcess='+this.api().exports().IForkable.forkedProcess());
+    ifeatureproviderStart(){
+        Msg.debug( 'coreController.ifeatureproviderStart()', 'forkedProcess='+this.api().exports().IForkable.forkedProcess());
         const config = this.config();
         return Promise.resolve( true )
             .then(() => {
@@ -288,7 +288,7 @@ export class coreController {
                     this.ITcpServer.create( config.listenPort );
                 }
             })
-            .then(() => { Msg.debug( 'coreController.iserviceableStart() tcpServer created' ); })
+            .then(() => { Msg.debug( 'coreController.ifeatureproviderStart() tcpServer created' ); })
             .then(() => {
                 if( Object.keys( config ).includes( 'messaging' )){
                     this.IMqttClient.advertise( config.messaging );
@@ -302,11 +302,11 @@ export class coreController {
      * @returns {Promise} which resolves the a status object
      * [-implementation Api-]
      */
-    iserviceableStatus(){
-        Msg.debug( 'coreController.iserviceableStatus()' );
+    ifeatureproviderStatus(){
+        Msg.debug( 'coreController.ifeatureproviderStatus()' );
         this.api().exports().utils.tcpRequest( this.config().listenPort, 'iz.status' )
             .then(( answer ) => {
-                Msg.debug( 'coreController.iserviceableStatus()', 'receives answer to \'iz.status\'', answer );
+                Msg.debug( 'coreController.ifeatureproviderStatus()', 'receives answer to \'iz.status\'', answer );
             }, ( failure ) => {
                 // an error message is already sent by the called self.api().exports().utils.tcpRequest()
                 //  what more to do ??
@@ -318,11 +318,11 @@ export class coreController {
      * @returns {Promise}
      * [-implementation Api-]
      */
-    iserviceableStop(){
-        Msg.debug( 'coreController.iserviceableStop()' );
+    ifeatureproviderStop(){
+        Msg.debug( 'coreController.ifeatureproviderStop()' );
         this.api().exports().utils.tcpRequest( this.config().listenPort, 'iz.stop' )
             .then(( answer ) => {
-                Msg.debug( 'coreController.iserviceableStop()', 'receives answer to \'iz.stop\'', answer );
+                Msg.debug( 'coreController.ifeatureproviderStop()', 'receives answer to \'iz.stop\'', answer );
             }, ( failure ) => {
                 // an error message is already sent by the called self.api().exports().utils.tcpRequest()
                 //  what more to do ??

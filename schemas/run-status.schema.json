@@ -2,7 +2,7 @@
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "$id": "https://github.com/iztiar/iztiar-core/schemas/run-status.schema.json",
     "title": "runStatus",
-    "description": "the content of the object to be provided by the IServiceable to publish its running status",
+    "description": "the content of the object to be provided by the IFeatureProvider to publish its running status",
     "type": "object",
     "patternProperties": {
         "^[a-zA-Z][a-zA-Z0-9-_]*$": {
@@ -19,7 +19,7 @@
                 },
                 "pids": {
                     "type": "integer[]",
-                    "description": "list of running pids owned by this IServiceable"
+                    "description": "list of running pids owned by this IFeatureProvider"
                 },
                 "ports": {
                     "type": "integer[]",

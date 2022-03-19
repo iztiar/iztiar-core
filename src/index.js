@@ -2,16 +2,18 @@
 export * from './icapability.interface.js';
 export * from './icheckable.interface.js';
 export * from './icmdline.interface.js';
+export * from './ifeature-provider.interface.js';
 export * from './iforkable.interface.js';
 export * from './imqtt-client.interface.js';
 export * from './iplugin-manager.interface.js';
 export * from './irunfile.interface.js';
 export * from './irunnable.interface.js';
-export * from './iserviceable.interface.js';
 export * from './istatus.interface.js';
 export * from './itcp-server.interface.js';
 
 // classes
+export * from './base-addon.class.js';
+export * from './base-provider.class.js';
 export * from './base-service.class.js';
 export * from './checkable.class.js';
 export * from './cli-application.class.js';

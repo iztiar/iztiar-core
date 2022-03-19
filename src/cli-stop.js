@@ -8,7 +8,7 @@
 import chalk from 'chalk';
 import ps from 'ps';
 
-import { IServiceable, featureCard, Msg, utils } from './index.js';
+import { IFeatureProvider, featureCard, Msg, utils } from './index.js';
 
 /**
  * Stop the named feature
@@ -43,9 +43,9 @@ export function cliStop( api, name, options={} ){
 
     let _promise = Promise.resolve( true )
         .then(() => { return feature.initialize( api ); })
-        .then(( iServiceable ) => {
-            if( iServiceable && iServiceable instanceof IServiceable ){
-                Msg.verbose( name+' iServiceable sucessfully initialized' );
+        .then(( iFeatureProvider ) => {
+            if( iFeatureProvider && iFeatureProvider instanceof IFeatureProvider ){
+                Msg.verbose( name+' iFeatureProvider sucessfully initialized' );
                 result.next = STAT;
             } else {
                 Msg.verbose( name+' initialization failed' );
@@ -150,7 +150,7 @@ export function cliStop( api, name, options={} ){
                         process.kill( p, 'SIGKILL' );
                         return true;
                     })
-                    feature.iServiceable().killed();
+                    feature.iProvider().killed();
                     res.next = STAT;
                     resolve( result );
                 } else {

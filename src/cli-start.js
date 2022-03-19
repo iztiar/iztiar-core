@@ -7,7 +7,7 @@
  */
 import chalk from 'chalk';
 
-import { IForkable, IServiceable, featureCard, Msg, utils } from './index.js';
+import { IForkable, IFeatureProvider, featureCard, Msg, utils } from './index.js';
 
 /**
  * Start the named feature
@@ -44,9 +44,9 @@ export function cliStart( api, name, options={} ){
 
     let _promise = Promise.resolve( true )
         .then(() => { return feature.initialize( api ); })
-        .then(( iServiceable ) => {
-            if( iServiceable && iServiceable instanceof IServiceable ){
-                Msg.verbose( name+' iServiceable sucessfully initialized' );
+        .then(( iFeatureProvider ) => {
+            if( iFeatureProvider && iFeatureProvider instanceof IFeatureProvider ){
+                Msg.verbose( name+' IFeatureProvider interface sucessfully initialized' );
                 result.next = STAT;
             } else {
                 Msg.verbose( name+' initialization failed' );
@@ -88,7 +88,7 @@ export function cliStart( api, name, options={} ){
                                 } else {
                                     res.started = true;
                                     Msg.out( chalk.green( 'Service(s) \''+_name+'\' successfully started' ));
-                                    const hello = feature.iServiceable().getCapability( 'helloMessage' );
+                                    const hello = feature.iProvider().getCapability( 'helloMessage' );
                                     if( hello ){
                                         hello.then(( res ) => { Msg.out( chalk.green( 'Greetings message is « '+res+' »' )); });
                                     }
@@ -195,7 +195,7 @@ export function cliStart( api, name, options={} ){
                 if( result.child ){
                     Msg.verbose( 'cliStart().killIfNeeded() killing process', result.child.pid );
                     process.kill( result.child.pid, 'SIGKILL' );
-                    feature.iServiceable().killed();
+                    feature.iProvider().killed();
                 }
             }
             return Promise.resolve( res );

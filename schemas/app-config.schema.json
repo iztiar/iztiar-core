@@ -35,7 +35,7 @@
                         },
                         "class": {
                             "type": "string",
-                            "description": "the name of the class or type or something inside the module, which qualifies the service type, mandatory if module is 'core'"
+                            "description": "the name which identifies the feature provider, mandatory if module is 'core', class name being our best suggestion"
                         },
                         "enabled": {
                             "type": "boolean",
@@ -52,7 +52,11 @@
                                     "properties": {
                                         "module": {
                                             "type": "string",
-                                            "description": "the name of the module which provides the feature, or 'core', mandatory, no default"
+                                            "description": "the name of the module which provides the add-on feature, or 'core', mandatory, no default"
+                                        },
+                                        "class": {
+                                            "type": "string",
+                                            "description": "the name which identifies the feature provider, mandatory if module is 'core', class name being our best suggestion"
                                         },
                                         "enabled": {
                                             "type": "boolean",

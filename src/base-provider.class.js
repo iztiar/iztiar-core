@@ -1,25 +1,27 @@
 /*
- * baseService class
+ * baseProvider class
  *
- *  A base class for a feature as a service
+ *  A base class for our IFeatureProvider's
+ * 
+ *  It aims to be a very thin class which just deals with contruction time arguments.
+ *  This is not mandatory for a plugin to derive from this class, but this may save some work...
  */
 
 import { Msg } from './index.js';
 
-export class baseService {
+export class baseProvider {
 
     // construction
     _api = null;
     _feature = null;
-    _config = null;
 
     /**
      * @param {engineApi} api the engine API as described in engine-api.schema.json
      * @param {featureCard} card the instance which describes this feature
-     * @returns {baseService}
+     * @returns {baseProvider}
      */
-     constructor( api, card ){
-        Msg.debug( 'baseService instanciation', 'engineApi:', api, 'featureCard:', card, 'count='+arguments.length );
+    constructor( api, card ){
+        Msg.debug( 'baseProvider instanciation', 'engineApi:', api, 'featureCard:', card, 'count='+arguments.length );
         this._api = api;
         this._feature = card;
         return this;
@@ -30,18 +32,6 @@ export class baseService {
      */
     api(){
         return this._api;
-    }
-
-    /**
-     * Getter/Setter
-     * @returns {Object} the filled config built at construction time
-     */
-    config( conf ){
-        if( conf && Object.keys( conf ).length ){
-            Msg.debug( 'baseService.config()', 'name='+this.feature().name(), conf );
-            this._config = conf;
-        }
-        return this._config;
     }
 
     /**

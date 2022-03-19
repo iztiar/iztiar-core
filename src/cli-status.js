@@ -5,7 +5,7 @@
  */
 import chalk from 'chalk';
 
-import { IServiceable, featureCard, Msg } from './index.js';
+import { IFeatureProvider, featureCard, Msg } from './index.js';
 
 /**
  * Get the status of the named service
@@ -35,9 +35,9 @@ export function cliStatus( api, name, options={} ){
 
     let _promise = Promise.resolve( true )
         .then(() => { return feature.initialize( api ); })
-        .then(( iServiceable ) => {
-            if( iServiceable && iServiceable instanceof IServiceable ){
-                Msg.verbose( name+': iServiceable sucessfully initialized' );
+        .then(( iFeatureProvider ) => {
+            if( iFeatureProvider && iFeatureProvider instanceof IFeatureProvider ){
+                Msg.verbose( name+': iFeatureProvider sucessfully initialized' );
             } else {
                 Msg.verbose( name+': initialization failed' );
             }
@@ -55,7 +55,7 @@ export function cliStatus( api, name, options={} ){
 
             } else {
                 Msg.out( chalk.green( 'Service \''+name+'\' is confirmed up and running' ));
-                const hello = feature.iServiceable().getCapability( 'helloMessage' );
+                const hello = feature.iProvider().getCapability( 'helloMessage' );
                 if( hello ){
                     hello.then(( res ) => { Msg.out( chalk.green( 'Greetings message is « '+res+' »' )); });
                 }

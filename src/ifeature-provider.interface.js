@@ -1,23 +1,26 @@
 /*
- * IServiceable interface
+ * IFeatureProvider interface
  *
- *  The interface to be implemented by the running services to be managed by Iztiar.
- *  This also acts as a proxy to ICapability, ICheckable interfaces
+ *  The minimal interface to be implemented by any plugin which provides any type of feature to be managed by Iztiar.
+ *  See also IServiceFeature and IAddonFeature for more specific other interfaces.
+ * 
+ *  The IFeatureProvider also acts as a proxy to ICapability, ICheckable interfaces
  *  (that would also take advantage of being implemented by the way).
  */
 import { Msg } from './index.js';
 
-export class IServiceable {
+export class IFeatureProvider {
 
     _instance = null;
+    _config = null;
 
     /**
      * Constructor
      * @param {*} instance the implementation instance
-     * @returns {IServiceable}
+     * @returns {IFeatureProvider}
      */
     constructor( instance ){
-        Msg.debug( 'IServiceable instanciation' );
+        Msg.debug( 'IFeatureProvider instanciation' );
         this._instance = instance;
         return this;
     }
@@ -27,19 +30,25 @@ export class IServiceable {
        *** *************************************************************************************** */
 
     /**
-     * @returns {String} the type of the service, not an identifier, rather a qualifier
+     * @returns {String} the name providing the feature, not an identifier, rather a qualifier
      *  For example, the implementation class name is a good choice
-     *  This method is also called from featureCard.class() to provide the actual runtime class name.
-     *  So you probably want rather use the featureCard.class() method which is always available.
+     * 
      *  Note:
-     *      Depending of the module rules, the class may or may not be specified in the application configuration
-     *      file (for now, only 'core' requires that the class be specified).
-     *      So we strongy advise that a plugin implement this method to provide some valuable information
-     *      to the application, other plugins, the administrator itself...
+     *      You should never call yourself this method, but rather ask to featureCard.class(), which
+     *      - anyway, requires this method if it is defined
+     *      - and defaults to the name configured for this feature in the application configuration file
+     *      - is always available (while this one requires the plugin be initialized).
+     * 
+     *  Rationale:
+     *      Depending of the module rules, the class may or may not be specified in the application
+     *      configuration file (for now, only 'core' requires that the class be specified).
+     *      So we strongly advise that a plugin implement this method to provide some valuable
+     *      information to the application, other plugins, the administrator itself...
+     * 
      * [-implementation Api-]
      */
-    class(){
-        Msg.debug( 'IServiceable.class()' );
+    _class(){
+        Msg.debug( 'IFeatureProvider._class()' );
         return '';
     }
 
@@ -48,7 +57,7 @@ export class IServiceable {
      * [-implementation Api-]
      */
     config(){
-        Msg.debug( 'IServiceable.config()' );
+        Msg.debug( 'IFeatureProvider.config()' );
         return {};
     }
 
@@ -57,7 +66,7 @@ export class IServiceable {
      * [-implementation Api-]
      */
     killed(){
-        Msg.debug( 'IServiceable.killed()' );
+        Msg.debug( 'IFeatureProvider.killed()' );
     }
 
     /**
@@ -65,7 +74,7 @@ export class IServiceable {
      * [-implementation Api-]
      */
     isForkable(){
-        Msg.debug( 'IServiceable.isForkable()' );
+        Msg.debug( 'IFeatureProvider.isForkable()' );
         return true;
     }
 
@@ -80,7 +89,7 @@ export class IServiceable {
      * [-implementation Api-]
      */
     start(){
-        Msg.verbose( 'IServiceable.start()' );
+        Msg.verbose( 'IFeatureProvider.start()' );
         return Promise.resolve( false );
     }
 
@@ -91,7 +100,7 @@ export class IServiceable {
      * [-implementation Api-]
      */
     status(){
-        Msg.debug( 'IServiceable.status()' );
+        Msg.debug( 'IFeatureProvider.status()' );
         return Promise.resolve({
             name: {
                 module: 'unset',
@@ -109,13 +118,25 @@ export class IServiceable {
      * [-implementation Api-]
      */
     stop(){
-        Msg.debug( 'IServiceable.stop()' );
+        Msg.debug( 'IFeatureProvider.stop()' );
         return Promise.resolve( true );
     }
 
     /* *** ***************************************************************************************
-       *** The public API, i.e; the API anyone may call to access the interface service        ***
+       *** The public API, i.e; the API anyone may call to access the interface services       ***
        *** *************************************************************************************** */
+
+    /**
+     * Getter/Setter
+     * @returns {Object} the filled config built at construction time
+     */
+    config( conf ){
+        if( conf && Object.keys( conf ).length ){
+            Msg.debug( 'IFeatureProvider.config()', 'name='+this._instance().feature().name(), conf );
+            this._config = conf;
+        }
+        return this._config;
+    }
 
     /**
      * @param {String} cap the desired capability name
@@ -123,7 +144,7 @@ export class IServiceable {
      * [-Public API-]
      */
     getCapability( cap ){
-        Msg.debug( 'IServiceable.getCapability() cap='+cap );
+        Msg.debug( 'IFeatureProvider.getCapability() cap='+cap );
         if( this._instance && this._instance.ICapability ){
             return this._instance.ICapability.invoke( cap );
         }
@@ -135,7 +156,7 @@ export class IServiceable {
      * [-Public API-]
      */
     getCheckable(){
-        Msg.debug( 'IServiceable.getCheckable()' );
+        Msg.debug( 'IFeatureProvider.getCheckable()' );
         if( this._instance && this._instance.ICheckable ){
             return this._instance.ICheckable.run();
         }

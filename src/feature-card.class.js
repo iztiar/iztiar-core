@@ -12,7 +12,7 @@
  */
 import path from 'path';
 
-import { IForkable, IServiceable, coreApi, Checkable, coreController, engineApi, Msg, utils } from './index.js';
+import { IForkable, IFeatureProvider, coreApi, Checkable, coreController, engineApi, Msg, utils } from './index.js';
 
 export class featureCard {
 
@@ -22,7 +22,7 @@ export class featureCard {
     _package = null;
 
     // got from initialization() from the module
-    _iServiceable = null;
+    _featureProvider = null;
 
     /**
      * Constructor
@@ -60,11 +60,12 @@ export class featureCard {
      *  Whether the class is required depends of the providing module itself:
      *  - if 'core', the class is required when configuring a feature from the '@iztiar/iztiar-core' core module
      *  - other (external) modules may have their own rule
-     *  Before the module is featureCard.initialized(), we only have access to the configured class; as seen above, this may or may not be set.
-     *  After the initialization, we have access to the actual, runtime, class, which is returned first.
+     *  Before the module is featureCard.initialized(), we only have access to the configured class;
+     *  as seen above, this may or may not be set.
+     *  After the initialization, we have access to the actual, runtime, class, which will be returned first.
      */
     class(){
-        return this._iServiceable ? this._iServiceable.class() : ( this.config().class ? this.config().class : '(undefined class)' );
+        return this._featureProvider ? this._featureProvider._class() : ( this.config().class ? this.config().class : '(undefined class)' );
     }
 
     /**
@@ -84,8 +85,8 @@ export class featureCard {
     /**
      * dynamically load and initialize the default function of the module
      * @param {coreApi} core a coreApi instance
-     * @returns {Promise} which resolves to the IServiceable which must be returned by the default function
-     * @throws {Error} if IServiceable is not set
+     * @returns {Promise} which resolves to the IFeatureProvider which must be returned by the default function
+     * @throws {Error} if IFeatureProvider is not set
      */
     initialize( core ){
         const _name = this.name();
@@ -122,7 +123,7 @@ export class featureCard {
                         throw new Error( 'featureCard.initialize()', _name, 'doesn\'t export a default function' );
                     }
                 })
-                .then(( o ) => { return self._iServiceable = o; });
+                .then(( o ) => { return self._featureProvider = o; });
             };
 
         // or import the requested class from 'core' module
@@ -133,7 +134,7 @@ export class featureCard {
             switch( _class ){
                 case 'coreController':
                     return new coreController( api, self )
-                        .then(( o ) => { return self._iServiceable = o.IServiceable; });
+                        .then(( o ) => { return self._featureProvider = o.IFeatureProvider; });
                 default:
                     // this is a configuration error rather a runtime one
                     throw new Error( 'featureCard.initialize()', _name, 'unknown class \''+_class+'\'' );
@@ -148,31 +149,31 @@ export class featureCard {
             _promise = _promise.then(() => { return _importFromExternal( _module ); });
         }
 
-        // at the end, either we have rejected the promise, or it must be resolved with a IServiceable
+        // at the end, either we have rejected the promise, or it must be resolved with a IFeatureProvider
         _promise = _promise.then(( res ) => {
             Msg.debug( 'featureCard.initialize()', _name, 'result:', res );
-            if( res && res instanceof IServiceable ){
+            if( res && res instanceof IFeatureProvider ){
                 return Promise.resolve( res );
             } else {
-                throw new Error( _name, 'IServiceable expected, '+res+' received: rejected' );
+                throw new Error( _name, 'IFeatureProvider expected, '+res+' received: rejected' );
             }
         });
 
         return _promise;
     }
 
-    isForkable(){
-        const _forkable = this._iServiceable.isForkable();
-        Msg.verbose( 'featureCard.isForkable()', 'name='+this.name(), 'forkable='+_forkable );
-        return _forkable;
-    }
-
     /**
-     * @returns {IServiceable} the instance of the interface provided by the feature
+     * @returns {IFeatureProvider} the instance of the interface provided by the feature
      *  Null before initialization
      */
-    iServiceable(){
-        return this._iServiceable;
+    iProvider(){
+        return this._featureProvider;
+    }
+
+    isForkable(){
+        const _forkable = this._featureProvider.isForkable();
+        Msg.verbose( 'featureCard.isForkable()', 'name='+this.name(), 'forkable='+_forkable );
+        return _forkable;
     }
 
     module(){
@@ -202,8 +203,8 @@ export class featureCard {
         }
 
         let _promise = Promise.resolve( true )
-        if( this._iServiceable && this._iServiceable.start && typeof this._iServiceable.start === 'function' ){
-            _promise = _promise.then(() => { return this._iServiceable.start(); });
+        if( this._featureProvider && this._featureProvider.start && typeof this._featureProvider.start === 'function' ){
+            _promise = _promise.then(() => { return this._featureProvider.start(); });
         }
 
         return _promise;
@@ -233,9 +234,9 @@ export class featureCard {
         Msg.verbose( 'featureCard.status()', 'name='+this.name());
         const self = this;
         //console.log( this );
-        //console.log( this._iServiceable );
-        //console.log( self._iServiceable.getCheckStatus );
-        //console.log( typeof self._iServiceable.getCheckStatus );
+        //console.log( this._featureProvider );
+        //console.log( self._featureProvider.getCheckStatus );
+        //console.log( typeof self._featureProvider.getCheckStatus );
 
         // the returned object which will resolve the promise
         let result = new Checkable();
@@ -250,9 +251,9 @@ export class featureCard {
             Msg.info( ...arguments );
         }
 
-        // first ask the IServiceable to provide its own status check (must conform to check-status.schema.json)
+        // first ask the IFeatureProvider to provide its own status check (must conform to check-status.schema.json)
         const _checkablePromise = function(){
-            return self.iServiceable().getCheckable()
+            return self.iProvider().getCheckable()
                 .then(( res ) => {
                     if( res ){
                         //console.log( 'getCheckable', res );
@@ -262,9 +263,9 @@ export class featureCard {
                 });
         };
 
-        // first ask the IServiceable to provide its own status check (must conform to check-status.schema.json)
+        // first ask the IFeatureProvider to provide its own status check (must conform to check-status.schema.json)
         const _serviceablePromise = function(){
-            return self.iServiceable().getCapability( 'checkStatus' )
+            return self.iProvider().getCapability( 'checkStatus' )
                 .then(( res ) => {
                     if( res ){
                         //console.log( 'checkStatus res', res );
@@ -395,8 +396,8 @@ export class featureCard {
         // after our own cheks, ask the service itself
         //  NO: first, the status has already been requested in _portStatusPromise()
         //      second, this would ask the status of the service in *this* process instead of in the forked one...
-        //if( this._iServiceable && this._iServiceable.status && typeof this._iServiceable.status === 'function' ){
-        //    promise = promise.then(() => { return this._iServiceable.status(); });
+        //if( this._featureProvider && this._featureProvider.status && typeof this._featureProvider.status === 'function' ){
+        //    promise = promise.then(() => { return this._featureProvider.status(); });
         //}
         promise = promise.then(() => { return Promise.resolve( result )});
         return promise;
@@ -416,8 +417,8 @@ export class featureCard {
 
         let promise = Promise.resolve( true )
 
-        if( this._iServiceable && this._iServiceable.stop && typeof this._iServiceable.stop === 'function' ){
-            promise = promise.then(() => { return this._iServiceable.stop(); });
+        if( this._featureProvider && this._featureProvider.stop && typeof this._featureProvider.stop === 'function' ){
+            promise = promise.then(() => { return this._featureProvider.stop(); });
         }
         promise = promise
             .then(( res ) => { return Promise.resolve( res )});
