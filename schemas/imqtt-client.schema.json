@@ -1,0 +1,33 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://github.com/iztiar/iztiar-core/schemas/imqtt-client.schema.json",
+    "title": "IMqttClient",
+    "description": "the configuration of the IMqttClient interface",
+    "type": "object",
+    "properties" : {
+        "IMqttClient": {
+            "type": "object",
+            "description": "the configuration group, required to be present to try to connect as IMqttClient to a broker",
+            "properties": {
+                "feature": {
+                    "type": "string",
+                    "description": "the name of the messaging feature to which the feature may connect (the preferred configuration)"
+                },
+                "host": {
+                    "type": "string",
+                    "description": "the hostname to use to connect to the message bus (only localhost being managed for now)"
+                },
+                "port": {
+                    "type": "integer",
+                    "description": "the port number to use to connect to the message bus",
+                    "default": 24003
+                },
+                "alivePeriod": {
+                    "type": "integer",
+                    "description": "interval (ms) between two alive publications, defaulting to 1mn",
+                    "default": 60000
+                }
+            }
+        }
+    }
+}

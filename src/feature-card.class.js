@@ -21,6 +21,9 @@ export class featureCard {
     _config = null;
     _package = null;
 
+    // the class first read from the config, then passed by the IFeatureProvider
+    _class = null;
+
     // got from initialization() from the module
     _featureProvider = null;
 
@@ -50,28 +53,51 @@ export class featureCard {
 
         this._name = name;
         this._config = config;
+        this._class = config.class || '';
         this._package = packet;
 
         return this;
     }
 
     /**
-     * @returns {String} the class known for this feature
+     * Getter/Setter
+     * @param {String} name the class known for this feature
+     * @returns {String}
+     * Note:
+     *  The class name is the name which identifies the feature from the module point of view
+     *  (where the feature name idenfifies this instance of the feature from the application point of view).
+     *  Though it is free, it should be chosen carefully as it also will be the identifier used by third
+     *  party add-ons to address the feature. As a general rule, the implementation class name seems to be
+     *  a rather good choice.
      *  Whether the class is required depends of the providing module itself:
      *  - if 'core', the class is required when configuring a feature from the '@iztiar/iztiar-core' core module
      *  - other (external) modules may have their own rule
-     *  Before the module is featureCard.initialized(), we only have access to the configured class;
-     *  as seen above, this may or may not be set.
-     *  After the initialization, we have access to the actual, runtime, class, which will be returned first.
+     *  In other words, depending of the module rules, the class may or may not be specified in the application
+     *  configuration file (for now, only 'core' requires that the class be specified).
+     *  Before the plugin be initialized, the featureCard.class() method returns the class read
+     *  from the application configuration file. The IFeatureProvider interface takes care of setting
+     *  here the actual runtime class name.
      */
-    class(){
-        return this._featureProvider ? this._featureProvider._class() : ( this.config().class ? this.config().class : '(undefined class)' );
+    class( name ){
+        if( name && typeof name === 'string' && name.length ){
+            this._class = name;
+        }
+        return this._class;
     }
 
     /**
-     * @returns {Object} the part of the application configuration which describes this feature
+     * Getter/Setter
+     * @param {Object} conf the feature configuration
+     *  - either the part of the application configuration which describes this feature (from construction time
+     *      of this instance until the feature plugin is initialized)
+     *  - or the filled configuration built at plugin initialization time
+     * @returns {Object} the current feature configuration
      */
-    config(){
+    config( conf ){
+        if( conf && Object.keys( conf ).length ){
+            Msg.debug( 'featureCard.config()', 'name='+this._name, conf );
+            this._config = conf;
+        }
         return this._config;
     }
 
@@ -152,6 +178,7 @@ export class featureCard {
         // at the end, either we have rejected the promise, or it must be resolved with a IFeatureProvider
         _promise = _promise.then(( res ) => {
             Msg.debug( 'featureCard.initialize()', _name, 'result:', res );
+            Msg.debug( 'featureCard.initialize()', _name, 'config:', this.config());
             if( res && res instanceof IFeatureProvider ){
                 return Promise.resolve( res );
             } else {

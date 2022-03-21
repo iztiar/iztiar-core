@@ -10,6 +10,8 @@ import { Msg } from './index.js';
 
 export class Interface {
 
+    static _published = false;
+
     static _statusPart( instance ){
         Msg.debug( 'Interface.statusPart()', 'instance '+( instance ? 'set':'unset' ));
         const o = {
@@ -59,19 +61,24 @@ export class Interface {
         });
 
         // register the new interface against the instance
-        let first = false;
         if( !instance.Interfaces ){
             instance.Interfaces = [];
-            first = true;
         }
         instance.Interfaces.push( name );
 
         // let the interfaces be published with the class status (only once)
-        if( first && instance.api && typeof instance.api === 'function' ){
-            const IStatus = instance.api().exports().IStatus;
-            if( !instance.IStatus ) Interface.add( instance, IStatus );
-            instance.IStatus.add( Interface._statusPart );
-    
+        if( !Interface._published ){
+            if( instance.IFeatureProvider && instance.IFeatureProvider.api && typeof instance.IFeatureProvider.api === 'function' ){
+                const api = instance.IFeatureProvider.api();
+                if( api && api.exports && typeof api.exports === 'function' ){
+                    Interface._published = true;
+                    const IStatus = instance.IFeatureProvider.api().exports().IStatus;
+                    if( !instance.IStatus ){
+                        Interface.add( instance, IStatus );
+                    }
+                    instance.IStatus.add( Interface._statusPart );
+                }
+            }
         }
 
         return instance;
@@ -130,7 +137,7 @@ export class Interface {
      * @returns {Object} the instance updated with new class prototype
      * @throws Error
      */
-    static extends( instance, defClass ){
+     static extends( instance, defClass ){
         const args = [ ...arguments ].slice( 2 );
         //console.log( 'Interface.extends', args );
         //console.log( 'Interface.extends', arguments );
@@ -154,5 +161,35 @@ export class Interface {
         });
 
         return instance;
+    }
+
+    /**
+     * tries to fill the configuration of the interface
+     * This function tests and calls for a 'fillConfig()' method in the interface
+     * The 'fillConfig()' method is expected to get the full feature configuration as input
+     * and return a Promise which whill resolve to the filled configuration for the interface.
+     * @param {Object} instance the instance of the implementation class
+     * @param {String} iface the interface name
+     * @returns {Promise} which resolves to the new instance filled configuration for the interface part
+     */
+    static fillConfig( instance, iface ){
+        let _promise = Promise.resolve( null );
+        if( instance.IFeatureProvider && instance.IFeatureProvider.feature && typeof instance.IFeatureProvider.feature === 'function' ){
+            const featCard = instance.IFeatureProvider.feature();
+            let _conf = featCard.config();
+            _promise = Promise.resolve( _conf )
+            if( Object.keys( _conf ).includes( iface )){
+                if( instance[iface].fillConfig && typeof instance[iface].fillConfig === 'function' ){
+                    _promise = _promise
+                        .then(() => { return instance[iface].fillConfig( _conf ) })
+                        .then(( res ) => {
+                            _conf[iface] = { ...res };
+                            instance.IFeatureProvider.feature().config( _conf );
+                            return Promise.resolve( _conf );
+                        });
+                }
+            }
+        }
+        return _promise;
     }
 }

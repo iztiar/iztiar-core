@@ -18,6 +18,11 @@
                     "type": "string",
                     "description": "the desired level of the console verbosity, overridable on the command-line",
                     "default": "NORMAL"
+                },
+                "environment": {
+                    "type": "string",
+                    "description": "the name of the environment",
+                    "default": "production"
                 }
             }
         },

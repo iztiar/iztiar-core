@@ -27,14 +27,6 @@ export class coreController {
         }
     };
 
-    /**
-     * Defaults
-     */
-    static d = {
-        listenPort: 24001,
-        alivePeriod: 60*1000
-    };
-
     // returns the full status of the server
     static _izStatus( self, reply ){
         return self.status()
@@ -65,10 +57,20 @@ export class coreController {
         const exports = api.exports();
         const Interface = exports.Interface;
 
-        Interface.extends( this, exports.baseProvider, api, card );
+        //Interface.extends( this, exports.baseProvider, api, card );
         Msg.debug( 'coreController instanciation' );
 
-        // first interface to be added, so that other interfaces may take advantage of that
+        // must implement the IFeatureProvider
+        Interface.add( this, exports.IFeatureProvider, {
+            killed: this.ifeatureproviderKilled,
+            start: this.ifeatureproviderStart,
+            status: this.ifeatureproviderStatus,
+            stop: this.ifeatureproviderStop
+        });
+        this.IFeatureProvider.api( api );
+        this.IFeatureProvider.feature( card );
+
+        // add this rather sooner, so that other interfaces may take advantage of it
         Interface.add( this, exports.ICapability );
 
         this.ICapability.add(
@@ -86,23 +88,14 @@ export class coreController {
         });
 
         Interface.add( this, exports.IMqttClient, {
-            _class: this._class,
-            _module: this.feature().module,
+            _class: card.class,
+            _module: card.module,
             _name: this._name,
             _status: this._imqttclientStatus
         });
 
         Interface.add( this, exports.IRunFile, {
             runDir: this.irunfileRunDir
-        });
-
-        Interface.add( this, exports.IFeatureProvider, {
-            class: this.ifeatureproviderClass,
-            config: this.ifeatureproviderConfig,
-            killed: this.ifeatureproviderKilled,
-            start: this.ifeatureproviderStart,
-            status: this.ifeatureproviderStatus,
-            stop: this.ifeatureproviderStop
         });
 
         Interface.add( this, exports.ITcpServer, {
@@ -119,7 +112,7 @@ export class coreController {
 
         let _promise = Promise.resolve( true )
             .then(() => { return this._filledConfig(); })
-            .then(( o ) => { this.IFeatureProvider.config( o ); })
+            .then(( o ) => { card.config( o ); })
             .then(() => { return Promise.resolve( this ); });
     
         return _promise;
@@ -131,9 +124,9 @@ export class coreController {
      */
     _checkStatus(){
         Msg.debug( 'coreController._checkStatus()' );
-        const _name = this.feature().name();
+        const _name = this.IFeatureProvider.feature().name();
         const _json = this.IRunFile.jsonByName( _name );
-        const Checkable = this.api().exports().Checkable;
+        const Checkable = this.IFeatureProvider.api().exports().Checkable;
         let o = new Checkable();
         if( _json && _json[_name] ){
             o.pids = [ ..._json[_name].pids ];
@@ -145,24 +138,16 @@ export class coreController {
         return Promise.resolve( o );
     }
 
-    _class(){
-        return this.constructor.name;
-    }
-
     /*
      * @returns {Promise} which resolves to the filled (runtime) configuration for this service
      */
     _filledConfig(){
         Msg.debug( 'coreController.filledConfig()' );
-        let _config = this.feature().config();
+        const featApi = this.IFeatureProvider.api();
+        const featCard = this.IFeatureProvider.feature();
+        let _config = featCard.config();
         let _filled = { ..._config };
         _filled.featuredConfig = {};
-        if( !_filled.module ){
-            throw new Error( 'coreController.filledConfig() module not found in plugin configuration' );
-        }
-        if( !_filled.class ){
-            throw new Error( 'coreController.filledConfig() class not found in plugin configuration' );
-        }
         if( !_filled.listenPort ){
             _filled.listenPort = coreController.d.listenPort;
         }
@@ -176,7 +161,7 @@ export class coreController {
                 _filled.messaging.alivePeriod = coreController.d.alivePeriod;
             }
             if( Object.keys( _filled.messaging ).includes( 'feature' )){
-                _feat = this.api().pluginManager().byNameExt( this.api().config(), this.api().packet(), _filled.messaging.feature );
+                _feat = featApi.pluginManager().byNameExt( featApi.config(), featApi.packet(), _filled.messaging.feature );
                 if( !_feat ){
                     Msg.error( 'coreController.filledConfig() feature not found:', _filled.messaging.feature );
                 }
@@ -190,10 +175,10 @@ export class coreController {
         let _promise = Promise.resolve( true );
         if( _feat ){
             _promise = _promise
-                .then(() => { return _feat.initialize( this.api()); })
-                .then(( iFeatureProvider ) => {
-                    if( iFeatureProvider && iFeatureProvider instanceof this.api().exports().IFeatureProvider ){
-                        return iFeatureProvider.config();
+                .then(() => { return _feat.initialize( featApi ); })
+                .then(( featureProvider ) => {
+                    if( featureProvider && featureProvider instanceof featApi.exports().IFeatureProvider ){
+                        return featureProvider.feature().config();
                     }
                 })
                 .then(( conf ) => {
@@ -212,7 +197,7 @@ export class coreController {
 
     // for whatever reason, this doesn't work the same than module() function fromIMqttClient point of view
     _name(){
-        return this.feature().name();
+        return this.IFeatureProvider.feature().name();
     }
 
     /*
@@ -243,26 +228,7 @@ export class coreController {
      */
     irunfileRunDir(){
         Msg.debug( 'coreController.irunfileRunDir()' );
-        return this.api().config().runDir();
-    }
-
-    /*
-     * @returns {String} the type of the feature, not an identifier, rather a qualifier
-     *  For example, the implementation class name is a good choice
-     * [-implementation Api-]
-     */
-    ifeatureproviderClass(){
-        Msg.debug( 'coreController.ifeatureproviderClass()' );
-        return this._class();
-    }
-
-    /*
-     * @returns {Object} the filled configuration for the feature
-     * [-implementation Api-]
-     */
-    ifeatureproviderConfig(){
-        Msg.debug( 'coreController.ifeatureproviderConfig()' );
-        return this.config();
+        return this.IFeatureProvider.api().config().runDir();
     }
 
     /*
@@ -271,7 +237,7 @@ export class coreController {
      */
     ifeatureproviderKilled(){
         Msg.debug( 'coreController.ifeatureproviderKilled()' );
-        this.IRunFile.remove( this.feature().name());
+        this.IRunFile.remove( this.IFeatureProvider.feature().name());
     }
 
     /*
@@ -280,8 +246,8 @@ export class coreController {
      * [-implementation Api-]
      */
     ifeatureproviderStart(){
-        Msg.debug( 'coreController.ifeatureproviderStart()', 'forkedProcess='+this.api().exports().IForkable.forkedProcess());
-        const config = this.config();
+        Msg.debug( 'coreController.ifeatureproviderStart()', 'forkedProcess='+this.IFeatureProvider.api().exports().IForkable.forkedProcess());
+        const config = this.IFeatureProvider.feature().config();
         return Promise.resolve( true )
             .then(() => {
                 if( Object.keys( config ).includes( 'listenPort' ) && config.listenPort > 0 ){
@@ -304,7 +270,7 @@ export class coreController {
      */
     ifeatureproviderStatus(){
         Msg.debug( 'coreController.ifeatureproviderStatus()' );
-        this.api().exports().utils.tcpRequest( this.config().listenPort, 'iz.status' )
+        this.IFeatureProvider.api().exports().utils.tcpRequest( this.IFeatureProvider.feature().config().listenPort, 'iz.status' )
             .then(( answer ) => {
                 Msg.debug( 'coreController.ifeatureproviderStatus()', 'receives answer to \'iz.status\'', answer );
             }, ( failure ) => {
@@ -320,7 +286,7 @@ export class coreController {
      */
     ifeatureproviderStop(){
         Msg.debug( 'coreController.ifeatureproviderStop()' );
-        this.api().exports().utils.tcpRequest( this.config().listenPort, 'iz.stop' )
+        this.IFeatureProvider.api().exports().utils.tcpRequest( this.IFeatureProvider.feature().config().listenPort, 'iz.stop' )
             .then(( answer ) => {
                 Msg.debug( 'coreController.ifeatureproviderStop()', 'receives answer to \'iz.stop\'', answer );
             }, ( failure ) => {
@@ -339,10 +305,11 @@ export class coreController {
      */
     itcpserverListening( tcpServerStatus ){
         Msg.debug( 'coreController.itcpserverListening()' );
+        const featCard = this.IFeatureProvider.feature();
         const self = this;
-        const _name = this.feature().name();
-        let _msg = 'Hello, I am \''+_name+'\' '+this._class();
-        _msg += ', running with pid '+process.pid+ ', listening on port '+this.config().listenPort;
+        const _name = featCard.name();
+        let _msg = 'Hello, I am \''+_name+'\' '+featCard.class();
+        _msg += ', running with pid '+process.pid+ ', listening on port '+featCard.config().listenPort;
         this.status().then(( status ) => {
             status[_name].event = 'startup';
             status[_name].helloMessage = _msg;
@@ -360,7 +327,7 @@ export class coreController {
      */
     itcpserverStatsUpdated( status ){
         Msg.debug( 'coreController.itcpserverStatsUpdated()' );
-        const _name = this.feature().name();
+        const _name = this.IFeatureProvider.feature().name();
         this.IRunFile.set([ _name, 'ITcpServer' ], status );
     }
 
@@ -383,7 +350,9 @@ export class coreController {
      *  A minimum of structure is so required, described in run-status.schema.json.
      */
     status(){
-        const _serviceName = this.feature().name();
+        const featApi = this.IFeatureProvider.api();
+        const featCard = this.IFeatureProvider.feature();
+        const _serviceName = featCard.name();
         Msg.debug( 'coreController.status()', 'serviceName='+_serviceName );
         const self = this;
         let status = {};
@@ -391,10 +360,10 @@ export class coreController {
         const _runStatus = function(){
             return new Promise(( resolve, reject ) => {
                 const o = {
-                    module: self.feature().module(),
-                    class: self._class(),
+                    module: featCard.module(),
+                    class: featCard.class(),
                     pids: [ process.pid ],
-                    ports: [ self.config().listenPort ],
+                    ports: [ featCard.config().listenPort ],
                     //status: status[_serviceName].ITcpServer.status
                 };
                 Msg.debug( 'coreController.status()', 'runStatus', o );
@@ -406,7 +375,7 @@ export class coreController {
         const _thisStatus = function(){
             return new Promise(( resolve, reject ) => {
                 const o = {
-                    listenPort: self.config().listenPort,
+                    listenPort: featCard.config().listenPort,
                     messaging: self._messaging | '',
                     messagingPort: self._messagingPort,
                     // running environment
@@ -414,13 +383,13 @@ export class coreController {
                         IZTIAR_DEBUG: process.env.IZTIAR_DEBUG || '(undefined)',
                         IZTIAR_ENV: process.env.IZTIAR_ENV || '(undefined)',
                         NODE_ENV: process.env.NODE_ENV || '(undefined)',
-                        forkedProcess: self.api().exports().IForkable.forkedProcess()
+                        forkedProcess: featApi.exports().IForkable.forkedProcess()
                     },
                     // general runtime constants
-                    logfile: self.api().exports().Logger.logFname(),
+                    logfile: featApi.exports().Logger.logFname(),
                     runfile: self.IRunFile.runFile( _serviceName ),
-                    storageDir: self.api().exports().coreConfig.storageDir(),
-                    version: self.api().packet().getVersion()
+                    storageDir: featApi.exports().coreConfig.storageDir(),
+                    version: featApi.packet().getVersion()
                 };
                 Msg.debug( 'coreController.status()', 'controllerStatus', o );
                 status = { ...status, ...o };
@@ -479,8 +448,8 @@ export class coreController {
      *  this terminate() function. So, try to prevent a double execution.
      */
     terminate( args=[], cb=null ){
-        const exports = this.api().exports();
-        exports.Msg.debug( 'coreController.terminate()' );
+        const exports = this.IFeatureProvider.api().exports();
+        Msg.debug( 'coreController.terminate()' );
         this.ITcpServer.status().then(( res ) => {
             if( res.status === exports.ITcpServer.s.STOPPING ){
                 exports.Msg.debug( 'coreController.terminate() returning as currently stopping' );
@@ -492,9 +461,9 @@ export class coreController {
             }
         });
 
-        const _name = this.feature().name();
-        const _module = this.feature().module();
-        const _class = this._class();
+        const _name = this.IFeatureProvider.feature().name();
+        const _module = this.IFeatureProvider.feature().module();
+        const _class = this.IFeatureProvider.feature().class();
         this._forwardPort = args && args[0] && exports.utils.isInt( args[0] ) ? args[0] : 0;
 
         const self = this;
@@ -508,7 +477,7 @@ export class coreController {
         let _promise = Promise.resolve( true )
             .then(() => {
                 if( cb && typeof cb === 'function' ){
-                    cb({ name:_name, module:_module, class:_class, pid:process.pid, port:self.config().listenPort });
+                    cb({ name:_name, module:_module, class:_class, pid:process.pid, port:self.IFeatureProvider.feature().config().listenPort });
                 }
                 return self.ITcpServer.terminate();
             })

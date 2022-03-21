@@ -12,9 +12,6 @@ export * from './istatus.interface.js';
 export * from './itcp-server.interface.js';
 
 // classes
-export * from './base-addon.class.js';
-export * from './base-provider.class.js';
-export * from './base-service.class.js';
 export * from './checkable.class.js';
 export * from './cli-application.class.js';
 export * from './config.class.js';

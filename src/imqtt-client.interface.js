@@ -8,8 +8,9 @@ import { Msg, utils } from './index.js';
 export class IMqttClient {
 
     static d = {
+        alivePeriod: 60*1000,
         connectPeriod: 60*1000,
-        alivePeriod: 60*1000
+        port: 24003
     };
 
     _instance = null;
@@ -94,7 +95,7 @@ export class IMqttClient {
      * [-implementation Api-]
      */
     _class(){
-        return '';
+        return this._instance.IFeatureProvider.feature().class();
     }
 
     /**
@@ -102,7 +103,7 @@ export class IMqttClient {
      * [-implementation Api-]
      */
     _module(){
-        return null;
+        return this._instance.IFeatureProvider.feature().module();
     }
 
     /**
@@ -110,7 +111,7 @@ export class IMqttClient {
      * [-implementation Api-]
      */
     _name(){
-        return null;
+        return this._instance.IFeatureProvider.feature().name();
     }
 
     /**
@@ -158,6 +159,60 @@ export class IMqttClient {
             console.log( 'message:message', message.toString());
             self._client.end();
         });
+    }
+
+    /**
+     * Fill the configuration for this interface
+     * @param {Object} conf the full feature configuration
+     * @returns {Promise} which resolves to the filled interface configuration
+     */
+    fillConfig( conf ){
+        const featApi = this._instance.IFeatureProvider.api();
+        const exports = featApi.exports();
+        exports.Msg.debug( 'IMqttClient.fillConfig()' );
+        let _filled = conf.IMqttClient;
+        if( !_filled.alivePeriod ){
+            _filled.alivePeriod = IMqttClient.d.alivePeriod;
+        }
+        //  the feature should be preferred - not mandatory and no default
+        //  host and port are possible too - not mandatory either and no defaults
+        //  if only a port is specified, then we default to localhost
+        let _feat = null;
+        if( Object.keys( _filled ).includes( 'feature' )){
+            _feat = featApi.pluginManager().byNameExt( featApi.config(), featApi.packet(), _filled.feature );
+            if( !_feat ){
+                Msg.error( 'IMqttClient.fillConfig() feature not found:', _filled.feature );
+            }
+
+        } else {
+            if( !_filled.host ){
+                _filled.host = 'localhost';
+            }
+            if( !_filled.port ){
+                _filled.port = IMqttClient.d.port;
+            }
+        }
+        let _promise = Promise.resolve( true );
+        if( _feat ){
+            _promise = _promise
+                .then(() => { return _feat.initialize( featApi ); })
+                .then(( featProvider ) => {
+                    if( featProvider && featProvider instanceof featApi.exports().IFeatureProvider ){
+                        return featProvider.feature().config();
+                    }
+                })
+                .then(( featConf ) => {
+                    if( featConf && featConf.IMqttServer ){
+                        _filled.featuredConfig[_filled.feature] = featConf.IMqttServer;
+                        _filled.host = featConf.IMqttServer.host || 'localhost'; 
+                        _filled.port = featConf.IMqttServer.port;
+                    }
+                })
+        }
+        _promise = _promise
+            .then(() => { return Promise.resolve( _filled ); });
+
+        return Promise.resolve( _filled );
     }
 
     /**

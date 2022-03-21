@@ -12,6 +12,10 @@ import { Msg, utils } from './index.js';
 
 export class ITcpServer {
 
+    static d = {
+        port: 24001
+    };
+
     static s = {
         STARTING: 'starting',
         RUNNING: 'running',
@@ -87,7 +91,7 @@ export class ITcpServer {
      * @returns {ITcpServer}
      */
     constructor( instance ){
-        const exports = instance.api().exports();
+        const exports = instance.IFeatureProvider.api().exports();
         const Interface = exports.Interface;
         const Msg = exports.Msg;
 
@@ -119,7 +123,7 @@ export class ITcpServer {
     // @returns {Checkable} adapted to current ITcpServer
     //  note that this is only useful in the forked process
     _newCheckable( instance ){
-        const Checkable = instance.api().exports().Checkable;
+        const Checkable = instance.IFeatureProvider.api().exports().Checkable;
         let res = new Checkable();
         const self = instance ? instance : this;
         if( self._port ){
@@ -307,6 +311,21 @@ export class ITcpServer {
                 //process.kill( process.pid, 'SIGKILL' ); // if previous is not enough ?
             }
         });
+    }
+
+    /**
+     * Fill the configuration for this interface
+     * @param {Object} conf the full feature configuration
+     * @returns {Promise} which resolves to the filled interface configuration
+     */
+    fillConfig( conf ){
+        const exports = this._instance.IFeatureProvider.api().exports();
+        exports.Msg.debug( 'ITcpServer.fillConfig()' );
+        let _filled = conf.ITcpServer;
+        if( !_filled.port ){
+            _filled.port = ITcpServer.d.port;
+        }
+        return Promise.resolve( _filled );
     }
 
     /**

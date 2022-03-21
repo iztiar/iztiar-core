@@ -50,6 +50,13 @@ export class coreConfig {
     }
 
     /**
+     * @returns {String} the default environment
+     */
+    static getDefaultEnvironment(){
+        return 'production';
+    }
+
+    /**
      * @returns {String} the default log level of the application
      */
     static getDefaultLogLevel(){
@@ -97,6 +104,10 @@ export class coreConfig {
                 filled.core.consoleLevel = opts.consoleLevel;
             }
             filled.core.consoleLevel = filled.core.consoleLevel.toUpperCase();
+            // core: environment
+            if( !_jsonCore.environment ){
+                filled.core.environment = coreConfig.getDefaultEnvironment();
+            }
             // core: log level
             if( !_jsonCore.logLevel || opts.logLevel !== coreConfig.getDefaultLogLevel()){
                 filled.core.logLevel = opts.logLevel;
@@ -131,6 +142,13 @@ export class coreConfig {
             this._filled.core.consoleLevel = level.toUpperCase();
         }
         return this._filled.core.consoleLevel;
+    }
+
+    /**
+     * @returns {Object} the full filled application configuration
+     */
+    filled(){
+        return this._filled;
     }
 
     /**

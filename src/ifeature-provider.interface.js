@@ -7,12 +7,18 @@
  *  The IFeatureProvider also acts as a proxy to ICapability, ICheckable interfaces
  *  (that would also take advantage of being implemented by the way).
  */
-import { Msg } from './index.js';
+import { featureCard, engineApi, Msg } from './index.js';
 
 export class IFeatureProvider {
 
+    // instanciation time
     _instance = null;
-    _config = null;
+
+    // the engineApi passed in when the implementation is instanciated
+    _api = null;
+
+    // the featureCard passed in when the implementation is instanciated
+    _feature = null;
 
     /**
      * Constructor
@@ -28,38 +34,6 @@ export class IFeatureProvider {
     /* *** ***************************************************************************************
        *** The implementation API, i.e; the functions the implementation may want to implement ***
        *** *************************************************************************************** */
-
-    /**
-     * @returns {String} the name providing the feature, not an identifier, rather a qualifier
-     *  For example, the implementation class name is a good choice
-     * 
-     *  Note:
-     *      You should never call yourself this method, but rather ask to featureCard.class(), which
-     *      - anyway, requires this method if it is defined
-     *      - and defaults to the name configured for this feature in the application configuration file
-     *      - is always available (while this one requires the plugin be initialized).
-     * 
-     *  Rationale:
-     *      Depending of the module rules, the class may or may not be specified in the application
-     *      configuration file (for now, only 'core' requires that the class be specified).
-     *      So we strongly advise that a plugin implement this method to provide some valuable
-     *      information to the application, other plugins, the administrator itself...
-     * 
-     * [-implementation Api-]
-     */
-    _class(){
-        Msg.debug( 'IFeatureProvider._class()' );
-        return '';
-    }
-
-    /**
-     * @returns {Object} the filled configuration for the service
-     * [-implementation Api-]
-     */
-    config(){
-        Msg.debug( 'IFeatureProvider.config()' );
-        return {};
-    }
 
     /**
      * If the service had to be SIGKILL'ed to be stoppped, then gives it an opportunity to make some cleanup
@@ -128,14 +102,29 @@ export class IFeatureProvider {
 
     /**
      * Getter/Setter
-     * @returns {Object} the filled config built at construction time
+     * @param {engineApi} api the engine API as described in engine-api.schema.json
+     * @returns {engineApi}
+     * [-Public API-]
      */
-    config( conf ){
-        if( conf && Object.keys( conf ).length ){
-            Msg.debug( 'IFeatureProvider.config()', 'name='+this._instance().feature().name(), conf );
-            this._config = conf;
+    api( o ){
+        if( o && o instanceof engineApi ){
+            this._api = o;
         }
-        return this._config;
+        return this._api;
+    }
+
+    /**
+     * Getter/Setter
+     * @param {featureCard} card the instance which describes this feature in the application configuration
+     * @returns {featureCard}
+     * [-Public API-]
+     */
+    feature( o ){
+        if( o && o instanceof featureCard ){
+            this._feature = o;
+            o.class( this._instance.constructor.name );
+        }
+        return this._feature;
     }
 
     /**

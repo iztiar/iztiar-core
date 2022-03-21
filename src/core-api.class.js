@@ -36,7 +36,7 @@ export class coreApi {
 
     /**
      * Getter/Setter
-     * The setter is called as soon as command-line options have been parsed
+     * The setter is called as soon as command-line options have been parsed, and provides a filled application configuration
      * @param {coreConfig} o application configuration instance
      * @returns {coreConfig}
      */

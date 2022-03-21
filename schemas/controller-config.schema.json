@@ -27,31 +27,12 @@
                     "description": "TCP listening port number for internal service management",
                     "default": 24001
                 },
-                "messaging": {
+                "IMqttClient": {
                     "type": "object",
-                    "description": "options for the messaging service, must be at least present to try to connect to this service",
-                    "properties": {
-                        "feature": {
-                            "type": "string",
-                            "description": "the name of the messaging feature to which the coreController may connect (the preferred configuration)"
-                        },
-                        "host": {
-                            "type": "string",
-                            "description": "the hostname to use to connect to the message bus (only localhost being managed for now)"
-                        },
-                        "port": {
-                            "type": "integer",
-                            "description": "the port number to use to connect to the message bus"
-                        },
-                        "alivePeriod": {
-                            "type": "integer",
-                            "description": "interval (ms) between two alive publications, defaulting to 1mn",
-                            "default": 60000
-                        }
-                    }
+                    "description": "messaging service options (see IMqttClient schema)"
                 },
                 "add-ons": {
-                    
+
                 }
             }
         }
