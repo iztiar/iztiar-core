@@ -18,7 +18,29 @@ export class ICapability {
     constructor( instance ){
         Msg.debug( 'ICapability instanciation' );
         this._instance = instance;
+
+        // let the capabilities be published as a part of the status
+        if( instance.IFeatureProvider && instance.IFeatureProvider.api && typeof instance.IFeatureProvider.api === 'function' ){
+            const api = instance.IFeatureProvider.api();
+            if( api && api.exports && typeof api.exports === 'function' ){
+                const IStatus = instance.IFeatureProvider.api().exports().IStatus;
+                if( !instance.IStatus ){
+                    instance.IFeatureProvider.api().exports().Interface.add( instance, IStatus );
+                }
+                instance.IStatus.add( this._statusPart );
+            }
+        }
+
         return this;
+    }
+
+    // publish the capabilities as part of the status
+    _statusPart( instance ){
+        Msg.debug( 'ICapability.statusPart()', 'instance '+( instance ? 'set':'unset' ));
+        const self = instance ? instance.ICapability : this;
+        const o = {
+            ICapability: [ ... self.get() ]
+        };
     }
 
     /* *** ***************************************************************************************

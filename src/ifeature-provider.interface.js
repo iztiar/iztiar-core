@@ -31,6 +31,33 @@ export class IFeatureProvider {
         return this;
     }
 
+    _statusInstall( api ){
+        const IStatus = api.exports().IStatus;
+        if( !this._instance.IStatus ){
+            api.exports().Interface.add( this._instance, IStatus );
+        }
+        this._instance.IStatus.add( this._statusPart );
+    }
+
+    // publish some core information as part of the status
+    _statusPart( instance ){
+        Msg.debug( 'IFeatureProvider.statusPart()', 'instance '+( instance ? 'set':'unset' ));
+        const self = instance ? instance.IFeatureProvider : this;
+        const exports = self.api().exports();
+        const o = {
+            // running environment
+            env: {
+                IZTIAR_DEBUG: process.env.IZTIAR_DEBUG || '(undefined)',
+                NODE_ENV: process.env.NODE_ENV || '(undefined)'
+            },
+            // general runtime constants
+            logfile: exports.Logger.logFname(),
+            version: self.api().packet().getVersion(),
+            core: self.api().config().core()
+        };
+        return Promise.resolve( o );
+    }
+
     /* *** ***************************************************************************************
        *** The implementation API, i.e; the functions the implementation may want to implement ***
        *** *************************************************************************************** */
@@ -109,6 +136,7 @@ export class IFeatureProvider {
     api( o ){
         if( o && o instanceof engineApi ){
             this._api = o;
+            this._statusInstall( o );
         }
         return this._api;
     }

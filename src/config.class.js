@@ -145,10 +145,10 @@ export class coreConfig {
     }
 
     /**
-     * @returns {Object} the full filled application configuration
+     * @returns {Object} the core (filled) application configuration
      */
-    filled(){
-        return this._filled;
+    core(){
+        return this._filled.core;
     }
 
     /**
