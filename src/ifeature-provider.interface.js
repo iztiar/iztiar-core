@@ -63,6 +63,15 @@ export class IFeatureProvider {
        *** *************************************************************************************** */
 
     /**
+     * @returns {Boolean} true if the process must be forked
+     * [-implementation Api-]
+     */
+    forkable(){
+        Msg.debug( 'IFeatureProvider.forkable()' );
+        return false;
+    }
+
+    /**
      * If the service had to be SIGKILL'ed to be stoppped, then gives it an opportunity to make some cleanup
      * [-implementation Api-]
      */
@@ -71,16 +80,11 @@ export class IFeatureProvider {
     }
 
     /**
-     * @returns {Boolean} true if the process must be forked (and the main application will take care of that)
-     * [-implementation Api-]
-     */
-    isForkable(){
-        Msg.debug( 'IFeatureProvider.isForkable()' );
-        return true;
-    }
-
-    /**
      * Start the service (and just that)
+     * @param {String} name the name of the feature
+     * @param {Callback|null} cb the funtion to be called on IPC messages reception (only relevant if a process is forked)
+     * @param {String[]} args arguments list (only relevant if a process is forked)
+     * @returns {Promise}
      * Notes:
      *  - If the service must start in its own process, then the calling application must have taken care of forking the ad-hoc
      *    process before calling this method.

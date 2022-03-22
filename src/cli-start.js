@@ -126,13 +126,13 @@ export function cliStart( api, name, options={} ){
             Msg.debug( 'cliStart()._forkOrStart()', 'next='+res.next );
             if( res.next === START ){
                 return new Promise(( resolve, reject ) => {
-                    if( feature.isForkable()){
-                        res.child = IForkable.fork( feature.name(), _ipcCallback, _args );
+                    feature.start( _ipcCallback, _args ).then(( st ) => {
+                        if( feature.isForkable()){
+                            res.child = st;
+                            res.ipcStartupReceived = false;
+                        }
                         resolve( res );
-                    } else {
-                        feature.start().then(() => { return Promise.resolve( res ); });
-                    }
-                    res.ipcStartupReceived = false;
+                    });
                 });
             } else {
                 return Promise.resolve( res );

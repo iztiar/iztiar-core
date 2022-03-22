@@ -29,7 +29,7 @@ export class ITcpServer {
             fn: ITcpServer._izCapability
         },
         'iz.help': {
-            label: 'returns the list of known commands',
+            label: 'return the list of known commands',
             fn: ITcpServer._izHelp
         },
         'iz.ping': {
@@ -241,31 +241,34 @@ export class ITcpServer {
 
             c.on( 'data', ( data ) => {
                 //console.log( data );
-                const _bufferStr = new Buffer.from( data ).toString().replace( '\r\n', '' );
+                const _bufferStr = new Buffer.from( data ).toString().replace( /[\r\n]+/, '' );
                 self._inMsgCount += 1;
                 self._inBytesCount += _bufferStr.length+2;
-                Msg.info( 'server receives \''+_bufferStr+'\' request' );
-                const _words = _bufferStr.split( /\s+/ );
-
-                try {
-                    let _reply = {
-                        verb: _words[0],
-                        args: [ ..._words ].splice( 1 ),
-                        timestamp: utils.now(),
-                        answer: null
-                    };
-                    if( !self.execute( _words, c, _reply, ITcpServer.verbs ) && !self.execute( _words, c, _reply, self._verbs())){
-                        const _msg = 'ITcpServer error: unknown verb \''+_words[0]+'\'';
-                        Msg.error( _msg );
-                        _reply.answer = _msg;
-                        this.answer( c, _reply, true );
-                    }
-                } catch( e ){
-                    Msg.error( 'ITcpServer.execute()', e.name, e.message );
+                // Ctrl+D aka end_of_stream
+                if( _bufferStr == "\u0004" ){
+                    Msg.info( 'ITcpServer receives \u0004 = EndOfStream' );
                     c.end();
+                } else {
+                    const _words = _bufferStr.split( /\s+/ );
+                    Msg.info( 'ITcpServer receives \''+_bufferStr+'\' request', 'verb.length='+_words[0].length, 'words.count='+_words.length );
+                    try {
+                        let _reply = {
+                            verb: _words[0],
+                            args: [ ..._words ].splice( 1 ),
+                            timestamp: utils.now(),
+                            answer: null
+                        };
+                        if( !self.execute( _words, c, _reply, ITcpServer.verbs ) && !self.execute( _words, c, _reply, self._verbs())){
+                            const _msg = 'ITcpServer error: unknown verb \''+_words[0]+'\'';
+                            Msg.error( _msg );
+                            _reply.answer = _msg;
+                            this.answer( c, _reply, true );
+                        }
+                    } catch( e ){
+                        Msg.error( 'ITcpServer.execute()', e.name, e.message );
+                        c.end();
+                    }
                 }
-
-                self.statsUpdated();
             })
 
             .on( 'close', () => {
@@ -303,6 +306,7 @@ export class ITcpServer {
         //    return;
         //}
         // not very sure this is a good idea !?
+        //////////// no more terminate on error, just logging it ??
         this.status().then(( res ) => {
             if( res.status !== ITcpServer.s.STOPPING ){
                 Msg.info( 'auto-killing on '+e.code+' error' );
@@ -311,21 +315,6 @@ export class ITcpServer {
                 //process.kill( process.pid, 'SIGKILL' ); // if previous is not enough ?
             }
         });
-    }
-
-    /**
-     * Fill the configuration for this interface
-     * @param {Object} conf the full feature configuration
-     * @returns {Promise} which resolves to the filled interface configuration
-     */
-    fillConfig( conf ){
-        const exports = this._instance.IFeatureProvider.api().exports();
-        exports.Msg.debug( 'ITcpServer.fillConfig()' );
-        let _filled = conf.ITcpServer;
-        if( !_filled.port ){
-            _filled.port = ITcpServer.d.port;
-        }
-        return Promise.resolve( _filled );
     }
 
     /**
@@ -347,6 +336,21 @@ export class ITcpServer {
             }
         }
         return _found;
+    }
+
+    /**
+     * Fill the configuration for this interface
+     * @param {Object} conf the full feature configuration
+     * @returns {Promise} which resolves to the filled interface configuration
+     */
+    fillConfig( conf ){
+        const exports = this._instance.IFeatureProvider.api().exports();
+        exports.Msg.debug( 'ITcpServer.fillConfig()' );
+        let _filled = conf.ITcpServer;
+        if( !_filled.port ){
+            _filled.port = ITcpServer.d.port;
+        }
+        return Promise.resolve( _filled );
     }
 
     /**

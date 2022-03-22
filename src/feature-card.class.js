@@ -198,7 +198,7 @@ export class featureCard {
     }
 
     isForkable(){
-        const _forkable = this._featureProvider.isForkable();
+        const _forkable = this._featureProvider.forkable();
         Msg.verbose( 'featureCard.isForkable()', 'name='+this.name(), 'forkable='+_forkable );
         return _forkable;
     }
@@ -216,24 +216,28 @@ export class featureCard {
     }
 
     /**
-     * @returns {Promise} which resolves to the startup result, or is rejected
+     * @param {Callback|null} cb the funtion to be called on IPC messages reception (only relevant if a process is forked)
+     * @param {String[]} args arguments list (only relevant if a process is forked)
+     * @returns {Promise} which may:
+     *  - resolve to the child process (the IFeatureProvider has forked),
+     *  - never resolve (the IFeatureProvider has started a daemon adn doesn't want the program exit)
+     *  - be rejected (a runtime condition has been detected)
+     *  - resolve to another startup result...
      */
-    start(){
-        Msg.verbose( 'featureCard.start()', 'name='+this.name());
+    start( cb, args ){
+        const _name = this.name();
+        Msg.verbose( 'featureCard.start()', 'name='+_name );
         if( !this.enabled()){
             return Promise.reject( new Error( 'Feature is disabled' ));
         }
-
         if( IForkable.forkedProcess()){
-            const _title = process.title + '/' + this.name();
+            const _title = process.title + '/' + _name;
             process.title = _title;
         }
-
         let _promise = Promise.resolve( true )
         if( this._featureProvider && this._featureProvider.start && typeof this._featureProvider.start === 'function' ){
-            _promise = _promise.then(() => { return this._featureProvider.start(); });
+            _promise = _promise.then(() => { return this._featureProvider.start( _name, cb, args ); });
         }
-
         return _promise;
     }
 

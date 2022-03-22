@@ -71,8 +71,13 @@
    62 2022- 3-18 use lowdb to manage run files
 
    63 2022- 3-21 review runfile: only pids and ports are needed
+      2022- 3-22 coreBroker: done
 
    64 2022- 3-21 review status functions chaining: ifeatureprovider is not called
+
+   65 2022- 3-22 deprecate IFeatureProvider.IsForkable()
+
+   66
 
 -------------------------------------------------------------------------------------------
  Done
