@@ -39,7 +39,7 @@ export class ICapability {
         Msg.debug( 'ICapability.statusPart()', 'instance '+( instance ? 'set':'unset' ));
         const self = instance ? instance.ICapability : this;
         const o = {
-            ICapability: [ ... self.get() ]
+            ICapability: [ ... self.get().sort() ]
         };
         return Promise.resolve( o );
     }

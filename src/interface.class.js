@@ -15,7 +15,7 @@ export class Interface {
     static _statusPart( instance ){
         Msg.debug( 'Interface.statusPart()', 'instance '+( instance ? 'set':'unset' ));
         const o = {
-            Interfaces: instance.Interfaces
+            Interfaces: instance.Interfaces.sort()
         };
         //Msg.debug( 'Interface.statusPart()', o );
         return Promise.resolve( o );
