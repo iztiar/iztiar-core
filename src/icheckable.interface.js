@@ -51,6 +51,7 @@ export class ICheckable {
      * [-Public API-]
      */
     run(){
+        Msg.debug( 'ICheckable.run()' );
         let _result = new Checkable();
         let _promise = Promise.resolve( _result );
         this._checkables.every(( o ) => {

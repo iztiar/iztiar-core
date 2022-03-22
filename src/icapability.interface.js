@@ -23,9 +23,9 @@ export class ICapability {
         if( instance.IFeatureProvider && instance.IFeatureProvider.api && typeof instance.IFeatureProvider.api === 'function' ){
             const api = instance.IFeatureProvider.api();
             if( api && api.exports && typeof api.exports === 'function' ){
-                const IStatus = instance.IFeatureProvider.api().exports().IStatus;
+                const IStatus = api.exports().IStatus;
                 if( !instance.IStatus ){
-                    instance.IFeatureProvider.api().exports().Interface.add( instance, IStatus );
+                    api.exports().Interface.add( instance, IStatus );
                 }
                 instance.IStatus.add( this._statusPart );
             }
@@ -41,6 +41,7 @@ export class ICapability {
         const o = {
             ICapability: [ ... self.get() ]
         };
+        return Promise.resolve( o );
     }
 
     /* *** ***************************************************************************************

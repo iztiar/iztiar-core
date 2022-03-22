@@ -104,7 +104,7 @@ export function cliStart( api, name, options={} ){
                                     res.next = END;
 
                                 } else {
-                                    Msg.warn( 'Service is said running, but exhibits', status.reasons.length,'error message(s), is not startable' );
+                                    Msg.warn( 'Service is said running, but exhibits '+status.reasons.length+' error message(s), is not startable' );
                                     status.reasons.every(( m ) => {
                                         Msg.warn( ' '+m );
                                         return true;

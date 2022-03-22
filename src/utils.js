@@ -253,8 +253,8 @@ export const utils = {
         Msg.debug( 'utils.tcpRequest()', 'port='+port, 'command='+command );
         return new Promise(( resolve, reject ) => {
             try {
-                const client = net.createConnection( port, () => {
-                    client.write( command );
+                const client = net.createConnection({ port:port, family:4 }, () => {
+                    client.write( command+'\r\n' );
                 });
                 client.on( 'data', ( data ) => {
                     const _bufferStr = new Buffer.from( data ).toString();

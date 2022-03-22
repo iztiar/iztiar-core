@@ -251,7 +251,7 @@ export class featureCard {
      *  alive.ports: []           array of alive ports
      *  status: JSON object       full status returned by the feature
      * Note:
-     *  This method takes advantage of the 'checkStatus' capability.
+     *  This method takes advantage of the 'checkableStatus' capability.
      * Note:
      *  As a reminder, if the feature is forkable, then its status cannot be directly requested.
      *  Getting the status from a forkable requires either getting an answer of an ITcpServer, or reading some runfile somewhere.
@@ -292,8 +292,9 @@ export class featureCard {
 
         // first ask the IFeatureProvider to provide its own status check (must conform to check-status.schema.json)
         const _serviceablePromise = function(){
-            return self.iProvider().getCapability( 'checkStatus' )
-                .then(( res ) => {
+            const p = self.iProvider().getCapability( 'checkableStatus' );
+            if( p && p instanceof Promise ){
+                return p.then(( res ) => {
                     if( res ){
                         //console.log( 'checkStatus res', res );
                         result.merge( res );
@@ -301,6 +302,9 @@ export class featureCard {
                     }
                     return Promise.resolve( result );
                 });
+            } else {
+                return Promise.resolve( result );
+            }
         };
 
         // check if this pid is alive, resolving with true|false
