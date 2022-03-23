@@ -79,4 +79,6 @@ So, inside a feature 'FA', a particular interface 'IA' may allow all or a part o
 
 The features described in the previous paragraph are most often features which run in their own process, also said services or daemons.
 
-Another type of feature exist inside of Iztiar, which is called an 'add-on'. An add-on is just a module which adds a function (a feature) to another feature.
+Another type of feature exist inside of Iztiar, which is called an add-on. An add-on is just a module which adds a function (a feature) to another feature.
+
+Add-ons are identified by their name under the `add-ons` keyword.

@@ -1,0 +1,20 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://github.com/iztiar/iztiar-core/schemas/itcp-server.schema.json",
+    "title": "ITcpServer",
+    "description": "the configuration of the ITcpServer interface",
+    "type": "object",
+    "properties" : {
+        "ITcpServer": {
+            "type": "object",
+            "description": "the configuration group, required to be present to create a listening ITcpServer",
+            "properties": {
+                "port": {
+                    "type": "integer",
+                    "description": "the listening TCP port number",
+                    "default": 24001
+                }
+            }
+        }
+    }
+}

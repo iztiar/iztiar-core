@@ -56,7 +56,7 @@
 
    55 2022- 3-17 coreBroker is a plugin which provides an independant forkable feature
                   now writes a plugin which provides a new interface
-                  ex. pidUsage
+      2022- 3-23 pidUsage is an add-on for a running feature
 
    56 2022- 3-17 have IStart interface on the IStatus model
 
@@ -70,16 +70,15 @@
 
    62 2022- 3-18 use lowdb to manage run files
 
-   63 2022- 3-21 review runfile: only pids and ports are needed
-      2022- 3-22 coreBroker: done
-
    64 2022- 3-21 review status functions chaining: ifeatureprovider is not called
 
-   65 2022- 3-22 deprecate IFeatureProvider.IsForkable()
+   67 2022- 3-22 engineApi.config.filled is equal to engineApi.config.json
 
-   66 2022- 3-22 featureCard exhibits a 'class' member, while it should be in config
+   68 2022- 3-23 rename featureCard.iProvider() to something better
 
-   67
+   69 2022- 3-23 ITcpServer just ignore empty commands
+
+   70
 
 -------------------------------------------------------------------------------------------
  Done
@@ -217,6 +216,16 @@
 
    59 2022- 3-17 change service command-line option with feature ?
       2022- 3-18 nope, service is good as it also talks about daemon
+
+   63 2022- 3-21 review runfile: only pids and ports are needed
+      2022- 3-22 coreBroker: done
+      2022- 3-23 coreController: done
+
+   65 2022- 3-22 deprecate IFeatureProvider.IsForkable()
+      2022- 3-23 done
+
+   66 2022- 3-22 featureCard exhibits a 'class' member, while it should be in config
+      2022- 3-23 fixed
 
 -------------------------------------------------------------------------------------------
  P. Wieser - Created on 2022, Jan. 29th

@@ -1,8 +1,6 @@
 /*
  * coreController class
  */
-import pidUsage from 'pidusage';
-
 import { Msg } from './index.js';
 
 export class coreController {
@@ -134,7 +132,7 @@ export class coreController {
         const feature = this.IFeatureProvider.feature();
         Msg.debug( 'coreController.fillConfig()' );
         let _filled = { ...feature.config() };
-        return Promise.resolve( feature.config( this.IFeatureProvider.fillConfig( _filled )));
+        return this.IFeatureProvider.fillConfig( _filled ).then(( c ) => { return feature.config( c ); });
     }
 
     /*
@@ -262,6 +260,8 @@ export class coreController {
         let st = new Checkable();
         st.pids = [ process.pid ];
         st.ports = [ _port ];
+        delete st.startable;
+        delete st.reasons;
         let status = {};
         status[_name] = {
             module: featCard.module(),
@@ -354,24 +354,8 @@ export class coreController {
                 resolve( status );
             });
         };
-        // pidUsage
-        const _pidPromise = function(){
-            return pidUsage( process.pid )
-                .then(( res ) => {
-                    const o = {
-                        cpu: res.cpu,
-                        memory: res.memory,
-                        ctime: res.ctime,
-                        elapsed: res.elapsed
-                    };
-                    Msg.debug( 'coreController.publiableStatus()', 'pidUsage', o );
-                    status.pidUsage = { ...o };
-                    return Promise.resolve( status );
-                });
-        };
         return Promise.resolve( true )
             .then(() => { return _runStatus(); })
-            .then(() => { return _pidPromise(); })
             .then(() => { return this.IStatus ? this.IStatus.run( status ) : status; })
             .then(( res ) => {
                 let featureStatus = {};

@@ -195,7 +195,7 @@ export class Interface {
                 }
             } else {
                 Msg.verbose( 'Interface.fillConfig()', instance.constructor.name, 'iface='+iface, 'Object.keys doesn\'t include '+iface );
-                Msg.verbose( _conf );
+                //Msg.verbose( _conf );
             }
         } else {
             Msg.verbose( 'Interface.fillConfig()', instance.constructor.name, 'iface='+iface, 'IFeatureProvider is not set' );

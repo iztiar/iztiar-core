@@ -25,11 +25,19 @@ export class featureCard {
     _config = null;
     _package = null;
 
-    // the class first read from the config, then passed by the IFeatureProvider
-    _class = null;
-
     // got from initialization() from the module
     _featureProvider = null;
+
+    /**
+     * @param {String} name the feature name
+     * @returns {featureCard|null} the already initialized feature
+     */
+    static byName( name ){
+        if( Object.keys( featureCard._features ).includes( name )){
+            return featureCard._features[name];
+        }
+        return null;
+    }
 
     /**
      * Constructor
@@ -41,6 +49,7 @@ export class featureCard {
      */
     constructor( name, config, packet=null ){
         //console.log( 'featureCard constructor', 'name='+name, config );
+        Msg.debug( 'featureCard.constructor()', 'name='+name, 'config', config, 'packet', packet );
 
         if( !name || typeof name !== 'string' || !name.length ){
             throw new Error( 'featureCard(): feature name is not set');
@@ -57,7 +66,6 @@ export class featureCard {
 
         this._name = name;
         this._config = config;
-        this._class = config.class || '';
         this._package = packet;
 
         return this;
@@ -84,9 +92,9 @@ export class featureCard {
      */
     class( name ){
         if( name && typeof name === 'string' && name.length ){
-            this._class = name;
+            this.config().class = name;
         }
-        return this._class;
+        return this.config().class;
     }
 
     /**
@@ -115,10 +123,11 @@ export class featureCard {
     /**
      * dynamically load and initialize the default function of the module
      * @param {coreApi} core a coreApi instance
+     * @param {Object} instance the implementation instance when initializing an add-on
      * @returns {Promise} which resolves to the IFeatureProvider which must be returned by the default function
      * @throws {Error} if IFeatureProvider is not set
      */
-    initialize( core ){
+    initialize( core, instance=null ){
         const _name = this.name();
         // first search in our cache
         if( Object.keys( featureCard._features ).includes( _name )){
@@ -155,7 +164,7 @@ export class featureCard {
                 .then(( extImported ) => {
                     //Msg.debug( 'featureCard.initialize()', _name, 'about to call default', extImported );
                     if( typeof extImported.default === 'function' ){
-                        return extImported.default( api, self )
+                        return extImported.default( api, self, instance )
                     } else {
                         throw new Error( 'featureCard.initialize()', _name, 'doesn\'t export a default function' );
                     }
@@ -454,16 +463,14 @@ export class featureCard {
      *  It is up to the caller to begin with a first check, and end with a later check.
      */
     stop(){
-        Msg.verbose( 'featureCard.stop()' );
-
+        Msg.verbose( 'featureCard.stop()', 'name='+this.name());
         let promise = Promise.resolve( true )
-
         if( this._featureProvider && this._featureProvider.stop && typeof this._featureProvider.stop === 'function' ){
             promise = promise.then(() => { return this._featureProvider.stop(); });
+        } else {
+            Msg.verbose( 'featureCard.stop()', 'name='+this.name(), 'IFeatureProvider.stop is not a function' );
         }
-        promise = promise
-            .then(( res ) => { return Promise.resolve( res )});
-
+        promise = promise.then(( res ) => { return Promise.resolve( res )});
         return promise;
     }
 }

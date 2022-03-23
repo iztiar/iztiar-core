@@ -7,6 +7,9 @@ import { IFeatureProvider, featureCard, Msg, PackageJson, utils } from './index.
 
 export class IPluginManager {
 
+    // cache of installed plugins
+    _installed = [];
+
     /* *** ***************************************************************************************
        *** The implementation API, i.e; the functions the implementation may want to implement ***
        *** *************************************************************************************** */
@@ -45,32 +48,76 @@ export class IPluginManager {
     }
 
     /**
-     * @param {coreApi} api a coreApi instance
-     * @param {String} name the searched feature
-     * @param {String} iface the searched interface in the searched feature
-     * @returns {Promise} which resolves to the filled configuration of iface in the named feature
+     * @param {Object} instance the implementation instance
+     * @param {String} name the searched add-on feature
+     * @param {Object} conf the configuration of the searched add-on
+     *  If unset, then the full filled configuration is returned in the promise
+     * @returns {Promise} which resolves to the filled configuration of the add-on or null
      * [-public API-]
      */
-    getConfig( api, name, iface ){
+    getAddonConfig( instance, name, conf ){
+        if( !Object.keys( conf ).includes( 'module' )){
+            Msg.error( 'IPluginManager.getAddonConfig() '+name+' configuration doesn\'t include module' );
+            return Promise.resolve( null );
+        }
+        let _feat = null;
+        const api = instance.IFeatureProvider.api();
+        const feature = instance.IFeatureProvider.feature();
+        this.getInstalled( api ).every(( pck ) => {
+            if( pck.getName() === conf.module ){
+                _feat = new featureCard( feature.name()+'/'+name, conf, pck );
+                return false;
+            }
+            return true;
+        });
+        if( !_feat ){
+            Msg.error( 'IPluginManager.getAddonConfig() feature not found:', name );
+            return Promise.resolve( null );
+        }
+        let _promise = _feat.initialize( api, instance )
+            .then(( _provider ) => {
+                if( _provider && _provider instanceof IFeatureProvider ){
+                    return _feat.config();
+                } else {
+                    Msg.error( 'IPluginManager.getConfig() unable to initialize the feature' );
+                    return null;
+                }
+            });
+        return _promise;
+    }
+
+    /**
+     * @param {coreApi} api a coreApi instance
+     * @param {String} name the searched feature
+     * @param {String|null} iface the searched interface in the searched feature
+     * @returns {Promise} which resolves to the filled configuration of iface in the named feature or null
+     * [-public API-]
+     */
+    getConfig( api, name, iface=null ){
         const _feat = this.byNameExt( api.config(), api.packet(), name );
         if( !_feat ){
             Msg.error( 'IPluginManager.getConfig() feature not found:', name );
             return Promise.resolve( null );
         }
-        let _promise = Promise.resolve( true )
-            .then(() => { return _feat.initialize( api ); })
+        let _promise = _feat.initialize( api )
             .then(( _provider ) => {
                 if( _provider && _provider instanceof IFeatureProvider ){
                     return _provider.feature().config();
                 } else {
+                    Msg.error( 'IPluginManager.getConfig() unable to initialize the feature' );
                     return null;
                 }
             })
             .then(( _conf ) => {
-                if( _conf && _conf[iface] ){
-                    return( _conf[iface] );
+                if( iface ){
+                    if( _conf && _conf[iface] ){
+                        return( _conf[iface] );
+                    } else {
+                        Msg.error( 'IPluginManager.getConfig() configuration is empty or doesn\' provider '+iface+' group' );
+                        return null;
+                    }
                 } else {
-                    return null;
+                    return _conf;
                 }
             });
         return _promise;
@@ -127,17 +174,21 @@ export class IPluginManager {
      * [-public API-]
      */
     getInstalled( api ){
+        if( this._installed.length ){
+            Msg.debug( 'IPluginManager.getInstalled() reusing already cached installed plugins' );
+            return( this._installed );
+        }
+        Msg.debug( 'IPluginManager.getInstalled() searching for installed plugins' );
         const parentDir = path.dirname( api.packet().getDir());
         const regex = [
             new RegExp( '^[^\.]' ),
             new RegExp( '^'+api.commonName()+'-' )
         ];
-        let result = [];
         utils.dirScanSync( parentDir, { type:'d', regex:regex }).every(( p ) => {
-            result.push( new PackageJson( p ));
+            this._installed.push( new PackageJson( p ));
             return true;
         });
-        return result;
+        return this._installed;
     }
 
     /**

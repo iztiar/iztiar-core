@@ -161,21 +161,40 @@ export class IFeatureProvider {
 
     /**
      * @param {Object} conf the feature configuration
-     * @returns {Object} the feature configuration filled from IFeatureProvider point of view
+     * @returns {Promise} which resolves to the full configuration of the feature (filled from IFeatureProvider point of view)
      *  - module is expected to already having been checked at featureCard instanciation
      *  - class can only be setup by the feature class implementation itself
      *  - enabled: set default here
      * Note:
      *  This fillConfig() method is specific to IFeatureProvider interface.
-     *  The Interface.fillConfig() static method provides other arguments, expects other return value.
+     *  The generally-used Interface.fillConfig() static method provides other arguments, expects other return value.
      *  See IMqttClient or ITcpServer interfaces for examples.
      * [-Public API-]
      */
     fillConfig( conf ){
+        let _promise = Promise.resolve( conf );
         if( !Object.keys( conf ).includes( 'enabled' )){
             conf.enabled = true;
         }
-        return conf;
+        // each add-on has its own configuration, even if all use the same module
+        //  so each add-on also has its own featureCard (-> no need to cache)
+        if( Object.keys( conf ).includes( 'add-ons' )){
+            Object.keys( conf['add-ons'] ).every(( name ) => {
+                this.api().pluginManager().getAddonConfig( this._instance, name, conf['add-ons'][name] )
+                    .then(( _confAddon ) => {
+                        if( _confAddon ){
+                            conf['add-ons'][name] = { ... _confAddon };
+                            return conf;
+                        } else {
+                            Msg.error( 'IFeatureProvider.fillConfig()', name+' add-on not found' );
+                            return null;
+                        }
+                    })
+                    .then(( conf ) => { if( conf ) return Promise.resolve( conf ); });
+                return true;
+            });
+        }
+        return _promise;
     }
 
     /**

@@ -22,17 +22,17 @@
                     "description": "whether the service is enabled or disabled",
                     "default": true
                 },
-                "listenPort": {
-                    "type": "integer",
-                    "description": "TCP listening port number for internal service management",
-                    "default": 24001
+                "ITcpServer": {
+                    "type": "object",
+                    "description": "the properties of the integrated TCP server (see ITcpServer schema)"
                 },
                 "IMqttClient": {
                     "type": "object",
                     "description": "messaging service options (see IMqttClient schema)"
                 },
                 "add-ons": {
-
+                    "type": "object",
+                    "description": "the group which describe the add-ons (see appConfig schema)"
                 }
             }
         }
