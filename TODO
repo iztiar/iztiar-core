@@ -76,9 +76,12 @@
 
    68 2022- 3-23 rename featureCard.iProvider() to something better
 
-   69 2022- 3-23 ITcpServer just ignore empty commands
+   69 2022- 3-23 ITcpServer: just ignore empty commands
 
-   70
+   70 2022- 3-23 a feature works in its own instance, while an add-on works in its hosting instance
+                  maybe this could be materialized by a different interface or derived classes
+
+   71
 
 -------------------------------------------------------------------------------------------
  Done
