@@ -27,7 +27,7 @@ Initializing development environment
   =================
 
   Note: publishing to npm requires tagging the version number
-  (contrarily to github, npmjs doesn't accept to publish twice the same version, so we have to tag the publish version, and then bump the version number...)
+  (contrarily to github, npmjs doesn't accept to publish twice the same version, so we have to tag the published version, and then bump the version number...)
 
     1. locally
         $ git checkout master
@@ -40,5 +40,5 @@ Initializing development environment
         $ git checkout -b vy.y.y
         $ vi package.json
           bumping version number
-        $ git commit -am "Bump version number post-release"
+        $ git commit -am "Post release version bump"
 

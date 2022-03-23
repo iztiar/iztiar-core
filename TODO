@@ -81,7 +81,12 @@
    70 2022- 3-23 a feature works in its own instance, while an add-on works in its hosting instance
                   maybe this could be materialized by a different interface or derived classes
 
-   71
+   71 2022- 3-23 write engine-api.schema.md
+
+   72 2022- 3-23 seen on pidUsage add-on: seems that all three configurations are not filled the same way
+                  to be checked
+
+   73 2022- 3-23 
 
 -------------------------------------------------------------------------------------------
  Done

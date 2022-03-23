@@ -53,7 +53,7 @@ As specified in the `app-config.schema.json`, each feature MUST exhibit a minima
     
         the module may be specified either by its ESM name (e.g. `@iztiar/iztizr-broker`), or as `'core'`
 
-        this key is mandatory and no default is provided
+        this key is mandatory, no default is provided
 
     - `class` key specifies the class to be invoked inside of the module
 
@@ -61,19 +61,34 @@ As specified in the `app-config.schema.json`, each feature MUST exhibit a minima
 
     - `enabled` key let the administrator disable a feature without removing its description from the application configuration
 
-        this key is optional, and defaults to `true`
+        this key is optional, defaults to `true`
 
-#### Interface of a feature
+#### Interfaces of a feature
 
 Besides of the general configuration of a feature above, each implemented interface has its own specific configuration. If a particular feature implements for example a TCP server, you should find a 'ITcpServer' group inside of the feature group. Say that we are calling these 'interface' groups.
 
-Though this cannot be enforced in any way as this eventually is the responsability of the feature itself, we at Iztiar strongly suggest that an interface actually runs only if at least its group is specified in the application configuration file, even if this group is itself empty (because default values well suit your needs).
+Though this cannot be enforced in any way as this eventually is the responsability of the feature itself, we at Iztiar strongly suggest that an interface actually runs only if at least its group is specified in the application configuration file, even if this group is itself empty (because default values would well suit your needs).
 
 An interface group may allow the user to address another feature to take the configuration from.
 
 As an example, the IMqttClient accepts for its configuration, either a host and a port number, but also the name of the feature which describes the MQTT server it is expected to connect to. This redirection is specified via the `feature` keyword.
 
-So, inside a feature 'FA', a particular interface 'IA' may allow all or a part of its configuration to be taken from another feature (FB), which should itself implements a particular interface IB.
+So, inside a feature 'FA', a particular interface 'IA' may allow all or a part of its configuration to be taken from another feature (FB), which should itself implements a particular interface IB. We so would have:
+
+```json
+    "features": {
+        "FA": {
+            "IA": {
+                "feature": "FB"
+            }
+        },
+        "FB": {
+            "IB": {
+                ... FB/IB properties here
+            }
+        }
+    }
+```
 
 ### Add-ons configuration
 
