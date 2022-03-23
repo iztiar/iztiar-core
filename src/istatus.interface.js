@@ -55,7 +55,7 @@ export class IStatus {
                 return;
             }
         }
-        Msg.error( 'IStatus.add() lack of at least an instance and a function' );
+        Msg.error( 'IStatus.add() lacks of at least an instance and a function' );
     }
 
     /**
@@ -78,7 +78,7 @@ export class IStatus {
                 return;
             }
         }
-        Msg.error( 'IStatus.add() lack of at least a function' );
+        Msg.error( 'IStatus.add() lacks of at least a function' );
     }
 
     /**

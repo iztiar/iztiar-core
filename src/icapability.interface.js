@@ -3,7 +3,7 @@
  *
  *  Manage the capabilities of the implementation class
  */
-import { Msg } from './index.js';
+import { Interface, IStatus, Msg } from './index.js';
 
 export class ICapability {
 
@@ -20,16 +20,7 @@ export class ICapability {
         this._instance = instance;
 
         // let the capabilities be published as a part of the status
-        if( instance.IFeatureProvider && instance.IFeatureProvider.api && typeof instance.IFeatureProvider.api === 'function' ){
-            const api = instance.IFeatureProvider.api();
-            if( api && api.exports && typeof api.exports === 'function' ){
-                const IStatus = api.exports().IStatus;
-                if( !instance.IStatus ){
-                    api.exports().Interface.add( instance, IStatus );
-                }
-                instance.IStatus.add( this._statusPart );
-            }
-        }
+        IStatus.add( this._instance, this._statusPart );
 
         return this;
     }
@@ -53,6 +44,36 @@ export class ICapability {
        *** *************************************************************************************** */
 
     /**
+     * Add a capability to a feature instance
+     * Takes care of implementing this interface if not already done
+     * @param {Object} instance the implementation instance
+     * @param {String} cap the capability to add
+     * @param {Function} fn the function to be invoked when someone asks for this capability
+     *  It is expected that the function returns a Promise which resolves to the actual value
+     * @param {Object[]} args the arguments to pass to the function, after:
+     *  - the implementation instance
+     *  - the capability name
+     * [-Public API-]
+     */
+    static add(){
+        Msg.debug( 'ICapability.add()' );
+        if( arguments.length < 3 ){
+            Msg.error( 'ICapability.add() expects at least ( instance, capability, function ) arguments' );
+        } else {
+            let _args = [ ...arguments ];
+            const instance = _args.splice( 0, 1 )[0];
+            if( instance ){
+                if( !instance.ICapability ){
+                    Interface.add( instance, ICapability );
+                }
+                instance.ICapability.add( ..._args );
+            } else {
+                Msg.error( 'ICapability.add() lacks at least an instance' );
+            }
+        }
+    }
+
+    /**
      * Add a capability to the server
      * @param {String} cap the capability to add
      * @param {Function} fn the function to be invoked when someone asks for this capability
@@ -62,14 +83,23 @@ export class ICapability {
      *  - the capability name
      * [-Public API-]
      */
-    add( cap, fn, args=[] ){
-        Msg.debug( 'ICapability.add()', 'cap='+cap, fn, args );
+    add( cap ){
+        Msg.debug( 'ICapability.add()', 'cap='+cap );
         if( Object.keys( this._capabilities ).includes( cap )){
             Msg.error( 'ICapability.add() already defined capability \''+cap+'\'' );
+        } else if( arguments.length < 2 ){
+            Msg.error( 'ICapability.add() expects at least ( capability, function ) arguments' );
         } else {
-            this._capabilities[cap] = {
-                fn: fn,
-                args: args
+            let _args = [ ...arguments ];
+            _args.splice( 0, 1 );
+            const fn = _args.splice( 0, 1 )[0];
+            if( fn && typeof fn === 'function' ){
+                this._capabilities[cap] = {
+                    fn: fn,
+                    args: [ ..._args ]
+                }
+            } else {
+                Msg.error( 'ICapability.add() capability=\''+cap+'\' lacks a function' );
             }
         }
     }
