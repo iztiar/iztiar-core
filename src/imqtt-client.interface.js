@@ -163,7 +163,7 @@ export class IMqttClient {
 
     /**
      * Fill the configuration for this interface
-     * @param {Object} conf the full feature configuration
+     * @param {Object} conf the full feature configuration (at an unspecified stade of filling...)
      * @returns {Promise} which resolves to the filled interface configuration
      */
     fillConfig( conf ){
@@ -177,42 +177,28 @@ export class IMqttClient {
         //  the feature should be preferred - not mandatory and no default
         //  host and port are possible too - not mandatory either and no defaults
         //  if only a port is specified, then we default to localhost
-        let _feat = null;
+        let _promise = Promise.resolve( _filled );
         if( Object.keys( _filled ).includes( 'feature' )){
-            _feat = featApi.pluginManager().byNameExt( featApi.config(), featApi.packet(), _filled.feature );
-            if( !_feat ){
-                Msg.error( 'IMqttClient.fillConfig() feature not found:', _filled.feature );
-            }
-
-        } else {
-            if( !_filled.host ){
-                _filled.host = 'localhost';
-            }
-            if( !_filled.port ){
-                _filled.port = IMqttClient.d.port;
-            }
-        }
-        let _promise = Promise.resolve( true );
-        if( _feat ){
-            _promise = _promise
-                .then(() => { return _feat.initialize( featApi ); })
-                .then(( featProvider ) => {
-                    if( featProvider && featProvider instanceof featApi.exports().IFeatureProvider ){
-                        return featProvider.feature().config();
+            _promise = featApi.pluginManager().getConfig( featApi, _filled.feature, 'IMqttServer' )
+                .then(( _conf ) => {
+                    if( _conf ){
+                        _filled.host = _conf.host || 'localhost'; 
+                        _filled.port = _conf.port;
                     }
-                })
-                .then(( featConf ) => {
-                    if( featConf && featConf.IMqttServer ){
-                        _filled.featuredConfig[_filled.feature] = featConf.IMqttServer;
-                        _filled.host = featConf.IMqttServer.host || 'localhost'; 
-                        _filled.port = featConf.IMqttServer.port;
-                    }
-                })
+                    return Promise.resolve( _filled );
+                });
         }
         _promise = _promise
-            .then(() => { return Promise.resolve( _filled ); });
-
-        return Promise.resolve( _filled );
+            .then(() => {
+                if( !_filled.host ){
+                    _filled.host = 'localhost';
+                }
+                if( !_filled.port ){
+                    _filled.port = IMqttClient.d.port;
+                }
+                return Promise.resolve( _filled );
+            });
+        return _promise;
     }
 
     /**

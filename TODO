@@ -77,7 +77,9 @@
 
    65 2022- 3-22 deprecate IFeatureProvider.IsForkable()
 
-   66
+   66 2022- 3-22 featureCard exhibits a 'class' member, while it should be in config
+
+   67
 
 -------------------------------------------------------------------------------------------
  Done

@@ -160,6 +160,25 @@ export class IFeatureProvider {
     }
 
     /**
+     * @param {Object} conf the feature configuration
+     * @returns {Object} the feature configuration filled from IFeatureProvider point of view
+     *  - module is expected to already having been checked at featureCard instanciation
+     *  - class can only be setup by the feature class implementation itself
+     *  - enabled: set default here
+     * Note:
+     *  This fillConfig() method is specific to IFeatureProvider interface.
+     *  The Interface.fillConfig() static method provides other arguments, expects other return value.
+     *  See IMqttClient or ITcpServer interfaces for examples.
+     * [-Public API-]
+     */
+    fillConfig( conf ){
+        if( !Object.keys( conf ).includes( 'enabled' )){
+            conf.enabled = true;
+        }
+        return conf;
+    }
+
+    /**
      * @param {String} cap the desired capability name
      * @returns {Object|null} the capability characteristics 
      * [-Public API-]

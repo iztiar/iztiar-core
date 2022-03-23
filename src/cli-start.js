@@ -127,7 +127,7 @@ export function cliStart( api, name, options={} ){
             if( res.next === START ){
                 return new Promise(( resolve, reject ) => {
                     feature.start( _ipcCallback, _args ).then(( st ) => {
-                        if( feature.isForkable()){
+                        if( feature.iProvider().forkable()){
                             res.child = st;
                             res.ipcStartupReceived = false;
                         }

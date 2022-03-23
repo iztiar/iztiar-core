@@ -217,11 +217,11 @@ export class ITcpServer {
      * @returns {Promise} which resolves when the server is actually listening
      * Note:
      *  The caller should take care of never terminating its process if it wants keep this ITcpServer alive.
-     *  This may be obtained by returning iself a Promise which never resolves: return new Promise(() => {});
+     *  This may be obtained by returning a Promise which never resolves: return new Promise(() => {});
      * [-public API-]
      */
     create( port ){
-        Msg.debug( 'ITcpServer.create()' );
+        Msg.debug( 'ITcpServer.create()', 'port='+port );
         this.status( ITcpServer.s.STARTING );
         this._port = port;
         const self = this;
@@ -345,7 +345,7 @@ export class ITcpServer {
      */
     fillConfig( conf ){
         const exports = this._instance.IFeatureProvider.api().exports();
-        exports.Msg.debug( 'ITcpServer.fillConfig()' );
+        exports.Msg.debug( 'ITcpServer.fillConfig()', this._instance.constructor.name );
         let _filled = conf.ITcpServer;
         if( !_filled.port ){
             _filled.port = ITcpServer.d.port;

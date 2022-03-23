@@ -16,6 +16,10 @@ import { IForkable, IFeatureProvider, coreApi, Checkable, coreController, engine
 
 export class featureCard {
 
+    // the (sub-)features specified in a feature configuration
+    //  we record here all *initialized* featureCard's
+    static _features = {};
+
     // from constructor
     _name = null;
     _config = null;
@@ -116,7 +120,13 @@ export class featureCard {
      */
     initialize( core ){
         const _name = this.name();
-        Msg.verbose( 'featureCard.initialize()', _name );
+        // first search in our cache
+        if( Object.keys( featureCard._features ).includes( _name )){
+            Msg.verbose( 'featureCard.initialize() '+_name+' already initialized' );
+            return Promise.resolve( featureCard._features[_name].iProvider());
+        }
+        // else initialize the feature
+        Msg.verbose( 'featureCard.initialize()', 'initializing '+_name );
         const self = this;
 
         // cf. engine-api.schema.json
@@ -143,6 +153,7 @@ export class featureCard {
             const _extMain = path.join( _extPackage.getDir(), _extPackage.getMain());
             return import( _extMain )
                 .then(( extImported ) => {
+                    //Msg.debug( 'featureCard.initialize()', _name, 'about to call default', extImported );
                     if( typeof extImported.default === 'function' ){
                         return extImported.default( api, self )
                     } else {
@@ -179,6 +190,7 @@ export class featureCard {
         _promise = _promise.then(( res ) => {
             Msg.debug( 'featureCard.initialize()', _name, 'result:', res );
             Msg.debug( 'featureCard.initialize()', _name, 'config:', this.config());
+            featureCard._features[_name] = this;
             if( res && res instanceof IFeatureProvider ){
                 return Promise.resolve( res );
             } else {
@@ -195,12 +207,6 @@ export class featureCard {
      */
     iProvider(){
         return this._featureProvider;
-    }
-
-    isForkable(){
-        const _forkable = this._featureProvider.forkable();
-        Msg.verbose( 'featureCard.isForkable()', 'name='+this.name(), 'forkable='+_forkable );
-        return _forkable;
     }
 
     module(){

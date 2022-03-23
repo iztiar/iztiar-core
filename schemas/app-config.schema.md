@@ -25,7 +25,7 @@ In order to be considered by the application, a feature MUST:
     - be identified by its feature name in the application configuration
     - not be disabled by the application configuration.
 
-As a reminder, this is a design decision that each and every usable feature be named in the application configuration in order to be considered.
+As a reminder, this is a design decision that each and every usable feature must be named in the application configuration in order to be considered.
 
 Top-level features are described in a `features` group.
 
@@ -45,9 +45,7 @@ Example:
     }
 ```
 
-where `ControllerOne`, `BrokerOne` and `RestProductionApi` above are the name of the features.
-
-This name MUST be defined in the `features` group in order the feature be considered by the application.
+where `ControllerOne`, `BrokerOne` and `RestProductionApi` above are the name that the site adminitrator has decided to give to these respective features.
 
 As specified in the `app-config.schema.json`, each feature MUST exhibit a minimal set of keys, and MAY exhibit other keys depending of its own needs:
 
@@ -65,8 +63,20 @@ As specified in the `app-config.schema.json`, each feature MUST exhibit a minima
 
         this key is optional, and defaults to `true`
 
-    - `features` key specifies a list of (sub-) features to be added at startup time to this specific feature
+#### Interface of a feature
 
-        this may for example be a plugin which adds an interface to a class
+Besides of the general configuration of a feature above, each implemented interface has its own specific configuration. If a particular feature implements for example a TCP server, you should find a 'ITcpServer' group inside of the feature group. Say that we are calling these 'interface' groups.
 
-        this (sub-) feature MUST itself be configured as any other feature, i.e. with `module` key, maybe a `class` key, maybe an `enabled` key, and other properties the (sub-) feature may need
+Though this cannot be enforced in any way as this eventually is the responsability of the feature itself, we at Iztiar strongly suggest that an interface actually runs only if at least its group is specified in the application configuration file, even if this group is itself empty (because default values well suit your needs).
+
+An interface group may allow the user to address another feature to take the configuration from.
+
+As an example, the IMqttClient accepts for its configuration, either a host and a port number, but also the name of the feature which describes the MQTT server it is expected to connect to. This redirection is specified via the `feature` keyword.
+
+So, inside a feature 'FA', a particular interface 'IA' may allow all or a part of its configuration to be taken from another feature (FB), which should itself implements a particular interface IB.
+
+### Add-ons configuration
+
+The features described in the previous paragraph are most often features which run in their own process, also said services or daemons.
+
+Another type of feature exist inside of Iztiar, which is called an 'add-on'. An add-on is just a module which adds a function (a feature) to another feature.

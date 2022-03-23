@@ -28,7 +28,7 @@ export class Interface {
      *  [[class_prototype]] -> [[Object_prototype]] -> [[null]]
      *  so three inheritance levels at least, last being null
      * @param {Object} mapFns an object whose keys map the interface functions to the implementation ones
-     * @returns {Object} the instance updated with interface prototype
+     * @returns {String} the name of the interface
      * @throws Error
      */
     static add( instance, ifaceClass, mapFns={} ){
@@ -81,7 +81,7 @@ export class Interface {
             }
         }
 
-        return instance;
+        return name;
     }
     /**
      *** Object.appendChain(@object, @prototype)
@@ -165,14 +165,17 @@ export class Interface {
 
     /**
      * tries to fill the configuration of the interface
-     * This function tests and calls for a 'fillConfig()' method in the interface
-     * The 'fillConfig()' method is expected to get the full feature configuration as input
-     * and return a Promise which whill resolve to the filled configuration for the interface.
+     * This function tests for and calls a 'fillConfig()' method in the interface
+     * The 'fillConfig()' method is expected to:
+     * - get the full feature configuration as input
+     * - fill-in its part of the configuration with the default values
+     * - return a Promise which whill resolve to the interface part of the configuration.
      * @param {Object} instance the instance of the implementation class
-     * @param {String} iface the interface name
-     * @returns {Promise} which resolves to the new instance filled configuration for the interface part
+     * @param {String} iface the interface
+     * @returns {Promise} which resolves to the interface part of the configuration
      */
     static fillConfig( instance, iface ){
+        Msg.debug( 'Interface.fillConfig()', instance.constructor.name, 'iface='+iface );
         let _promise = Promise.resolve( null );
         if( instance.IFeatureProvider && instance.IFeatureProvider.feature && typeof instance.IFeatureProvider.feature === 'function' ){
             const featCard = instance.IFeatureProvider.feature();
@@ -187,8 +190,15 @@ export class Interface {
                             instance.IFeatureProvider.feature().config( _conf );
                             return Promise.resolve( _conf );
                         });
+                } else {
+                    Msg.verbose( 'Interface.fillConfig()', instance.constructor.name, 'iface='+iface, 'fillConfig is not a function' );
                 }
+            } else {
+                Msg.verbose( 'Interface.fillConfig()', instance.constructor.name, 'iface='+iface, 'Object.keys doesn\'t include '+iface );
+                Msg.verbose( _conf );
             }
+        } else {
+            Msg.verbose( 'Interface.fillConfig()', instance.constructor.name, 'iface='+iface, 'IFeatureProvider is not set' );
         }
         return _promise;
     }

@@ -3,7 +3,7 @@
  */
 import path from 'path';
 
-import { featureCard, Msg, PackageJson, utils } from './index.js';
+import { IFeatureProvider, featureCard, Msg, PackageJson, utils } from './index.js';
 
 export class IPluginManager {
 
@@ -42,6 +42,38 @@ export class IPluginManager {
             return found === null;
         })
         return found;
+    }
+
+    /**
+     * @param {coreApi} api a coreApi instance
+     * @param {String} name the searched feature
+     * @param {String} iface the searched interface in the searched feature
+     * @returns {Promise} which resolves to the filled configuration of iface in the named feature
+     * [-public API-]
+     */
+    getConfig( api, name, iface ){
+        const _feat = this.byNameExt( api.config(), api.packet(), name );
+        if( !_feat ){
+            Msg.error( 'IPluginManager.getConfig() feature not found:', name );
+            return Promise.resolve( null );
+        }
+        let _promise = Promise.resolve( true )
+            .then(() => { return _feat.initialize( api ); })
+            .then(( _provider ) => {
+                if( _provider && _provider instanceof IFeatureProvider ){
+                    return _provider.feature().config();
+                } else {
+                    return null;
+                }
+            })
+            .then(( _conf ) => {
+                if( _conf && _conf[iface] ){
+                    return( _conf[iface] );
+                } else {
+                    return null;
+                }
+            });
+        return _promise;
     }
 
     /**
