@@ -83,10 +83,6 @@
 
    71 2022- 3-23 write engine-api.schema.md
 
-   73 2022- 3-24 be consistant among interfaces for implementation api naming
-                  almost everywhere, the '_' prefix is for private function
-                  find another prefix for there almost-virtual methods
-
    74
 
 -------------------------------------------------------------------------------------------
@@ -239,6 +235,11 @@
    72 2022- 3-23 seen on pidUsage add-on: seems that all three configurations are not filled the same way
                   to be checked
       2022- 3-23 this is normal as only the loaded feature need to get its add-ons filled
+
+   73 2022- 3-24 be consistant among interfaces for implementation api naming
+                  almost everywhere, the '_' prefix is for private function
+                  find another prefix for there almost-virtual methods
+      2022- 3-24 done with v_xxx methods
 
 -------------------------------------------------------------------------------------------
  P. Wieser - Created on 2022, Jan. 29th

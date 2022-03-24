@@ -175,7 +175,7 @@ export class Interface {
      * @returns {Promise} which resolves to the interface part of the configuration
      */
     static fillConfig( instance, iface ){
-        Msg.debug( 'Interface.fillConfig()', instance.constructor.name, 'iface='+iface );
+        Msg.debug( 'Interface.fillConfig()', instance.constructor.name+':'+iface );
         let _promise = Promise.resolve( null );
         if( instance.IFeatureProvider && instance.IFeatureProvider.feature && typeof instance.IFeatureProvider.feature === 'function' ){
             const featCard = instance.IFeatureProvider.feature();
@@ -191,14 +191,14 @@ export class Interface {
                             return Promise.resolve( _conf );
                         });
                 } else {
-                    Msg.verbose( 'Interface.fillConfig()', instance.constructor.name, 'iface='+iface, 'fillConfig is not a function' );
+                    Msg.verbose( 'Interface.fillConfig()', instance.constructor.name+':'+iface, 'fillConfig is not a function' );
                 }
             } else {
-                Msg.verbose( 'Interface.fillConfig()', instance.constructor.name, 'iface='+iface, 'Object.keys doesn\'t include '+iface );
+                Msg.verbose( 'Interface.fillConfig()', instance.constructor.name+':'+iface, 'interface is not configured' );
                 //Msg.verbose( _conf );
             }
         } else {
-            Msg.verbose( 'Interface.fillConfig()', instance.constructor.name, 'iface='+iface, 'IFeatureProvider is not set' );
+            Msg.verbose( 'Interface.fillConfig()', instance.constructor.name+':'+iface, 'IFeatureProvider is not set' );
         }
         return _promise;
     }

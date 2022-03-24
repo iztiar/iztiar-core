@@ -146,7 +146,7 @@ export function cliStop( api, name, options={} ){
             return new Promise(( resolve, reject ) => {
                 if( !res.waitFor && pids.length ){
                     pids.every(( p ) => {
-                        Msg.verbose( 'cliStop().checkTimeout() killing process', p );
+                        Msg.info( 'cliStop().checkTimeout() killing process', p );
                         process.kill( p, 'SIGKILL' );
                         return true;
                     })
@@ -163,11 +163,37 @@ export function cliStop( api, name, options={} ){
         }
     };
 
+    // there was no timeout, maybe because there is no pid running
+    //  but there is still a runfile which perturbs the check
+    const _killProcess = function( res, pids ){
+        if( res.next === KILL ){
+            Msg.debug( 'cliStart()._killProcess()', 'next='+res.next, 'pids:', res.status.pids );
+            return new Promise(( resolve, reject ) => {
+                res.status.pids.every(( p ) => {
+                    Msg.info( 'cliStop().checkTimeout() killing process', p );
+                    try {
+                        process.kill( p, 'SIGKILL' );
+                    } catch( e ){
+                        Msg.error( e );
+                    }
+                    return true;
+                });
+                feature.iProvider().v_killed();
+                res.next = STAT;
+                resolve( result );
+            });
+        } else {
+            return Promise.resolve( res );
+        }
+    };
+
     _promise = _promise
         .then(() => { return _checkStatus( result, true ); })
         .then(() => { return _stopService( result ); })
         .then(() => { return utils.waitFor( result, _countProcesses, result.status.pids, 5*1000 ); })
         .then(() => { return _checkTimeout( result, result.status.pids ); })
+        .then(() => { return _checkStatus( result, false ); })
+        .then(() => { return _killProcess( result ); })
         .then(() => { return _checkStatus( result, false ); })
         .then(() => {
             if( _consoleLevel !== _origLevel ) Msg.consoleLevel( _origLevel );

@@ -129,8 +129,8 @@ export class coreController {
         if( !this.IFeatureProvider ){
             throw new Error( 'IFeatureProvider is expected to have been instanciated before calling this function' );
         }
-        const feature = this.IFeatureProvider.feature();
         Msg.debug( 'coreController.fillConfig()' );
+        const feature = this.IFeatureProvider.feature();
         let _filled = { ...feature.config() };
         return this.IFeatureProvider.fillConfig( _filled ).then(( c ) => { return feature.config( c ); });
     }

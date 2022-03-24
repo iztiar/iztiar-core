@@ -199,17 +199,20 @@ export class IFeatureProvider {
         //  so each add-on also has its own featureCard (-> no need to cache)
         if( Object.keys( conf ).includes( 'add-ons' )){
             Object.keys( conf['add-ons'] ).every(( name ) => {
-                this.api().pluginManager().getAddonConfig( this._instance, name, conf['add-ons'][name] )
+                _promise = _promise
+                    .then(() => {
+                        return this.api().pluginManager().getAddonConfig( this._instance, name, conf['add-ons'][name] )
+                    })
                     .then(( _confAddon ) => {
                         if( _confAddon ){
                             conf['add-ons'][name] = { ... _confAddon };
                             return conf;
                         } else {
-                            Msg.error( 'IFeatureProvider.fillConfig()', name+' add-on not found' );
+                            Msg.error( 'IFeatureProvider.fillConfig()', name+' add-on config not found' );
                             return null;
                         }
                     })
-                    .then(( conf ) => { if( conf ) return Promise.resolve( conf ); });
+                    .then(() => { return Promise.resolve( conf ); });
                 return true;
             });
         }

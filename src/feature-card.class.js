@@ -18,8 +18,8 @@ export class featureCard {
 
     // the (sub-)features specified in a feature configuration
     //  we record here all *initialized* featureCard's
-    static _features = {};
-    static _addons = {};
+    static _initializedFeatures = {};
+    static _initializedAddons = {};
 
     // from constructor
     _name = null;
@@ -34,8 +34,8 @@ export class featureCard {
      * @returns {featureCard|null} the already initialized feature
      */
     static byName( name ){
-        if( Object.keys( featureCard._features ).includes( name )){
-            return featureCard._features[name];
+        if( Object.keys( featureCard._initializedFeatures ).includes( name )){
+            return featureCard._initializedFeatures[name];
         }
         return null;
     }
@@ -130,13 +130,14 @@ export class featureCard {
      */
     initialize( core, instance=null ){
         const _name = this.name();
+        const _module = this.module();
         // first search in our cache
-        if( Object.keys( featureCard._features ).includes( _name )){
+        if( Object.keys( featureCard._initializedFeatures ).includes( _name )){
             Msg.verbose( 'featureCard.initialize() '+_name+' already initialized' );
-            return Promise.resolve( featureCard._features[_name].iProvider());
+            return Promise.resolve( featureCard._initializedFeatures[_name].iProvider());
         }
         // else initialize the feature
-        Msg.verbose( 'featureCard.initialize()', 'initializing '+_name );
+        Msg.verbose( 'featureCard.initialize()', 'initializing '+_name, 'module='+_module );
         const self = this;
 
         // cf. engine-api.schema.json
@@ -149,9 +150,9 @@ export class featureCard {
                 const _coreMain = path.join( _corePacket.getDir(), _corePacket.getMain());
                 return import( _coreMain );
             })
-            .then(( coreExports ) => {
+            .then(( _coreExports ) => {
                 // when we have imported all from the previous full core import, the we are able to complete the engineApi
-                api.exports( coreExports );
+                api.exports( _coreExports );
                 return api;
             });
 
@@ -188,8 +189,6 @@ export class featureCard {
             }
         };
 
-        const _module = this.module();
-        Msg.debug( 'featureCard.initialize()', _name, ' module='+_module );
         if( _module === 'core' ){
             _promise = _promise.then(() => { return _importFromCore(); });
         } else {
@@ -203,15 +202,15 @@ export class featureCard {
             Msg.debug( 'featureCard.initialize()', _name, 'result:', res );
             Msg.debug( 'featureCard.initialize()', _name, 'config:', this.config());
             if( res && res instanceof IFeatureProvider ){
-                featureCard._features[_name] = this;
+                featureCard._initializedFeatures[_name] = this;
                 if( instance ){
-                    featureCard._addons[_name] = this;
+                    featureCard._initializedAddons[_name] = this;
                 } else {
                     // only advertise the add-ons of *this* feature (plus the main feature itself)
-                    Object.keys( featureCard._addons ).every(( name ) => {
+                    Object.keys( featureCard._initializedAddons ).every(( name ) => {
                         const _short = name.split( '/' )[0];
                         if( _short === _name ){
-                            featureCard._addons[name].iProvider().featInitialized();
+                            featureCard._initializedAddons[name].iProvider().featInitialized();
                         }
                         return true;
                     });
