@@ -24,7 +24,7 @@ export class IRunFile {
      * @returns {String} the full pathname of the run directory
      * [-implementation Api-]
      */
-    runDir(){
+    v_runDir(){
         return null;
     }
 
@@ -89,7 +89,7 @@ export class IRunFile {
         if( !name || typeof name !== 'string' || !name.length ){
             throw new Error( 'IRunFile.runFile() name is unset' );
         }
-        return path.join( this.runDir(), name+'.json' )
+        return path.join( this.v_runDir(), name+'.json' )
     }
 
     /**

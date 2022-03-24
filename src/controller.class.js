@@ -103,7 +103,7 @@ export class coreController {
             })
             .then(() => {
                 Interface.add( this, exports.IRunFile, {
-                    runDir: this.irunfileRunDir
+                    v_runDir: this.irunfileRunDir
                 });
                 return Interface.fillConfig( this, 'IRunFile' );
             })
