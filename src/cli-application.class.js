@@ -31,10 +31,10 @@ export class cliApplication {
         Msg.init();
 
         Interface.add( this, ICmdline, {
-            _commands: this.icmdlineCommands,
-            _options: this.icmdlineOptions,
-            _texts: this.icmdlineTexts,
-            _version: this.icmdlineVersion
+            v_commands: this.icmdlineCommands,
+            v_options: this.icmdlineOptions,
+            v_texts: this.icmdlineTexts,
+            v_version: this.icmdlineVersion
         });
 
         Interface.add( this, IPluginManager );

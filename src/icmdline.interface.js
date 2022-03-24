@@ -22,17 +22,17 @@ export class ICmdline {
         this._command = new Command();
 
         // application name
-        this._command.name( this._name());
+        this._command.name( this.v_name());
 
         // help text
-        const _texts = this._texts();
+        const _texts = this.v_texts();
         Object.keys( _texts ).every(( k ) => {
             this._command.addHelpText( k, _texts[k] );
             return true;
         });
 
         // options
-        const _options = this._options();
+        const _options = this.v_options();
         //console.log( _options );
         for( let i=0 ; i<_options.length ; ++i ){
             //console.log( _options[i] );
@@ -41,8 +41,7 @@ export class ICmdline {
 
         // commands
         //  note that the action handler is called before all command-line options have been parsed
-        const _commands = this._commands();
-        _commands.every(( it ) => {
+        this.v_commands().every(( it ) => {
             const name = it.name;
             this._command
                 .command( name )
@@ -56,7 +55,7 @@ export class ICmdline {
         });
 
         // version specific option
-        const _version = this._version();
+        const _version = this.v_version();
         if( _version ){
             this._command.version( _version, '-V|--version', 'output the current version, gracefully exiting' );
         }
@@ -70,7 +69,7 @@ export class ICmdline {
      * @returns {Object[]} the list of commands
      * [-implementation Api-]
      */
-    _commands(){
+    v_commands(){
         return [];
     }
 
@@ -78,7 +77,7 @@ export class ICmdline {
      * @returns {String} the name of the application, defaulting to the process title
      * [-implementation Api-]
      */
-    _name(){
+    v_name(){
         return process.title;
     }
 
@@ -86,8 +85,8 @@ export class ICmdline {
      * @returns {Object[]} the list of options
      * [-implementation Api-]
      */
-    _options(){
-        //console.log( 'ICmdline._options()' );
+    v_options(){
+        //console.log( 'ICmdline.v_options()' );
         return [];
     }
 
@@ -96,7 +95,7 @@ export class ICmdline {
      * Keys may be 'beforeAll', 'before', 'after' or 'afterAll'.
      * [-implementation Api-]
      */
-    _texts(){
+    v_texts(){
         return {};
     }
 
@@ -104,7 +103,7 @@ export class ICmdline {
      * @returns {String} the version number of the implementor
      * [-implementation Api-]
      */
-    _version(){
+    v_version(){
         return '';
     }
 
