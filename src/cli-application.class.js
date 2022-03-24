@@ -40,8 +40,8 @@ export class cliApplication {
         Interface.add( this, IPluginManager );
 
         Interface.add( this, IRunnable, {
-            _copyrightColor: cliApplication.irunnableCopyrightColor,
-            _copyrightText: cliApplication.irunnableCopyrightText
+            v_copyrightColor: cliApplication.irunnableCopyrightColor,
+            v_copyrightText: cliApplication.irunnableCopyrightText
         });
 
         // replace the process title (node) by the application name

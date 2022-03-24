@@ -36,7 +36,7 @@ export class IRunnable {
      * @returns {String} the color to be used when printing the copyright message on the console
      * [-implementation Api-]
      */
-    static _copyrightColor(){
+    static v_copyrightColor(){
         return 'white';
     }
 
@@ -44,7 +44,7 @@ export class IRunnable {
      * @returns {String} the text to be used as a copyright message
      * [-implementation Api-]
      */
-    static _copyrightText(){
+    static v_copyrightText(){
         return 'IRunnable:copyrightText()';
     }
 
@@ -58,8 +58,8 @@ export class IRunnable {
      */
     displayCopyright(){
         if( !IForkable.forkedProcess()){
-            const _color = IRunnable._copyrightColor();
-            const _text = IRunnable._copyrightText();
+            const _color = IRunnable.v_copyrightColor();
+            const _text = IRunnable.v_copyrightText();
             if( _color && _text ){
                 console.log( chalk[_color].bold( _text ));
             }
