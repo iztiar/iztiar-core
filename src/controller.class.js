@@ -109,8 +109,7 @@ export class coreController {
             })
             .then(() => {
                 Interface.add( this, exports.ITcpServer, {
-                    _listening: this.itcpserverListening,
-                    _verbs: this.itcpserverVerbs
+                    v_listening: this.itcpserverListening
                 });
                 return Interface.fillConfig( this, 'ITcpServer' );
             })
@@ -307,15 +306,6 @@ export class coreController {
         this.IRunFile.set([ _name, 'ITcpServer' ], status );
     }
     */
-
-    /*
-     * @returns {Object[]} the list of implemented commands provided by the interface implementation
-     *  cf. tcp-server-command.schema.json
-     * [-implementation Api-]
-     */
-    itcpserverVerbs(){
-        return coreController.verbs;
-    }
 
     /*
      * @returns {Promise} which must resolve to an object conform to check-status.schema.json

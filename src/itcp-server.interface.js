@@ -163,8 +163,8 @@ export class ITcpServer {
      * @param {Object} status of the ITcpServer
      * [-implementation Api-]
      */
-    _listening( status ){
-        Msg.debug( 'ITcpServer._listening()' );
+    v_listening( status ){
+        Msg.debug( 'ITcpServer.v_listening()' );
     }
 
     /**
@@ -172,18 +172,8 @@ export class ITcpServer {
      * @param {Object} status of the ITcpServer
      * [-implementation Api-]
      */
-    _statsUpdated( status ){
-        Msg.debug( 'ITcpServer._statsUpdated()' );
-    }
-
-    /**
-     * @returns {Object[]} the list of implemented commands provided by the interface implementation
-     *  cf. tcp-server-command.schema.json
-     * [-implementation Api-]
-     */
-    _verbs(){
-        Msg.debug( 'ITcpServer._verbs()' );
-        return {};
+    v_statsUpdated( status ){
+        Msg.debug( 'ITcpServer.v_statsUpdated()' );
     }
 
     /* *** ***************************************************************************************
@@ -340,7 +330,7 @@ export class ITcpServer {
 
         return new Promise(( resolve, reject ) => {
             self._tcpServer.listen( port, '0.0.0.0', () => {
-                self.status( ITcpServer.s.RUNNING ).then(( res ) => { self._listening( res ); });
+                self.status( ITcpServer.s.RUNNING ).then(( res ) => { self.v_listening( res ); });
                 resolve( true );
             });
         });
@@ -418,7 +408,7 @@ export class ITcpServer {
             if( res.status === ITcpServer.s.STOPPING || res.status === ITcpServer.s.STOPPED ){
                 Msg.debug( 'ITcpServer.statsUpdated() not triggering event as status is \''+res.status+'\'' );
             } else {
-                this._statsUpdated( res );
+                this.v_statsUpdated( res );
             }
         })
     }
