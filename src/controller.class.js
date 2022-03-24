@@ -64,6 +64,7 @@ export class coreController {
         // must implement the IFeatureProvider
         //  should implement that first so that we can install the engineApi and the featureCard as soon as possible
         Interface.add( this, exports.IFeatureProvider, {
+            vFeatureInitialized: this.ifeatureproviderFeatureInitialized,
             forkable: this.ifeatureproviderForkable,
             killed: this.ifeatureproviderKilled,
             start: this.ifeatureproviderStart,
@@ -133,6 +134,22 @@ export class coreController {
         Msg.debug( 'coreController.fillConfig()' );
         let _filled = { ...feature.config() };
         return this.IFeatureProvider.fillConfig( _filled ).then(( c ) => { return feature.config( c ); });
+    }
+
+    /*
+     * Called on each and every loaded add-on when the main hosting feature has terminated with its initialization
+     * Time, for example, to increment all interfaces we are now sure they are actually implemented
+     * Here: add verbs to ITcpServer
+     */
+    ifeatureproviderFeatureInitialized(){
+        Msg.debug( 'coreController.vFeatureInitialized()' );
+        const self = this;
+        Object.keys( coreController.verbs ).every(( key ) => {
+            const o = coreController.verbs[key];
+            self.ITcpServer.add( key, o.label, o.fn, o.end ? o.end : false );
+            return true;
+        });
+        return;
     }
 
     /*

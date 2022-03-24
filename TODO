@@ -83,7 +83,11 @@
 
    71 2022- 3-23 write engine-api.schema.md
 
-   73 2022- 3-23 
+   73 2022- 3-24 be consistant among interfaces for implementation api naming
+                  almost everywhere, the '_' prefix is for private function
+                  find another prefix for there almost-virtual methods
+
+   74
 
 -------------------------------------------------------------------------------------------
  Done

@@ -13,7 +13,7 @@ export class Interface {
     static _published = false;
 
     static _statusPart( instance ){
-        Msg.debug( 'Interface.statusPart()', 'instance '+( instance ? 'set':'unset' ));
+        Msg.debug( 'Interface.statusPart()' );
         const o = {
             Interfaces: instance.Interfaces.sort()
         };

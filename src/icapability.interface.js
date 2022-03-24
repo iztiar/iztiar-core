@@ -27,8 +27,8 @@ export class ICapability {
 
     // publish the capabilities as part of the status
     _statusPart( instance ){
-        Msg.debug( 'ICapability.statusPart()', 'instance '+( instance ? 'set':'unset' ));
-        const self = instance ? instance.ICapability : this;
+        Msg.debug( 'ICapability.statusPart()' );
+        const self = instance.ICapability;
         const o = {
             ICapability: [ ... self.get().sort() ]
         };

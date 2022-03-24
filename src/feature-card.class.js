@@ -19,6 +19,7 @@ export class featureCard {
     // the (sub-)features specified in a feature configuration
     //  we record here all *initialized* featureCard's
     static _features = {};
+    static _addons = {};
 
     // from constructor
     _name = null;
@@ -196,11 +197,26 @@ export class featureCard {
         }
 
         // at the end, either we have rejected the promise, or it must be resolved with a IFeatureProvider
+        //  each add-on is initialized during the main hosting feature initialization process
+        //  keeping a trace of these add-ons let us advertise them at the end of the main initialization
         _promise = _promise.then(( res ) => {
             Msg.debug( 'featureCard.initialize()', _name, 'result:', res );
             Msg.debug( 'featureCard.initialize()', _name, 'config:', this.config());
-            featureCard._features[_name] = this;
             if( res && res instanceof IFeatureProvider ){
+                featureCard._features[_name] = this;
+                if( instance ){
+                    featureCard._addons[_name] = this;
+                } else {
+                    // only advertise the add-ons of *this* feature (plus the main feature itself)
+                    Object.keys( featureCard._addons ).every(( name ) => {
+                        const _short = name.split( '/' )[0];
+                        if( _short === _name ){
+                            featureCard._addons[name].iProvider().featInitialized();
+                        }
+                        return true;
+                    });
+                    this.iProvider().featInitialized();
+                }
                 return Promise.resolve( res );
             } else {
                 throw new Error( _name, 'IFeatureProvider expected, '+res+' received: rejected' );

@@ -60,10 +60,7 @@ export class ITcpServer {
 
     // display the list of known verbs
     static _izHelp( instance, reply ){
-        reply.answer = {
-            ...ITcpServer.verbs,
-            ...instance.ITcpServer._verbs()
-        }
+        reply.answer = instance.ITcpServer._availableVerbs;
         return Promise.resolve( reply );
     }
 
@@ -85,6 +82,10 @@ export class ITcpServer {
     _outMsgCount = 0;
     _outBytesCount = 0;
 
+    _availableVerbs = {
+        ...ITcpServer.verbs
+    };
+
     /**
      * Constructor
      * @param {*} instance the implementation instance
@@ -98,24 +99,18 @@ export class ITcpServer {
         Msg.debug( 'ITcpServer instanciation' );
         this._instance = instance;
         this._status = ITcpServer.s.STOPPED;
-        const self = this;
 
         // add a 'tcpServer' capability to the implementation
-        if( instance.ICapability ){
-            instance.ICapability.add( 'tcpServer', ( o ) => { return o.ITcpServer.status(); });
-        }
+        exports.ICapability.add( instance, 'tcpServer', this.status );
+
+        // define a new status part for the tcp server
+        exports.IStatus.add( instance, this._statusPart );
 
         // if not already done, make sure the instance implements a ICheckable interface
         //  and define a new checkable event
         const ICheckable = exports.ICheckable;
         if( !instance.ICheckable ) Interface.add( instance, ICheckable );
-        instance.ICheckable.add( self._newCheckable );
-
-        // if not already done, make sure the instance implements a IStatus interface
-        //  and define a new status part
-        const IStatus = exports.IStatus;
-        if( !instance.IStatus ) Interface.add( instance, IStatus );
-        instance.IStatus.add( self._statusPart );
+        instance.ICheckable.add( this._newCheckable );
 
         return this;
     }
@@ -178,7 +173,7 @@ export class ITcpServer {
      * [-implementation Api-]
      */
     _statsUpdated( status ){
-        Msg.debug( 'ITcpServer.statsUpdated()' );
+        Msg.debug( 'ITcpServer._statsUpdated()' );
     }
 
     /**
@@ -187,12 +182,72 @@ export class ITcpServer {
      * [-implementation Api-]
      */
     _verbs(){
+        Msg.debug( 'ITcpServer._verbs()' );
         return {};
     }
 
     /* *** ***************************************************************************************
        *** The public API, i.e; the API anyone may call to access the interface service        ***
        *** *************************************************************************************** */
+
+    /**
+     * Add a verb to the ITcpServer
+     * Checks that the ITcpServer is actually implemented, but doesn't try to implement it
+     * @param {Object} instance the implementation instance
+     * @param {*} args see add() method
+     */
+    static add(){
+        if( arguments.length < 4 ){
+            Msg.error( 'ITcpServer.add() expects at least ( instance, verb, help, fn ) arguments' );
+        } else {
+            let _args = [ ...arguments ];
+            const instance = _args.splice( 0, 1 )[0];
+            if( !instance ){
+                Msg.error( 'ITcpServer.add() expects at least an instance argument' );
+            } else if( !instance.ITcpServer ){
+                console.log( instance );
+                Msg.error( 'ITcpServer.add() instance doesn\'t implement ITcpServer' );
+            } else {
+                instance.ITcpServer.add( ..._args );
+            }
+        }
+    }
+
+    /**
+     * Add a verb to the ITcpServer
+     * @param {String} verb the verb, must be unique
+     * @param {String} label a short help message
+     * @param {Function} fn the function to be called when this verb is invoked
+     * @param {Boolean} end whether the connection has to be closed after the answer, defaulting to false
+     * @param {*} args arguments provided to the fn funtion after:
+     *  - the implementation instance
+     *  - the prepared reply (cf. tcp-server-reply.schema.json)
+     */
+    add(){
+        if( arguments.length < 3 ){
+            Msg.error( 'ITcpServer.add() expects at least ( verb, help, fn ) arguments' );
+        } else {
+            let _args = [ ...arguments ];
+            const verb = _args.splice( 0, 1 )[0];
+            if( Object.keys( this._availableVerbs ).includes( verb )){
+                Msg.error( 'ITcpServer.add() verb=\''+verb+'\' already defined' );
+            } else {
+                const label = _args.splice( 0, 1 )[0];
+                const fn = _args.splice( 0, 1 )[0];
+                const end = _args.length ? _args.splice( 0, 1 )[0] : false;
+                if( fn && typeof fn === 'function' ){
+                    this._availableVerbs[verb] = {
+                        label: label,
+                        fn: fn,
+                        end: end,
+                        args: _args
+                    };
+                } else {
+                    Msg.error( 'ITcpServer.add() verb=\''+verb+'\' lacks at least a function' );
+                }
+            }
+        }
+    }
 
     /**
      * 
@@ -258,7 +313,7 @@ export class ITcpServer {
                             timestamp: utils.now(),
                             answer: null
                         };
-                        if( !self.execute( _words, c, _reply, ITcpServer.verbs ) && !self.execute( _words, c, _reply, self._verbs())){
+                        if( !self.execute( _words, c, _reply, self._availableVerbs )){
                             const _msg = 'ITcpServer error: unknown verb \''+_words[0]+'\'';
                             Msg.error( _msg );
                             _reply.answer = _msg;
@@ -331,7 +386,8 @@ export class ITcpServer {
         const _found = Object.keys( ref ).includes( _verb );
         if( _found ){
             if( ref[_verb].fn && typeof ref[_verb].fn === 'function' ){
-                ref[_verb].fn( this._instance, reply )
+                const _args = ref[_verb].args ? [ ...ref[_verb].args ] : [];
+                ref[_verb].fn( this._instance, reply, ..._args )
                     .then(( res ) => { this.answer( client, res, ref[_verb].end || false ); });
             }
         }

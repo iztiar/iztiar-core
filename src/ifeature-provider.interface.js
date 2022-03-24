@@ -7,7 +7,7 @@
  *  The IFeatureProvider also acts as a proxy to ICapability, ICheckable interfaces
  *  (that would also take advantage of being implemented by the way).
  */
-import { featureCard, engineApi, Msg } from './index.js';
+import { Interface, featureCard, engineApi, Msg } from './index.js';
 
 export class IFeatureProvider {
 
@@ -61,6 +61,15 @@ export class IFeatureProvider {
     /* *** ***************************************************************************************
        *** The implementation API, i.e; the functions the implementation may want to implement ***
        *** *************************************************************************************** */
+
+    /**
+     * Called on each and every loaded add-on when the main hosting feature has terminated with its initialization
+     * Time, for example, to increment all interfaces we are now sure they are actually implemented
+     */
+    vFeatureInitialized(){
+        Msg.debug( 'IFeatureProvider.vFeatureInitialized()' );
+        return;
+    }
 
     /**
      * @returns {Boolean} true if the process must be forked
@@ -143,6 +152,17 @@ export class IFeatureProvider {
             this._statusInstall( o );
         }
         return this._api;
+    }
+
+    /**
+     * Called on each feature when the main hosting feature has terminated with its initialization
+     * Time, for example, to increment all interfaces we are now sure they are actually implemented
+     */
+    featInitialized(){
+        Msg.debug( 'IFeatureProvider.featInitialized()' );
+        this.vFeatureInitialized();
+        Interface
+        return;
     }
 
     /**

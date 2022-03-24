@@ -16,12 +16,16 @@
                 },
                 "fn": {
                     "type": "function",
-                    "description": "the verb execution; will receive the implementation instance and a reply object as arguments, must return a Promise"
+                    "description": "the verb execution; will receive the implementation instance and a reply object as first arguments, maybe followed by supplementary arguments below, must return a Promise"
                 },
                 "end": {
                     "type": "boolean",
                     "description": "whether the server should close itself the client connection after having answered",
                     "default": false
+                },
+                "args": {
+                    "type": "any",
+                    "description": "supplementary arguments to be passed to the function after the implementation instance and the reply object"
                 }
             }
         }
