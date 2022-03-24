@@ -44,9 +44,9 @@ export class IMqttClient {
         //console.log( 'IMqttClient._aliveRun()', this );
         //Msg.debug( 'IMqttClient._aliveRun()' );
         if( this._client && this._aliveInterval ){
-            const topic = 'iztiar/alive/'+this._name();
+            const topic = 'iztiar/alive/'+this.v_name();
             let _payload = null;
-            this._status()
+            this.v_status()
                 .then(( res ) => {
                     if( res ){
                         return res;
@@ -80,8 +80,8 @@ export class IMqttClient {
     // the standard payload which is published by default
     _stdPayload(){
         return Promise.resolve({
-            module: this._module(),
-            class: this._class(),
+            module: this.v_module(),
+            class: this.v_class(),
             capabilities: this._capabilities(),
         });
     }
@@ -94,7 +94,7 @@ export class IMqttClient {
      * @returns {String} the name of the implementation class
      * [-implementation Api-]
      */
-    _class(){
+    v_class(){
         return this._instance.IFeatureProvider.feature().class();
     }
 
@@ -102,7 +102,7 @@ export class IMqttClient {
      * @returns {String} the name of the implementation module
      * [-implementation Api-]
      */
-    _module(){
+    v_module(){
         return this._instance.IFeatureProvider.feature().module();
     }
 
@@ -110,7 +110,7 @@ export class IMqttClient {
      * @returns {String} the name of the service
      * [-implementation Api-]
      */
-    _name(){
+    v_name(){
         return this._instance.IFeatureProvider.feature().name();
     }
 
@@ -120,7 +120,7 @@ export class IMqttClient {
      * If not iplemented by the instance, then we default to the standard payload
      * [-implementation Api-]
      */
-    _status(){
+    v_status(){
         return Promise.resolve( null );
     }
 

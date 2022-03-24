@@ -91,13 +91,13 @@ export class coreController {
             })
             .then(() => {
                 Interface.add( this, exports.IForkable, {
-                    vv_terminate: this.iforkableTerminate
+                    v_terminate: this.iforkableTerminate
                 });
                 return Interface.fillConfig( this, 'IForkable' );
             })
             .then(() => {
                 Interface.add( this, exports.IMqttClient, {
-                    _status: this._imqttclientStatus
+                    v_status: this._imqttclientStatus
                 });
                 return Interface.fillConfig( this, 'IMqttClient' );
             })
