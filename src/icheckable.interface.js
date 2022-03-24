@@ -6,7 +6,7 @@
  *  Everyone, and for example every implemented interface, is allowed to add() here a new checkable event.
  *  Each of the returned checkable will then be tested in sequence when requiring a feature status.
  */
-import { Checkable, Msg } from './index.js';
+import { Checkable, Interface, Msg } from './index.js';
 
 export class ICheckable {
 

@@ -152,13 +152,6 @@ export class IMqttClient {
         this._client.on( 'error', ( e ) => {
             Msg.error( 'IMqttClient error', e );
         });
-
-        this._client.on( 'message', ( topic, message ) => {
-            console.log( 'message:topic', topic );
-            // message is Buffer
-            console.log( 'message:message', message.toString());
-            self._client.end();
-        });
     }
 
     /**
@@ -199,6 +192,39 @@ export class IMqttClient {
                 return Promise.resolve( _filled );
             });
         return _promise;
+    }
+
+    /**
+     * Publish a payload message on the MQTT bus
+     * @param {String} topic must begin with 'iztiar/'
+     * @param {Object} payload the data to be published
+     * [-Public API-]
+     */
+    publish( topic, payload ){
+        if( this._client ){
+            this._client.publish( topic, JSON.stringify( payload ));
+        } else {
+            Msg.error( 'IMqttClient.publish() not connected while trying to publish on \''+topic+'\' topic' );
+        }
+    }
+
+    /**
+     * Subscribe to a topic
+     * @param {String} topic the topic to subscribe to
+     * @param {Object} instance an instance to become 'this' inside of the callback
+     * @param {Function} fn the function ( topic, payload ) to be called when a message is seen on this topic
+     * [-Public API-]
+     */
+    subscribe( topic, instance, fn ){
+        if( this._client ){
+            Msg.debug( 'IMqttClient.subscribe() topic='+topic );
+            this._client.subscribe( topic, ( err ) => {
+                Msg.error( 'IMqttClient.subscribe() topic='+topic, 'error', err );
+            });
+            this._client.on( 'message', ( t, p ) => { fn.apply( instance, [ t, p ]); });
+        } else {
+            Msg.error( 'IMqttClient.subscribe() not connected while trying to subscribe to \''+topic+'\' topic' );
+        }
     }
 
     /**
