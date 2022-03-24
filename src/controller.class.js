@@ -64,12 +64,12 @@ export class coreController {
         // must implement the IFeatureProvider
         //  should implement that first so that we can install the engineApi and the featureCard as soon as possible
         Interface.add( this, exports.IFeatureProvider, {
-            vFeatureInitialized: this.ifeatureproviderFeatureInitialized,
-            forkable: this.ifeatureproviderForkable,
-            killed: this.ifeatureproviderKilled,
-            start: this.ifeatureproviderStart,
-            status: this.ifeatureproviderStatus,
-            stop: this.ifeatureproviderStop
+            v_featureInitialized: this.ifeatureproviderFeatureInitialized,
+            v_forkable: this.ifeatureproviderForkable,
+            v_killed: this.ifeatureproviderKilled,
+            v_start: this.ifeatureproviderStart,
+            v_status: this.ifeatureproviderStatus,
+            v_stop: this.ifeatureproviderStop
         });
         this.IFeatureProvider.api( api );
         this.IFeatureProvider.feature( card );
@@ -142,14 +142,13 @@ export class coreController {
      * Here: add verbs to ITcpServer
      */
     ifeatureproviderFeatureInitialized(){
-        Msg.debug( 'coreController.vFeatureInitialized()' );
+        Msg.debug( 'coreController.ifeatureproviderFeatureInitialized()' );
         const self = this;
         Object.keys( coreController.verbs ).every(( key ) => {
             const o = coreController.verbs[key];
             self.ITcpServer.add( key, o.label, o.fn, o.end ? o.end : false );
             return true;
         });
-        return;
     }
 
     /*

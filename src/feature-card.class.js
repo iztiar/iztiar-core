@@ -266,8 +266,8 @@ export class featureCard {
             process.title = _title;
         }
         let _promise = Promise.resolve( true )
-        if( this._featureProvider && this._featureProvider.start && typeof this._featureProvider.start === 'function' ){
-            _promise = _promise.then(() => { return this._featureProvider.start( _name, cb, args ); });
+        if( this._featureProvider && this._featureProvider.v_start && typeof this._featureProvider.v_start === 'function' ){
+            _promise = _promise.then(() => { return this._featureProvider.v_start( _name, cb, args ); });
         }
         return _promise;
     }
@@ -481,8 +481,8 @@ export class featureCard {
     stop(){
         Msg.verbose( 'featureCard.stop()', 'name='+this.name());
         let promise = Promise.resolve( true )
-        if( this._featureProvider && this._featureProvider.stop && typeof this._featureProvider.stop === 'function' ){
-            promise = promise.then(() => { return this._featureProvider.stop(); });
+        if( this._featureProvider && this._featureProvider.v_stop && typeof this._featureProvider.v_stop === 'function' ){
+            promise = promise.then(() => { return this._featureProvider.v_stop(); });
         } else {
             Msg.verbose( 'featureCard.stop()', 'name='+this.name(), 'IFeatureProvider.stop is not a function' );
         }

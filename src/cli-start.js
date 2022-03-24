@@ -127,7 +127,7 @@ export function cliStart( api, name, options={} ){
             if( res.next === START ){
                 return new Promise(( resolve, reject ) => {
                     feature.start( _ipcCallback, _args ).then(( st ) => {
-                        if( feature.iProvider().forkable()){
+                        if( feature.iProvider().v_forkable()){
                             res.child = st;
                             res.ipcStartupReceived = false;
                         }
@@ -195,7 +195,7 @@ export function cliStart( api, name, options={} ){
                 if( result.child ){
                     Msg.verbose( 'cliStart().killIfNeeded() killing process', result.child.pid );
                     process.kill( result.child.pid, 'SIGKILL' );
-                    feature.iProvider().killed();
+                    feature.iProvider().v_killed();
                 }
             }
             return Promise.resolve( res );

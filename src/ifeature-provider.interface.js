@@ -66,8 +66,8 @@ export class IFeatureProvider {
      * Called on each and every loaded add-on when the main hosting feature has terminated with its initialization
      * Time, for example, to increment all interfaces we are now sure they are actually implemented
      */
-    vFeatureInitialized(){
-        Msg.debug( 'IFeatureProvider.vFeatureInitialized()' );
+    v_featureInitialized(){
+        Msg.debug( 'IFeatureProvider.v_featureInitialized()' );
         return;
     }
 
@@ -75,8 +75,8 @@ export class IFeatureProvider {
      * @returns {Boolean} true if the process must be forked
      * [-implementation Api-]
      */
-    forkable(){
-        Msg.debug( 'IFeatureProvider.forkable()' );
+    v_forkable(){
+        Msg.debug( 'IFeatureProvider.v_forkable()' );
         return false;
     }
 
@@ -84,8 +84,8 @@ export class IFeatureProvider {
      * If the service had to be SIGKILL'ed to be stoppped, then gives it an opportunity to make some cleanup
      * [-implementation Api-]
      */
-    killed(){
-        Msg.debug( 'IFeatureProvider.killed()' );
+    v_killed(){
+        Msg.debug( 'IFeatureProvider.v_killed()' );
     }
 
     /**
@@ -102,19 +102,18 @@ export class IFeatureProvider {
      * @returns {Promise}
      * [-implementation Api-]
      */
-    start(){
-        Msg.verbose( 'IFeatureProvider.start()' );
+    v_start(){
+        Msg.verbose( 'IFeatureProvider.v_start()' );
         return Promise.resolve( false );
     }
 
     /**
      * Get the status of a service
-     * Even if there is not any dameon, this default should be overriden
      * @returns {Promise} which must resolve to an object conform to run-status.schema.json
      * [-implementation Api-]
      */
-    status(){
-        Msg.debug( 'IFeatureProvider.status()' );
+    v_status(){
+        Msg.debug( 'IFeatureProvider.v_status()' );
         return Promise.resolve({
             name: {
                 module: 'unset',
@@ -131,8 +130,8 @@ export class IFeatureProvider {
      * @returns {Promise}
      * [-implementation Api-]
      */
-    stop(){
-        Msg.debug( 'IFeatureProvider.stop()' );
+    v_stop(){
+        Msg.debug( 'IFeatureProvider.v_stop()' );
         return Promise.resolve( true );
     }
 
@@ -160,7 +159,7 @@ export class IFeatureProvider {
      */
     featInitialized(){
         Msg.debug( 'IFeatureProvider.featInitialized()' );
-        this.vFeatureInitialized();
+        this.v_featureInitialized();
         Interface
         return;
     }

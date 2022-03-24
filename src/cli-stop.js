@@ -150,7 +150,7 @@ export function cliStop( api, name, options={} ){
                         process.kill( p, 'SIGKILL' );
                         return true;
                     })
-                    feature.iProvider().killed();
+                    feature.iProvider().v_killed();
                     res.next = STAT;
                     resolve( result );
                 } else {
