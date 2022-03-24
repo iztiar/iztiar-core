@@ -2,6 +2,10 @@
  * ICapability interface
  *
  *  Manage the capabilities of the implementation class
+ * 
+ *  As of v 0.x, we do not have real semantic for what is a 'capability'.
+ *  We accept here any named capabiity, associated with a function whih is expected to provided some valuable information
+ *  (be also seen as rather useless by the way...)
  */
 import { Interface, IStatus, Msg } from './index.js';
 
