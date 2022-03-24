@@ -76,8 +76,6 @@
 
    68 2022- 3-23 rename featureCard.iProvider() to something better
 
-   69 2022- 3-23 ITcpServer: just ignore empty commands
-
    70 2022- 3-23 a feature works in its own instance, while an add-on works in its hosting instance
                   maybe this could be materialized by a different interface or derived classes
 
@@ -231,6 +229,9 @@
 
    66 2022- 3-22 featureCard exhibits a 'class' member, while it should be in config
       2022- 3-23 fixed
+
+   69 2022- 3-23 ITcpServer: just ignore empty commands
+      2022- 3-24 no: depending of the client, we may wait for an answer
 
    72 2022- 3-23 seen on pidUsage add-on: seems that all three configurations are not filled the same way
                   to be checked

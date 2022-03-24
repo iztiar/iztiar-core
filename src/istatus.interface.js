@@ -43,7 +43,7 @@ export class IStatus {
      * [-Public API-]
      */
     static add(){
-        Msg.debug( 'IStatus.add()' );
+        Msg.debug( 'IStatus.static.add()' );
         if( arguments.length > 1 ){
             let _args = [ ...arguments ];
             const instance = _args.splice( 0, 1 )[0];
@@ -55,7 +55,7 @@ export class IStatus {
                 return;
             }
         }
-        Msg.error( 'IStatus.add() lacks of at least an instance and a function' );
+        Msg.error( 'IStatus.static.add() expects ( instance, function ) arguments' );
     }
 
     /**
@@ -74,7 +74,10 @@ export class IStatus {
             let _args = [ ...arguments ];
             const fn = _args.splice( 0, 1 )[0];
             if( fn && typeof fn === 'function' ){
-                this._status.push({ fn:fn, args:_args });
+                this._status.push({
+                    fn: fn,
+                    args: [ ..._args ]
+                });
                 return;
             }
         }

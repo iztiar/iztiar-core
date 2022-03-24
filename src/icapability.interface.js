@@ -48,7 +48,7 @@ export class ICapability {
        *** *************************************************************************************** */
 
     /**
-     * Add a capability to a feature instance
+     * Statically add a capability to a feature instance
      * Takes care of implementing this interface if not already done
      * @param {Object} instance the implementation instance
      * @param {String} cap the capability to add
@@ -60,9 +60,9 @@ export class ICapability {
      * [-Public API-]
      */
     static add(){
-        Msg.debug( 'ICapability.add()' );
+        Msg.debug( 'ICapability.static.add()' );
         if( arguments.length < 3 ){
-            Msg.error( 'ICapability.add() expects at least ( instance, capability, function ) arguments' );
+            Msg.error( 'ICapability.static.add() expects at least ( instance, capability, function ) arguments' );
         } else {
             let _args = [ ...arguments ];
             const instance = _args.splice( 0, 1 )[0];

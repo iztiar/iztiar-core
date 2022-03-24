@@ -106,11 +106,8 @@ export class ITcpServer {
         // define a new status part for the tcp server
         exports.IStatus.add( instance, this._statusPart );
 
-        // if not already done, make sure the instance implements a ICheckable interface
-        //  and define a new checkable event
-        const ICheckable = exports.ICheckable;
-        if( !instance.ICheckable ) Interface.add( instance, ICheckable );
-        instance.ICheckable.add( this._newCheckable );
+        // define a new checkable event
+        exports.ICheckable.add( instance, this._newCheckable );
 
         return this;
     }
@@ -188,15 +185,15 @@ export class ITcpServer {
      */
     static add(){
         if( arguments.length < 4 ){
-            Msg.error( 'ITcpServer.add() expects at least ( instance, verb, help, fn ) arguments' );
+            Msg.error( 'ITcpServer.static.add() expects at least ( instance, verb, help, fn ) arguments' );
         } else {
             let _args = [ ...arguments ];
             const instance = _args.splice( 0, 1 )[0];
             if( !instance ){
-                Msg.error( 'ITcpServer.add() expects at least an instance argument' );
+                Msg.error( 'ITcpServer.static.add() expects at least an instance argument' );
             } else if( !instance.ITcpServer ){
                 console.log( instance );
-                Msg.error( 'ITcpServer.add() instance doesn\'t implement ITcpServer' );
+                Msg.error( 'ITcpServer.static.add() instance doesn\'t implement ITcpServer' );
             } else {
                 instance.ITcpServer.add( ..._args );
             }

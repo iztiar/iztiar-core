@@ -33,6 +33,35 @@ export class ICheckable {
        *** *************************************************************************************** */
 
     /**
+     * Statically add a checkable to the implementation instance
+     * Takes care of implementing this interface if not already done
+     * @param {Object} instance the implementation instance
+     * @param {Function} fn the function to be invoked prior status may be checked
+     *  The function will be called with the implementation instance as first argument, followed by the args provided here
+     *  The function must return a Promise which resolves to a value which must conform to checkable.schema.json
+     * @param {Object[]} args the arguments to pass to the function, after:
+     *  - the implementation instance
+     * [-Public API-]
+     */
+    static add(){
+        Msg.debug( 'ICheckable.static.add()' );
+        if( arguments.length < 2 ){
+            Msg.error( 'ICheckable.static.add() expects at least ( instance, function ) arguments' );
+        } else {
+            let _args = [ ...arguments ];
+            const instance = _args.splice( 0, 1 )[0];
+            if( instance ){
+                if( !instance.ICheckable ){
+                    Interface.add( instance, ICheckable );
+                }
+                instance.ICheckable.add( ..._args );
+            } else {
+                Msg.error( 'ICheckable.static.add() lacks at least an instance' );
+            }
+        }
+    }
+
+    /**
      * Add a checkable to the implementation instance
      * @param {Function} fn the function to be invoked prior status may be checked
      *  The function will be called with the implementation instance as first argument, followed by the args provided here
@@ -41,9 +70,22 @@ export class ICheckable {
      *  - the implementation instance
      * [-Public API-]
      */
-    add( fn, args=[] ){
-        Msg.debug( 'ICheckable.add()', fn, args );
-        this._checkables.push({ fn:fn, args:args });
+    add(){
+        Msg.debug( 'ICheckable.add()' );
+        if( arguments.length < 1 ){
+            Msg.error( 'ICheckable.add() expects at least ( function ) arguments' );
+        } else {
+            let _args = [ ...arguments ];
+            const fn = _args.splice( 0, 1 )[0];
+            if( fn && typeof fn === 'function' ){
+                this._checkables.push({
+                    fn: fn,
+                    args: [ ..._args ]
+                });
+            } else {
+                Msg.error( 'ICheckable.add() lacks a function' );
+            }
+        }
     }
 
     /**
