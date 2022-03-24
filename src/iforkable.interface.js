@@ -13,6 +13,14 @@ export class IForkable {
         forkable: 'iztiar-bc05bf55-4313-49d7-ab9d-106c93c335eb'
     };
 
+    /**
+     * @returns {String} the name of the environment variable which, if set, holds the qualifier of the forked process
+     * [-implementation Api-]
+     */
+    static _forkedVar(){
+        return IForkable.c.forkable;
+    }
+
     constructor(){
         Msg.debug( 'IForkable instanciation' );
 
@@ -28,7 +36,7 @@ export class IForkable {
 
         process.on( 'SIGTERM', () => {
             Msg.debug( 'process receives SIGTERM signal' );
-            self._terminate();
+            self.v_terminate();
         });
 
         process.on( 'SIGHUP', () => {
@@ -45,19 +53,11 @@ export class IForkable {
        *** *************************************************************************************** */
 
     /**
-     * @returns {String} the name of the environment variable which, if set, holds the qualifier of the forked process
-     * [-implementation Api-]
-     */
-    static _forkedVar(){
-        return IForkable.c.forkable;
-    }
-
-    /**
      * Terminates the child process
      * @returns {Promise} which resolves when the process is actually about to terminate (only waiting for this Promise)
      * [-implementation Api-]
      */
-    _terminate(){
+    v_terminate(){
         return Promise.resolve( true );
     }
 

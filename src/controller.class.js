@@ -91,7 +91,7 @@ export class coreController {
             })
             .then(() => {
                 Interface.add( this, exports.IForkable, {
-                    _terminate: this.iforkableTerminate
+                    vv_terminate: this.iforkableTerminate
                 });
                 return Interface.fillConfig( this, 'IForkable' );
             })
