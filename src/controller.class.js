@@ -17,6 +17,10 @@ export class coreController {
      *      alternative being to wait for the client closes itself its own connection
      */
     static verbs = {
+        'iz.runtime': {
+            label: 'return some runtime informations',
+            fn: coreController._izRuntime
+        },
         'iz.status': {
             label: 'return the status of this coreController service',
             fn: coreController._izStatus
@@ -27,6 +31,14 @@ export class coreController {
             end: true
         }
     };
+
+    // returns runtime informations
+    static _izRuntime( self, reply ){
+        reply.answer = {
+            masterController:  mqtt.masterController() || 'none'
+        };
+        return Promise.resolve( reply );
+    }
 
     // returns the full status of the server
     static _izStatus( self, reply ){

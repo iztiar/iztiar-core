@@ -67,11 +67,18 @@ export const mqtt = {
      * @param {String} topic
      * @param {JSON} json
      */
-    detectAdminMaster: function( controller, topic, json ){
+     detectAdminMaster: function( controller, topic, json ){
         if( topic === mqtt.masterElectedTopic ){
             mqtt.masterElected = json;
             mqtt.masterElected.stamp = Date.now();
         }
+    },
+
+    /**
+     * @returns {Object|null} the curent masterController
+     */
+    masterController: function(){
+        return mqtt.masterElected;
     },
 
     /**
