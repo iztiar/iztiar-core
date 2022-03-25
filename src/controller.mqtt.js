@@ -23,7 +23,7 @@ export const mqtt = {
     masterInterval: null,
     masterPhase: null,
     masterElected: null,
-    masterElectionTopic: 'iztiar/ADMIN/masterElection/',
+    masterVoteTopic: 'iztiar/ADMIN/masterVotes/',
     masterElectedTopic: 'iztiar/ADMIN/masterController',
 
     /**
@@ -53,10 +53,11 @@ export const mqtt = {
      * @param {String} topic
      * @param {JSON} json
      */
-    detectAdminElection: function( controller, topic, json ){
-        if( topic.startsWith( mqtt.masterElectionTopic )){
+    detectAdminVote: function( controller, topic, json ){
+        if( topic.startsWith( mqtt.masterVoteTopic )){
             const _name = topic.split( '/' )[3];
             mqtt.votes[_name] = json;
+            Msg.debug( 'mqtt.detectAdminVote() '+_name+' votes pour ',json,' as master' );
         }
     },
 
@@ -68,12 +69,8 @@ export const mqtt = {
      */
     detectAdminMaster: function( controller, topic, json ){
         if( topic === mqtt.masterElectedTopic ){
-            mqtt.masterElected = {
-                name: json.name,
-                id: json.id,
-                hostname: json.hostname,
-                stamp: Date.now()
-            };
+            mqtt.masterElected = json;
+            mqtt.masterElected.stamp = Date.now();
         }
     },
 
@@ -115,7 +112,7 @@ export const mqtt = {
             // if we do not have received any, then we vote for us
             case START:
                 if( !_masterElected()){
-                    _publishMe( mqtt.masterElectionTopic+myName );
+                    _publishMe( mqtt.masterVoteTopic+myName );
                     mqtt.masterPhase = VOTEDME;
                 }
                 break;
@@ -126,9 +123,9 @@ export const mqtt = {
                 if( !_masterElected()){
                     let maxid = controller.id();
                     let chosen = null;
-                    if( mqtt.controllers ){
-                        Object.keys( mqtt.controllers ).every(( n ) => {
-                            const o = mqtt.controllers[n];
+                    if( mqtt.votes ){
+                        Object.keys( mqtt.votes ).every(( n ) => {
+                            const o = mqtt.votes[n];
                             if( o.id > maxid ){
                                 maxid = o.id;
                                 chosen = o;
@@ -137,12 +134,9 @@ export const mqtt = {
                         });
                     }
                     if( chosen ){
-                        controller.IMqttClient.publish( mqtt.masterElectionTopic+myName, {
-                            name: chosen.name,
-                            id: chosen.id,
-                            hostname: chosen.hostname,
-                            stamp: tnow
-                        });
+                        Msg.debug( 'voting for master chosen', chosen );
+                        chosen.stamp = tnow;
+                        controller.IMqttClient.publish( mqtt.masterVoteTopic+myName, chosen );
                         mqtt.masterPhase = VOTEAGAIN;
                     } else {
                         _publishMe( mqtt.masterElectedTopic );
@@ -174,7 +168,7 @@ export const mqtt = {
     received: function( controller, topic, json ){
         // detect other coreControllers
         mqtt.detectAliveController( controller, topic, json );
-        mqtt.detectAdminElection( controller, topic, json );
+        mqtt.detectAdminVote( controller, topic, json );
         mqtt.detectAdminMaster( controller, topic, json );
     },
 
