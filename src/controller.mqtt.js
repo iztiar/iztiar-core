@@ -32,12 +32,12 @@ export const mqtt = {
      * @param {String} topic
      * @param {JSON} json
      */
-    detectController: function( controller, topic, json ){
+    detectAliveController: function( controller, topic, json ){
         if( topic.startsWith( 'iztiar/alive/' )){
             const _class = json.class;
             const _name = topic.split( '/' )[2];
             if( _class === 'coreController' && _name !== controller.IFeatureProvider.feature().name()){
-                Msg.debug( 'mqtt.detectController() detects another coreController \''+_name+'\'' );
+                Msg.debug( 'mqtt.detectAliveController() detects another coreController \''+_name+'\'' );
                 mqtt.controllers[_name] = {
                     id: json.id,
                     hostname: json.hostname,
@@ -53,7 +53,7 @@ export const mqtt = {
      * @param {String} topic
      * @param {JSON} json
      */
-    detectElection: function( controller, topic, json ){
+    detectAdminElection: function( controller, topic, json ){
         if( topic.startsWith( mqtt.masterElectionTopic )){
             const _name = topic.split( '/' )[3];
             mqtt.votes[_name] = json;
@@ -66,7 +66,7 @@ export const mqtt = {
      * @param {String} topic
      * @param {JSON} json
      */
-    detectMaster: function( controller, topic, json ){
+    detectAdminMaster: function( controller, topic, json ){
         if( topic === mqtt.masterElectedTopic ){
             mqtt.masterElected = {
                 name: json.name,
@@ -85,7 +85,7 @@ export const mqtt = {
 
         const tnow = Date.now();
         const myName = controller.IFeatureProvider.feature().name();
-        Msg.debug( 'mqtt.masterVoting() masterPhase='+mqtt.masterPhase+' '+( mqtt.masterElected ? mqtt.masterElected.name : '' ));
+        //Msg.debug( 'mqtt.masterVoting() masterPhase='+mqtt.masterPhase+' '+( mqtt.masterElected ? mqtt.masterElected.name : '' ));
 
         // return true if a master has been elected and is still valid
         const _masterElected = function(){
@@ -173,9 +173,9 @@ export const mqtt = {
      */
     received: function( controller, topic, json ){
         // detect other coreControllers
-        mqtt.detectController( controller, topic, json );
-        mqtt.detectElection( controller, topic, json );
-        mqtt.detectMaster( controller, topic, json );
+        mqtt.detectAliveController( controller, topic, json );
+        mqtt.detectAdminElection( controller, topic, json );
+        mqtt.detectAdminMaster( controller, topic, json );
     },
 
     /**
