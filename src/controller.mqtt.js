@@ -57,7 +57,7 @@ export const mqtt = {
         if( topic.startsWith( mqtt.masterVoteTopic )){
             const _name = topic.split( '/' )[3];
             mqtt.votes[_name] = json;
-            Msg.debug( 'mqtt.detectAdminVote() '+_name+' votes pour ',json,' as master' );
+            Msg.debug( 'mqtt.detectAdminVote() '+_name+' votes for ',json,' as master' );
         }
     },
 
