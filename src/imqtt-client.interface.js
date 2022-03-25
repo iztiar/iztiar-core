@@ -3,7 +3,7 @@
  */
 import mqtt from 'mqtt';
 
-import { Msg, utils } from './index.js';
+import { IStatus, Msg, utils } from './index.js';
 
 export class IMqttClient {
 
@@ -26,6 +26,10 @@ export class IMqttClient {
    constructor( instance ){
         Msg.debug( 'IMqttClient instanciation' );
         this._instance = instance;
+
+        // let publish our own status
+        IStatus.add( this._instance, this._statusPart );
+
         return this;
     }
 
@@ -46,49 +50,44 @@ export class IMqttClient {
         if( this._client && this._aliveInterval ){
             const topic = 'iztiar/alive/'+this.v_name();
             let _payload = null;
-            this.v_status()
-                .then(( res ) => {
-                    if( res ){
-                        return res;
-                    } else {
-                        return this._stdPayload();
-                    }
-                })
+            this.v_alive()
                 .then(( res ) => {
                     if( res ){
                         _payload = res;
                     } else {
                         _payload = {};
                     }
-                })
-                .then(() => {
                     _payload.timestamp = utils.now();
                     Msg.debug( 'IMqttClient._alive() publishing', topic, _payload );
-                    this._client.publish( topic, JSON.stringify( _payload ));
+                    this.publish( topic, _payload );
                 });
         }
     }
 
-    _capabilities(){
-        let _caps = [];
-        if( this._instance && this._instance.ICapability ){
-            _caps = this._instance.ICapability.get();
-        }
-        return _caps
-    }
-
-    // the standard payload which is published by default
-    _stdPayload(){
-        return Promise.resolve({
-            module: this.v_module(),
-            class: this.v_class(),
-            capabilities: this._capabilities(),
-        });
+    // publish the IMqttClient status as part of the global one
+    _statusPart( instance ){
+        Msg.debug( 'IMqttClient.statusPart()' );
+        const o = {
+            IMqttClient: instance.IMqttClient._client.options
+        };
+        return Promise.resolve( o );
     }
 
     /* *** ***************************************************************************************
        *** The implementation API, i.e; the functions the implementation may want to implement ***
        *** *************************************************************************************** */
+
+    /**
+     * @returns {Promise} which resolves to the payload of the 'alive' message
+     * A date-hour timestamp is always added before publishing
+     * [-implementation Api-]
+     */
+    v_alive(){
+        return Promise.resolve({
+            module: this.v_module(),
+            class: this.v_class()
+        });
+    }
 
     /**
      * @returns {String} the name of the implementation class
@@ -112,16 +111,6 @@ export class IMqttClient {
      */
     v_name(){
         return this._instance.IFeatureProvider.feature().name();
-    }
-
-    /**
-     * @returns {Promise} which resolves to the status of the service
-     * This is the first tested option when publishing an 'alive' message
-     * If not iplemented by the instance, then we default to the standard payload
-     * [-implementation Api-]
-     */
-    v_status(){
-        return Promise.resolve( null );
     }
 
     /* *** ***************************************************************************************
