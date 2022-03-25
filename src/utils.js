@@ -128,7 +128,7 @@ export const utils = {
      * @returns {JSON|null} the object (may be empty) or null if ENOENT error
      * @throws {coreError}, unless ENOENT which is sent to coreLogger
      */
-     jsonReadFileSync: function( fname, options={} ){
+    jsonReadFileSync: function( fname, options={} ){
         Msg.debug( 'utils.jsonReadFileSync()', 'fname='+fname );
         let _json = null;
         try {

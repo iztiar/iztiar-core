@@ -1,7 +1,10 @@
 /*
  * coreController class
  */
+import os from 'os';
+
 import { Msg } from './index.js';
+import { mqtt } from './controller.mqtt.js';
 
 export class coreController {
 
@@ -48,6 +51,9 @@ export class coreController {
 
     // when stopping, the port to which answer and forward the received messages
     _forwardPort = 0;
+
+    // a random integer identifier in the range [1-999999]
+    _myId = 0;
 
     /**
      * @param {engineApi} api the engine API as described in engine-api.schema.json
@@ -138,16 +144,12 @@ export class coreController {
     // a subscription function to be advertised of mqtt messages
     // we want to detect other alive coreControllers on the network and negociate a master
     _mqttMessages( topic, payload ){
-        if( topic.startsWith( 'iztiar/alive/' )){
+        if( topic.startsWith( 'iztiar/' )){
             const _bufferStr = new Buffer.from( payload ).toString().replace( /[\r\n]+/, '' );
             const _json = JSON.parse( _bufferStr );
-            const _module = _json.module;
-            const _class = _json.class;
-            const _name = topic.split( '/' )[2];
-            if( _module === 'core' && _class === 'coreController' && _name !== this.IFeatureProvider.feature().name()){
-                //Msg.debug( 'coreController._mqttMessages this', this );
-                Msg.debug( 'coreController._mqttMessages detects another coreController \''+_name+'\'' );
-            }
+            mqtt.received( this, topic, _json );
+        } else {
+            Msg.info( 'coreController.mqttMessages() receives topic=\''+topic+'\'' );
         }
     }
 
@@ -204,6 +206,7 @@ export class coreController {
                 .then(() => { exports.Msg.debug( 'coreController.ifeatureproviderStart() tcpServer created' ); })
                 .then(() => { this.IMqttClient.advertise( featCard.config().IMqttClient ); })
                 .then(() => { this.IMqttClient.subscribe( 'iztiar/#', this, this._mqttMessages ); })
+                .then(() => { mqtt.startTimers( this ); })
                 .then(() => { return new Promise(() => {}); });
         } else {
             return Promise.resolve( exports.IForkable.fork( name, cb, args ));
@@ -344,6 +347,18 @@ export class coreController {
         return Promise.resolve( o );
     }
 
+    /*
+     * allocate if needed, and return the random identifier of this controller
+     */
+    id(){
+        if( !this._myId ){
+            while( !this._myId ){
+                this._myId = Math.floor( Math.random() * 1000000 );
+            }
+        }
+        return this._myId;
+    }
+
     /**
      * @returns {Promise} which resolves to a status Object
      * Note:
@@ -370,7 +385,9 @@ export class coreController {
                     pids: [ process.pid ],
                     ports: [ featCard.config().ITcpServer.port ],
                     runfile: self.IRunFile.runFile( _serviceName ),
-                    started: self._started
+                    started: self._started,
+                    hostname: os.hostname(),
+                    id: self.id()
                 };
                 Msg.debug( 'coreController.publiableStatus()', 'runStatus', o );
                 status = { ...status, ...o };
