@@ -37,4 +37,15 @@ We have chosen to implement these three points at the very core of the architect
 
 In other words, all the security relies on a predefined configuration, where a trustee administrator configures each point-to-point communication channel by defining who is authorized to communicate which who.
 
+Then there are two points :
+
+    - coreController's do not communicate between them
+    - only communications at the moment are those between a IMqttClient and a IMqttServer.
+
+Iztiar primary installation generate a CA root certificate available for the full environment (e.g. production), called here 'environment-based-CA-root' or also EBCAR (what a pretty name isn'it !?).
+
+Then each IMqttClient and each IMqttServer must also have their own environment-base-client-certificate, called here EBCC.
+
+It is so only a matter of configuring the server to only allow this and this client by specifying the public key in its configuration.
+
 ### Javascript consequences
