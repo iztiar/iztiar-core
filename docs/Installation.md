@@ -104,3 +104,118 @@ The installation process must :
     - generate a CA root certificate for the environment (e.g. production)
     - generate a CARoot-based CA certificate for each IMqttClient (coreBroker, coreController) and each IMqttServer (coreBroker)
     - configure the broker to allow the client certificates
+
+#### Create the CA
+
+    # mkdir certs
+    # cd certs
+
+    1/ generate a private key 'ca.key' for the CA
+
+    # openssl genpkey -algorithm RSA -out ca.key -pkeyopt rsa_keygen_bits:2048
+
+    2/ create the CA certificate based of its newly-created private key
+
+    # openssl req -new -x509 -days 3650 -key ca.key -nodes -out ca.crt
+
+
+```
+You are about to be asked to enter information that will be incorporated
+into your certificate request.
+What you are about to enter is what is called a Distinguished Name or a DN.
+There are quite a few fields but you can leave some blank
+For some fields there will be a default value,
+If you enter '.', the field will be left blank.
+-----
+Country Name (2 letter code) [XX]:FR
+State or Province Name (full name) []:France
+Locality Name (eg, city) [Default City]:
+Organization Name (eg, company) [Default Company Ltd]:Iztiar
+Organizational Unit Name (eg, section) []:Iztiar
+Common Name (eg, your name or your server's hostname) []:iztiar
+Email Address []:iztiar-leader@trychlos.org
+```
+
+#### Create the broker certificate
+
+Please note that the broker certificate is just a particular sort of client certificate, signed by our previously created CA.
+
+Which makes it particular is that the broker certificate MUST include the same server name than those that client will use to connect.
+
+Here we choose the broker FQDN hostname.
+
+    - create the broker private key
+    - create a certificate request, signing it with the client private key
+    - sign the certificate request for the CA key to provide a CA-certified client certificate
+
+    # openssl genpkey -algorithm RSA -out brokerOne.key -pkeyopt rsa_keygen_bits:2048
+    # openssl req -new -out brokerOne.csr -key brokerOne.key
+    # openssl x509 -req -in brokerOne.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out brokerOne.crt -days 3650
+
+```
+You are about to be asked to enter information that will be incorporated
+into your certificate request.
+What you are about to enter is what is called a Distinguished Name or a DN.
+There are quite a few fields but you can leave some blank
+For some fields there will be a default value,
+If you enter '.', the field will be left blank.
+-----
+Country Name (2 letter code) [XX]:FR
+State or Province Name (full name) []:France
+Locality Name (eg, city) [Default City]:
+Organization Name (eg, company) [Default Company Ltd]:Iztiar
+Organizational Unit Name (eg, section) []:Iztiar
+Common Name (eg, your name or your server's hostname) []:xps13.trychlos.lan
+Email Address []:iztiar-leader@trychlos.org
+
+Please enter the following 'extra' attributes
+to be sent with your certificate request
+A challenge password []:
+An optional company name []:brokerOne
+```
+
+```
+Signature ok
+subject=C = FR, ST = France, L = Default City, O = Iztiar, OU = Iztiar, CN = xps13.trychlos.lan, emailAddress = iztiar-leader@trychlos.org
+Getting CA Private Key
+```
+
+#### Create each clients certificate
+
+Then, for each client:
+
+    - create its private key
+    - create a certificate request, signing it with the client private key
+    - sign the certificate request for the CA key to provide a CA-certified client certificate
+
+    # openssl genpkey -algorithm RSA -out controllerOne.key -pkeyopt rsa_keygen_bits:2048
+    # openssl req -new -out controllerOne.csr -key controllerOne.key
+    # openssl x509 -req -in controllerOne.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out controllerOne.crt -days 3650
+
+```
+You are about to be asked to enter information that will be incorporated
+into your certificate request.
+What you are about to enter is what is called a Distinguished Name or a DN.
+There are quite a few fields but you can leave some blank
+For some fields there will be a default value,
+If you enter '.', the field will be left blank.
+-----
+Country Name (2 letter code) [XX]:FR
+State or Province Name (full name) []:France
+Locality Name (eg, city) [Default City]:
+Organization Name (eg, company) [Default Company Ltd]:Iztiar
+Organizational Unit Name (eg, section) []:
+Common Name (eg, your name or your server's hostname) []:
+Email Address []:iztiar-leader@trychlos.org
+
+Please enter the following 'extra' attributes
+to be sent with your certificate request
+A challenge password []:
+An optional company name []:controllerOne
+```
+
+```
+Signature ok
+subject=C = FR, ST = France, L = Default City, O = Iztiar, emailAddress = iztiar-leader@trychlos.org
+Getting CA Private Key
+```
