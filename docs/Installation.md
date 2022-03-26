@@ -94,3 +94,13 @@ What to do:
     - provide a full log of its actions and their results
 
 The installer should focalize on installing all services on a single host. Spanning the environment on several hosts should be considered as an advanced alternative.
+
+### Security notes
+
+The security is based on client certificates.
+
+The installation process must :
+
+    - generate a CA root certificate for the environment (e.g. production)
+    - generate a CARoot-based CA certificate for each IMqttClient (coreBroker, coreController) and each IMqttServer (coreBroker)
+    - configure the broker to allow the client certificates
