@@ -22,6 +22,11 @@
                     "description": "whether the service is enabled or disabled",
                     "default": true
                 },
+                "id": {
+                    "type": "integer",
+                    "description": "controller identifier when electing a masterController",
+                    "default": 0
+                },
                 "ITcpServer": {
                     "type": "object",
                     "description": "the properties of the integrated TCP server (see ITcpServer schema)"
