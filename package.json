@@ -1,6 +1,6 @@
 {
   "name": "@iztiar/iztiar-core",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "type": "module",
   "description": "The core of the Iztiar software family",
   "keywords": [
