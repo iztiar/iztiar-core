@@ -187,11 +187,12 @@ export class IMqttClient {
      * Publish a payload message on the MQTT bus
      * @param {String} topic must begin with 'iztiar/'
      * @param {Object} payload the data to be published
+     * @param {Object} options as name says (see https://www.npmjs.com/package/mqtt#api)
      * [-Public API-]
      */
-    publish( topic, payload ){
+    publish( topic, payload, options={} ){
         if( this._client ){
-            this._client.publish( topic, JSON.stringify( payload ));
+            this._client.publish( topic, JSON.stringify( payload ), options );
         } else {
             Msg.error( 'IMqttClient.publish() not connected while trying to publish on \''+topic+'\' topic' );
         }

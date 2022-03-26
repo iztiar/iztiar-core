@@ -105,21 +105,29 @@ export const mqtt = {
         };
 
         // publish myself either as a vote or as elected
-        const _publishMe = function( topic ){
+        const _publishMe = function( topic, options={} ){
             controller.IMqttClient.publish( topic, {
                 name: myName,
                 id: controller.id(),
                 hostname: os.hostname(),
                 stamp: tnow
-            });
+            }, options );
         }
+
+        // options when voting to limit the lifetime of the votes
+        //  this doesn't make the message disappear from the MQTT client
+        const options = {
+            properties: {
+                messageExpiryInterval: 10*mqtt.masterTimer
+            }
+        };
 
         switch( mqtt.masterPhase ){
             // a master controller is expected to publish its master status with this same timer
             // if we do not have received any, then we vote for us
             case START:
                 if( !_masterElected()){
-                    _publishMe( mqtt.masterVoteTopic+myName );
+                    _publishMe( mqtt.masterVoteTopic+myName, options );
                     mqtt.masterPhase = VOTEDME;
                 }
                 break;
@@ -143,7 +151,7 @@ export const mqtt = {
                     if( chosen ){
                         Msg.debug( 'voting for master chosen', chosen );
                         chosen.stamp = tnow;
-                        controller.IMqttClient.publish( mqtt.masterVoteTopic+myName, chosen );
+                        controller.IMqttClient.publish( mqtt.masterVoteTopic+myName, chosen, options );
                         mqtt.masterPhase = VOTEAGAIN;
                     } else {
                         _publishMe( mqtt.masterElectedTopic );
