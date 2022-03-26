@@ -1,0 +1,11 @@
+/var/lib/iztiar/logs/*.log {
+    weekly
+    rotate 4
+    create
+    dateext
+    compress
+    noolddir
+    missingok
+    copytruncate
+    maxsize 50M
+}

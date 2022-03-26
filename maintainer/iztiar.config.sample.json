@@ -1,0 +1,90 @@
+{
+    "core": {
+        "logLevel": "DEBUG"
+    },
+    "features": {
+        "ControllerOne": {
+            "module": "core",
+            "class": "coreController",
+            "IMqttClient": {
+                "feature": "BrokerOne",
+                "reconnectPeriod": 5000
+            },
+            "ITcpServer": {
+            },
+            "add-ons": {
+                "pidUsage": {
+                    "module": "@iztiar/iztiar-pidusage"
+                }
+            }
+        },
+        "BrokerOne": {
+            "module": "@iztiar/iztiar-broker",
+            "IMqttServer": {
+            },
+            "ITcpServer": {
+            },
+            "add-ons": {
+                "pidUsage": {
+                    "module": "@iztiar/iztiar-pidusage"
+                }
+            }
+        },
+        "RestMain": {
+            "module": "@iztiar/iztiar-rest",
+            "IMqttClient": {
+                "feature": "BrokerOne",
+                "reconnectPeriod": 5000
+            }
+        },
+        "ControllerTwo": {
+            "module": "core",
+            "class": "coreController",
+            "IMqttClient": {
+                "feature": "BrokerOne",
+                "reconnectPeriod": 5000
+            },
+            "ITcpServer": {
+                "port": 24004
+            },
+            "add-ons": {
+                "pidUsage": {
+                    "module": "@iztiar/iztiar-pidusage"
+                }
+            }
+        },
+        "ControllerThree": {
+            "module": "core",
+            "class": "coreController",
+            "IMqttClient": {
+                "feature": "BrokerOne",
+                "reconnectPeriod": 5000
+            },
+            "ITcpServer": {
+                "port": 24005
+            }
+        },
+        "ControllerFour": {
+            "module": "core",
+            "class": "coreController",
+            "IMqttClient": {
+                "feature": "BrokerOne",
+                "reconnectPeriod": 5000
+            },
+            "ITcpServer": {
+                "port": 24006
+            }
+        },
+        "ControllerFive": {
+            "module": "core",
+            "class": "coreController",
+            "IMqttClient": {
+                "feature": "BrokerOne",
+                "reconnectPeriod": 5000
+            },
+            "ITcpServer": {
+                "port": 24007
+            }
+        }
+    }
+}
