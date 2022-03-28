@@ -81,7 +81,9 @@
 
    71 2022- 3-23 write engine-api.schema.md
 
-   74
+   74 2022- 3-27 update election algorythm to allow a controller to force its own election when it starts up
+
+   75
 
 -------------------------------------------------------------------------------------------
  Done

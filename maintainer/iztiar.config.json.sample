@@ -8,7 +8,10 @@
             "class": "coreController",
             "IMqttClient": {
                 "feature": "BrokerOne",
-                "reconnectPeriod": 5000
+                "reconnectPeriod": 5000,
+                "cert": "config/certs/controllerOne.crt",
+                "key": "config/certs/controllerOne.key",
+                "rejectUnauthorized": false
             },
             "ITcpServer": {
             },
@@ -21,6 +24,19 @@
         "BrokerOne": {
             "module": "@iztiar/iztiar-broker",
             "IMqttServer": {
+                "certs": {
+                    "rootCA": "config/certs/ca.crt",
+                    "server": {
+                        "cert": "config/certs/brokerOne.crt",
+                        "key": "config/certs/brokerOne.key"
+                    }
+                }
+            },
+            "IMqttClient": {
+                "host": "xps13.trychlos.lan",
+                "cert": "config/certs/controllerOne.crt",
+                "key": "config/certs/controllerOne.key",
+                "rejectUnauthorized": false
             },
             "ITcpServer": {
             },
@@ -42,7 +58,10 @@
             "class": "coreController",
             "IMqttClient": {
                 "feature": "BrokerOne",
-                "reconnectPeriod": 5000
+                "reconnectPeriod": 5000,
+                "cert": "config/certs/controllerOne.crt",
+                "key": "config/certs/controllerOne.key",
+                "rejectUnauthorized": false
             },
             "ITcpServer": {
                 "port": 24004
@@ -58,7 +77,10 @@
             "class": "coreController",
             "IMqttClient": {
                 "feature": "BrokerOne",
-                "reconnectPeriod": 5000
+                "reconnectPeriod": 5000,
+                "cert": "config/certs/controllerOne.crt",
+                "key": "config/certs/controllerOne.key",
+                "rejectUnauthorized": false
             },
             "ITcpServer": {
                 "port": 24005

@@ -15,7 +15,7 @@
                 },
                 "host": {
                     "type": "string",
-                    "description": "the hostname to use to connect to the message bus (only localhost being managed for now)"
+                    "description": "the hostname to use to connect to the message bus, must match the common name of the server certificate"
                 },
                 "port": {
                     "type": "integer",
@@ -26,6 +26,14 @@
                     "type": "integer",
                     "description": "interval (ms) between two alive publications, defaulting to 1mn",
                     "default": 60000
+                },
+                "cert": {
+                    "type": "string",
+                    "description": "path (relative to storageDir) to this client certificate in PEM format"
+                },
+                "key": {
+                    "type": "string",
+                    "description": "path (relative to storageDir) to this client private key in PEM format"
                 }
             }
         }

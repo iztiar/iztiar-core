@@ -1,7 +1,10 @@
 /*
  * IMqttClient interface
  */
+import deepcopy from 'deepcopy';
+import fs from 'fs';
 import mqtt from 'mqtt';
+import path from 'path';
 
 import { IStatus, Msg, utils } from './index.js';
 
@@ -17,6 +20,11 @@ export class IMqttClient {
     _client = null;
     _aliveInterval = null;
     _alivePeriod = null;
+
+    // TLS certificate
+    _optionsWithoutTls = null;
+    _clientCert = null;
+    _clientKey = null;
 
     /**
      * Constructor
@@ -67,8 +75,13 @@ export class IMqttClient {
     // publish the IMqttClient status as part of the global one
     _statusPart( instance ){
         Msg.debug( 'IMqttClient.statusPart()' );
+        if( !instance._optionsWithoutTls ){
+            instance._optionsWithoutTls = deepcopy( instance.IMqttClient._client.options );
+            delete instance._optionsWithoutTls.cert;
+            delete instance._optionsWithoutTls.key;
+        }
         const o = {
-            IMqttClient: instance.IMqttClient._client.options
+            IMqttClient: instance._optionsWithoutTls
         };
         return Promise.resolve( o );
     }
@@ -131,7 +144,7 @@ export class IMqttClient {
         const self = this;
 
         // for now, we only connect to a local broker
-        this._client = mqtt.connect( 'mqtt://127.0.0.1:'+options.port, options );
+        this._client = mqtt.connect( 'mqtts://'+options.host+':'+options.port, options );
 
         this._client.on( 'connect', function(){
             Msg.verbose( 'IMqttClient (re)connect' );
@@ -178,6 +191,16 @@ export class IMqttClient {
                 if( !_filled.port ){
                     _filled.port = IMqttClient.d.port;
                 }
+                // starting with v0.7.0, IMqttServer requires TLS connections
+                // reading server key and cert files may also throw exceptions, which is acceptable here
+                if( !_filled.cert || !_filled.key ){
+                    throw new Error( 'IMqttClient requires both private key and certificate for the client' );
+                }
+                this._clientKey = fs.readFileSync( path.join( exports.coreConfig.storageDir(), _filled.key ));
+                this._clientCert = fs.readFileSync( path.join( exports.coreConfig.storageDir(), _filled.cert ))
+                _filled.cert = this._clientCert;
+                _filled.key = this._clientKey;
+
                 return Promise.resolve( _filled );
             });
         return _promise;
