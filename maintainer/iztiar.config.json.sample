@@ -1,6 +1,7 @@
 {
     "core": {
-        "logLevel": "DEBUG"
+        "logLevel": "DEBUG",
+        "environment": "development"
     },
     "features": {
         "ControllerOne": {
@@ -106,6 +107,15 @@
             },
             "ITcpServer": {
                 "port": 24007
+            }
+        },
+        "mySensorsGateway": {
+            "module": "@iztiar/iztiar-mysensors",
+            "IMqttClient": {
+                "feature": "BrokerOne",
+                "reconnectPeriod": 5000
+            },
+            "ITcpServer": {
             }
         }
     }
