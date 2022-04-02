@@ -2,21 +2,21 @@
 
 ## IMqttClient interface configuration
 
-We say here to which broker the IMqttClient will connect to.
+Though there is only one interface implementation, this unique implementation may manage several broker connections. This can be done by providing either one IMqttClient configuration, or an array of objects.
+
+We say here to which broker(s) the IMqttClient will connect to.
 
 ### feature
 
 The name of the feature which provides a IMqttServer implementation.
 
-The client will read the configuration of this feature, using the value for managing its connection.
+The client will read the configuration of this feature, using the found values for managing its connection.
 
-This should be the preferred way of configuring a IMqttClient.
+This should be the preferred way of configuring a IMqttClient when possible.
 
 ### hostname, port
 
 If no feature is configured, it is always possible to just specifiy a hostname and a port.
-
-As of v0.x, only localhost hostname is considered.
 
 If nothing is configured at all, then the interface is able to provide a default port.
 

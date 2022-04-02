@@ -13,6 +13,8 @@ export class IMqttClient {
     static d = {
         alivePeriod: 60*1000,
         connectPeriod: 60*1000,
+        proto: 'mqtt',
+        host: 'localhost',
         port: 24003
     };
 
@@ -143,8 +145,7 @@ export class IMqttClient {
         Msg.debug( 'IMqttClient.advertise()', options );
         const self = this;
 
-        // for now, we only connect to a local broker
-        this._client = mqtt.connect( 'mqtts://'+options.host+':'+options.port, options );
+        this._client = mqtt.connect( options.uri, options );
 
         this._client.on( 'connect', function(){
             Msg.verbose( 'IMqttClient (re)connect' );
@@ -185,22 +186,49 @@ export class IMqttClient {
         }
         _promise = _promise
             .then(() => {
-                if( !_filled.host ){
-                    _filled.host = 'localhost';
-                }
-                if( !_filled.port ){
-                    _filled.port = IMqttClient.d.port;
+                // if an URI is specified, then it replaces proto, host and port
+                //  a warning is emitted if these keys are present
+                if( Object.keys( _filled ).includes( 'uri' )){
+                    if( Object.keys( _filled ).includes( 'proto' )){
+                        exports.Msg.warn( 'IMqttClient.fillConfig() proto=\''+_filled.proto+'\' ignored as an URI is specified' );
+                    }
+                    if( Object.keys( _filled ).includes( 'host' )){
+                        exports.Msg.warn( 'IMqttClient.fillConfig() host=\''+_filled.host+'\' ignored as an URI is specified' );
+                    }
+                    if( Object.keys( _filled ).includes( 'port' )){
+                        exports.Msg.warn( 'IMqttClient.fillConfig() port=\''+_filled.port+'\' ignored as an URI is specified' );
+                    }
+                    let url = new URL( _filled.uri );
+                    _filled.proto = url.protocol;
+                    _filled.host = url.hostname;
+                    _filled.port = url.port;
+                } else {
+                    if( !_filled.proto ){
+                        _filled.proto = IMqttClient.d.proto;
+                    }
+                    if( !_filled.host ){
+                        _filled.host = IMqttClient.d.host;
+                    }
+                    if( !_filled.port ){
+                        _filled.port = IMqttClient.d.port;
+                    }
+                    _filled.uri = _filled.proto + '://' + _filled.host + ':' + _filled.port;
                 }
                 // starting with v0.7.0, IMqttServer requires TLS connections
                 // reading server key and cert files may also throw exceptions, which is acceptable here
+                if( _filled.cert ){
+                    this._clientCert = fs.readFileSync( path.join( exports.coreConfig.storageDir(), _filled.cert ))
+                    _filled.cert = this._clientCert;
+                }
+                if( _filled.key ){
+                    this._clientKey = fs.readFileSync( path.join( exports.coreConfig.storageDir(), _filled.key ));
+                    _filled.key = this._clientKey;
+                }
+                /*
                 if( !_filled.cert || !_filled.key ){
                     throw new Error( 'IMqttClient requires both private key and certificate for the client' );
                 }
-                this._clientKey = fs.readFileSync( path.join( exports.coreConfig.storageDir(), _filled.key ));
-                this._clientCert = fs.readFileSync( path.join( exports.coreConfig.storageDir(), _filled.cert ))
-                _filled.cert = this._clientCert;
-                _filled.key = this._clientKey;
-
+                */
                 return Promise.resolve( _filled );
             });
         return _promise;

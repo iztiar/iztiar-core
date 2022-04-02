@@ -1,4 +1,5 @@
 /var/lib/iztiar/logs/*.log {
+	su pierre users
     weekly
     rotate 4
     create

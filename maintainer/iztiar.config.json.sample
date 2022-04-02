@@ -109,11 +109,15 @@
                 "port": 24007
             }
         },
-        "mySensorsGateway": {
+        "mySensorsGw": {
             "module": "@iztiar/iztiar-mysensors",
             "IMqttClient": {
-                "feature": "BrokerOne",
-                "reconnectPeriod": 5000
+                "uri": "mqtt://pidom.trychlos.lan:1883",
+                "username": "dirwatch",
+                "topics": {
+                    "fromDevices": "jeedomv4/mySensors/fromDevice",
+                    "toDevices": "jeedomv4/mySensors/toDevice"
+                }
             },
             "ITcpServer": {
             }

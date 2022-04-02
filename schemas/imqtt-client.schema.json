@@ -6,12 +6,21 @@
     "type": "object",
     "properties" : {
         "IMqttClient": {
-            "type": "object",
+            "type": "object|object[]",
             "description": "the configuration group, required to be present to try to connect as IMqttClient to a broker",
             "properties": {
                 "feature": {
                     "type": "string",
                     "description": "the name of the messaging feature to which the feature may connect (the preferred configuration)"
+                },
+                "uri": {
+                    "type": "string",
+                    "description": "the URI to use to connect to (replace proto, host and port)"
+                },
+                "proto": {
+                    "type": "string",
+                    "description": "the protocol to be used",
+                    "default": "mqtt"
                 },
                 "host": {
                     "type": "string",
@@ -34,6 +43,14 @@
                 "key": {
                     "type": "string",
                     "description": "path (relative to storageDir) to this client private key in PEM format"
+                },
+                "username": {
+                    "type": "string",
+                    "description": "username"
+                },
+                "password": {
+                    "type": "string",
+                    "description": "password"
                 }
             }
         }

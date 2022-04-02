@@ -83,7 +83,24 @@
 
    74 2022- 3-27 update election algorythm to allow a controller to force its own election when it starts up
 
-   75
+   75 2022- 4- 1 upgrade IMqttClient to be able to manage several broker connections
+
+   76 2022- 4- 1 IMqttClient should only requires cert when the broker tells so, ie let other authentification ways to be used
+                 or nothing at all
+
+   77 2022- 4- 1 IMqttClient.advertise() in debug mode: do not publish security items (cert, key, username, password)
+
+   78 2022- 4- 1 cliStart, cliStop and cliStatus: greetingsMessage should be a level up to normal (info?)
+
+   79 2022- 4- 1 IMqttClient: do not always install 'alive' publication as the broker we connect to may be an external one
+                  implies: be able to identify a Iztiar broker, willing to accept alive pubs
+
+   80 2022- 4- 1 split the application configuration name by feature
+
+   81 2022- 4- 2 ITcpServer interface: should have a wildcard function when adding commands so that the
+                  implementation is able to see all what is not pre-planned
+
+   82
 
 -------------------------------------------------------------------------------------------
  Done

@@ -192,6 +192,10 @@ Then, for each client:
     # openssl req -new -out controllerOne.csr -key controllerOne.key
     # openssl x509 -req -in controllerOne.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out controllerOne.crt -days 3650
 
+or:
+
+    # client=mySensorsGateway && openssl genpkey -algorithm RSA -out $client.key -pkeyopt rsa_keygen_bits:2048 && openssl req -new -out $client.csr -key $client.key && openssl x509 -req -in $client.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out $client.crt -days 3650
+
 ```
 You are about to be asked to enter information that will be incorporated
 into your certificate request.
