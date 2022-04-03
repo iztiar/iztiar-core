@@ -75,7 +75,7 @@ export class MqttConnect {
                     }
                     _payload.timestamp = exports.utils.now();
                     Msg.debug( 'MqttConnect._alive() publishing', topic, _payload );
-                    this.publish( topic, _payload );
+                    this.publish( topic, _payload, { retain: true });
                 });
         }
     }
