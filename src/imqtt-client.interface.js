@@ -122,7 +122,7 @@ export class IMqttClient {
      */
     terminate(){
         Object.keys( this._clients ).every(( key ) => {
-            this._clients[key].terminate();
+            this._clients[key].terminate( this );
             return true;
         });
     }

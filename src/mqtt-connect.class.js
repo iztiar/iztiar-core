@@ -61,23 +61,31 @@ export class MqttConnect {
         }
     }
 
-    _aliveRun( iface ){
+    _aliveRun( iface, empty=false ){
         const exports = iface.featureProvider().api().exports();
+        let _promise = Promise.resolve( true );
         if( this._client && this._aliveInterval ){
             const topic = 'iztiar/alive/'+iface.v_name();
             let _payload = null;
-            iface.v_alive()
-                .then(( res ) => {
-                    if( res ){
-                        _payload = res;
-                    } else {
-                        _payload = {};
-                    }
-                    _payload.timestamp = exports.utils.now();
-                    Msg.debug( 'MqttConnect._alive() publishing', topic, _payload );
-                    this.publish( topic, _payload, { retain: true });
-                });
+            if( empty ){
+                _promise = _promise.then(() => { _payload = undefined; });
+            } else {
+                _promise = iface.v_alive()
+                    .then(( res ) => {
+                        if( res ){
+                            _payload = res;
+                        } else {
+                            _payload = {};
+                        }
+                        _payload.timestamp = exports.utils.now();
+                    });
+            }
+            _promise = _promise.then(() => {
+                Msg.debug( 'MqttConnect._alive() publishing', topic, _payload );
+                this.publish( topic, _payload, { retain: true });
+            });
         }
+        return _promise;
     }
 
     // try to build an URI to address the broker
@@ -272,15 +280,21 @@ export class MqttConnect {
 
     /**
      * When the server is asked for terminating, also close the MQTT connection
+     * @param {IMqttClient} iface
      * [-Public API-]
      */
-    terminate(){
+    terminate( iface ){
         if( this._client ){
+            let _promise = Promise.resolve( true );
             if( this._aliveInterval ){
                 clearInterval( this._aliveInterval );
+                _promise = this._aliveRun( iface, true );
                 this._aliveInterval = null;
             }
-            this._client.end();
+            _promise = _promise.then(() => {
+                Msg.debug( 'MqttConnect.terminate() ending client connection' );
+                this._client.end();
+            });
         }
     }
 }

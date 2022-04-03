@@ -188,9 +188,11 @@ export const mqtt = {
      */
     receivedIztiar: function( controller, topic, json, client ){
         // detect other coreControllers
-        mqtt.detectAliveController( controller, topic, json, client );
-        mqtt.detectAdminVote( controller, topic, json, client );
-        mqtt.detectAdminMaster( controller, topic, json, client );
+        if( json ){
+            mqtt.detectAliveController( controller, topic, json, client );
+            mqtt.detectAdminVote( controller, topic, json, client );
+            mqtt.detectAdminMaster( controller, topic, json, client );
+        }
     },
 
     // a subscription function to be advertised of mqtt messages
@@ -198,8 +200,12 @@ export const mqtt = {
     receivedMessages( topic, payload, client ){
         if( topic.startsWith( 'iztiar/' )){
             const _bufferStr = new Buffer.from( payload ).toString().replace( /[\r\n]+/, '' );
-            const _json = JSON.parse( _bufferStr );
-            mqtt.receivedIztiar( this, topic, _json, client );
+            if( _bufferStr && _bufferStr.length ){
+                const _json = JSON.parse( _bufferStr );
+                mqtt.receivedIztiar( this, topic, _json, client );
+            } else {
+                Msg.info( 'coreController.mqtt.receivedMessages() receives empty/undefined payload on topic=\''+topic+'\'' );
+            }
         } else {
             Msg.info( 'coreController.mqtt.receivedMessages() receives topic=\''+topic+'\'' );
         }
