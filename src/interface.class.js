@@ -12,6 +12,24 @@ export class Interface {
 
     static _published = false;
 
+    // an interface which is able to handle several configuration should be prepared to accept
+    //  configuration groups as '<iface>.<name>' - and so we should
+    static _getConfigurations( config, iface ){
+        let _found = [];
+        const _start = iface + '.';
+        Object.keys( config ).every(( k ) => {
+            if( k === iface ){
+                _found.push( k );
+            }
+            if( k.startsWith( _start )){
+                _found.push( k );
+            }
+            return true;
+        });
+        return _found;
+    }
+
+    // improve the displayed status
     static _statusPart( instance ){
         Msg.debug( 'Interface.statusPart()' );
         const o = {
@@ -177,29 +195,40 @@ export class Interface {
     static fillConfig( instance, iface ){
         Msg.debug( 'Interface.fillConfig()', instance.constructor.name+':'+iface );
         let _promise = Promise.resolve( null );
-        if( instance.IFeatureProvider && instance.IFeatureProvider.feature && typeof instance.IFeatureProvider.feature === 'function' ){
+
+        if( !instance.IFeatureProvider || !instance.IFeatureProvider.feature || typeof instance.IFeatureProvider.feature !== 'function' ){
+            Msg.verbose( 'Interface.fillConfig()', instance.constructor.name+':'+iface, 'IFeatureProvider is not set' );
+
+        } else {
             const featCard = instance.IFeatureProvider.feature();
             let _conf = featCard.config();
             _promise = Promise.resolve( _conf )
-            if( Object.keys( _conf ).includes( iface )){
-                if( instance[iface].fillConfig && typeof instance[iface].fillConfig === 'function' ){
-                    _promise = _promise
-                        .then(() => { return instance[iface].fillConfig( _conf ) })
-                        .then(( res ) => {
-                            _conf[iface] = { ...res };
-                            instance.IFeatureProvider.feature().config( _conf );
-                            return Promise.resolve( _conf );
-                        });
-                } else {
-                    Msg.verbose( 'Interface.fillConfig()', instance.constructor.name+':'+iface, 'fillConfig is not a function' );
-                }
-            } else {
+
+            // an interface which is able to handle several configurations is expected to accept iface.name configuration groups
+            const _founds = Interface._getConfigurations( _conf, iface );
+            if( _founds.length === 0 ){
                 Msg.verbose( 'Interface.fillConfig()', instance.constructor.name+':'+iface, 'interface is not configured' );
-                //Msg.verbose( _conf );
+
+            } else if( !instance[iface].fillConfig && typeof instance[iface].fillConfig !== 'function' ){
+                Msg.verbose( 'Interface.fillConfig()', instance.constructor.name+':'+iface, 'fillConfig is not a function' );
+            
+            } else if( instance[iface].filledConfig ){
+                Msg.verbose( 'Interface.fillConfig()', instance.constructor.name+':'+iface, 'is already filled' );
+
+            } else {
+                _promise = _promise
+                    .then(() => { return instance[iface].fillConfig( _conf, _founds ) })
+                    .then(( res ) => {
+                        //if( res ){
+                        //    _conf[iface] = { ...res };
+                        //    instance.IFeatureProvider.feature().config( _conf );
+                        //}
+                        instance[iface].filledConfig = true;
+                        return Promise.resolve( _conf );
+                    });
             }
-        } else {
-            Msg.verbose( 'Interface.fillConfig()', instance.constructor.name+':'+iface, 'IFeatureProvider is not set' );
         }
+
         return _promise;
     }
 }

@@ -6,7 +6,7 @@
     "type": "object",
     "properties" : {
         "IMqttClient": {
-            "type": "object|object[]",
+            "type": "object",
             "description": "the configuration group, required to be present to try to connect as IMqttClient to a broker",
             "properties": {
                 "feature": {
@@ -31,11 +31,6 @@
                     "description": "the port number to use to connect to the message bus",
                     "default": 24003
                 },
-                "alivePeriod": {
-                    "type": "integer",
-                    "description": "interval (ms) between two alive publications, defaulting to 1mn",
-                    "default": 60000
-                },
                 "cert": {
                     "type": "string",
                     "description": "path (relative to storageDir) to this client certificate in PEM format"
@@ -44,14 +39,32 @@
                     "type": "string",
                     "description": "path (relative to storageDir) to this client private key in PEM format"
                 },
-                "username": {
-                    "type": "string",
-                    "description": "username"
+                "options": {
+                    "type": "object",
+                    "description": "any client connection option that the official MQTT.js library accepts"
                 },
-                "password": {
-                    "type": "string",
-                    "description": "password"
+                "alive": {
+                    "type": "object",
+                    "description": "publication of an alive message on this connection",
+                    "properties": {
+                        "publish": {
+                            "type": "boolean",
+                            "description": "whether to publish an alive message on this connection",
+                            "default": "false"
+                        },
+                        "period": {
+                            "type": "integer",
+                            "description": "interval (ms) between two alive publications, defaulting to 1mn",
+                            "default": 60000
+                        }
+                    }
                 }
+            }
+        },
+        "patternProperties" : {
+            "^IMqttClient\\.[a-zA-Z][a-zA-Z0-9-_]*$": {
+                "type": "object",
+                "description": "the configuration group to handle a particular connection"
             }
         }
     }

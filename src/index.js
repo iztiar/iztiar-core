@@ -22,6 +22,7 @@ export * from './feature-card.class.js';
 export * from './interface.class.js';
 export * from './log-level.class.js';
 export * from './logger.class.js';
+export * from './mqtt-connect.class.js';
 export * from './msg.class.js';
 export * from './package-json.class.js';
 

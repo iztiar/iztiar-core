@@ -2,9 +2,18 @@
 
 ## IMqttClient interface configuration
 
-Though there is only one interface implementation, this unique implementation may manage several broker connections. This can be done by providing either one IMqttClient configuration, or an array of objects.
+As a reminder, for an instance have a connection one a MQTT message bus through this IMqttClient interface, not only must it implement this interface (this should be obvious), but also its configuration must include at least an empty IMqttClient group.
 
-We say here to which broker(s) the IMqttClient will connect to.
+Also, and though the interface is only implemented once by the instance, this unique implementation is able manage several broker connections. This can be done by appending a connection name to the 'IMqttClient' configuration group:
+
+    - IMqttClient group handles one connection
+    - IMqttClient.name handles the 'name'd connection.
+
+The broker to be connected to may be identified, in the order of preference:
+
+    - by identifying its _feature_, i.e. by the Iztiar service which manages this broker
+    - by providing a full URI
+    - by providing proto, hostname, port.
 
 ### feature
 
@@ -14,9 +23,13 @@ The client will read the configuration of this feature, using the found values f
 
 This should be the preferred way of configuring a IMqttClient when possible.
 
+### URI
+
+If not _feature_ is found in the configuration, then an URI is searched for. It is expected to be a full URI.
+
 ### hostname, port
 
-If no feature is configured, it is always possible to just specifiy a hostname and a port.
+If no feature nor an URI are configured, it is always possible to just specifiy a hostname and a port.
 
 If nothing is configured at all, then the interface is able to provide a default port.
 

@@ -243,4 +243,19 @@ export class IFeatureProvider {
         }
         return null;
     }
+
+    /**
+     * @param {String} name the searched feature
+     * @param {String|null} key the searched configuration group
+     * @returns {Object|null} the filled configuration group or null
+     * [-Public API-]
+     */
+    getConfig( name, key ){
+        Msg.debug( 'IFeatureProvider.getConfig()' );
+        if( this.feature().name() === name ){
+            const _conf = this.feature().config();
+            return _conf[key] || {};
+        }
+        return null;
+    }
 }

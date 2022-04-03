@@ -216,7 +216,7 @@ export class coreController {
             return Promise.resolve( true )
                 .then(() => { this.ITcpServer.create( featCard.config().ITcpServer.port ); })
                 .then(() => { exports.Msg.debug( 'coreController.ifeatureproviderStart() tcpServer created' ); })
-                .then(() => { this.IMqttClient.advertise( featCard.config().IMqttClient ); })
+                .then(() => { this.IMqttClient.connects(); })
                 .then(() => { this.IMqttClient.subscribe( 'iztiar/#', this, this._mqttMessages ); })
                 .then(() => { mqtt.startTimers( this ); })
                 .then(() => { return new Promise(() => {}); });

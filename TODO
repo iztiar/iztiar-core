@@ -32,12 +32,6 @@
 
    21 2022- 2- 1 be able to log to journalctl, via a command-line and/or configuration option
 
-   22 2022- 2- 2 command iz.start.broker / iz.stop.broker
-
-   23 2022- 2- 2 command iz.start.managed / iz.stop.managed
-
-   35 2022- 2- 6 IRunfile: use mv/rename to get an atomic lock on updates
-
    37 2022- 2- 7 IZTIAR_DEBUG="" bin/iztiar start -l test debug
                  Cmdline bug ? unable to get the servicename just right after parse
 
@@ -67,6 +61,7 @@
    60 2022- 3-18 reorganize src/ sources to classes/ and interfaces/ subdirectories, due to the growing count of files
 
    61 2022- 3-18 use rotatelogs + limit the size of the logs
+      2022- 4- 2 a logrotate configuration file is used and works fine, but has the drawback of requiring uid=0 owner
 
    62 2022- 3-18 use lowdb to manage run files
 
@@ -83,24 +78,14 @@
 
    74 2022- 3-27 update election algorythm to allow a controller to force its own election when it starts up
 
-   75 2022- 4- 1 upgrade IMqttClient to be able to manage several broker connections
-
-   76 2022- 4- 1 IMqttClient should only requires cert when the broker tells so, ie let other authentification ways to be used
-                 or nothing at all
-
-   77 2022- 4- 1 IMqttClient.advertise() in debug mode: do not publish security items (cert, key, username, password)
-
    78 2022- 4- 1 cliStart, cliStop and cliStatus: greetingsMessage should be a level up to normal (info?)
 
-   79 2022- 4- 1 IMqttClient: do not always install 'alive' publication as the broker we connect to may be an external one
-                  implies: be able to identify a Iztiar broker, willing to accept alive pubs
-
-   80 2022- 4- 1 split the application configuration name by feature
+   80 2022- 4- 1 split the application configuration name by feature ?
 
    81 2022- 4- 2 ITcpServer interface: should have a wildcard function when adding commands so that the
                   implementation is able to see all what is not pre-planned
 
-   82
+   83
 
 -------------------------------------------------------------------------------------------
  Done
@@ -153,6 +138,12 @@
                  as this is more efficient and easier to manage
       2022- 2- 3 done
 
+   22 2022- 2- 2 command iz.start.broker / iz.stop.broker
+      2022- 4- 2 obsolete
+
+   23 2022- 2- 2 command iz.start.managed / iz.stop.managed
+      2022- 4- 2 obsolete
+
    24 2022- 2- 2 command iz.set.loglevel
       20226 2- 9 cancelled as duplicate of #19
 
@@ -186,6 +177,9 @@
 
    34 2022- 2- 6 ICmdLine: have a log.info line 'process invoked wth parameters'
       2022- 2- 9 done
+
+   35 2022- 2- 6 IRunfile: use mv/rename to get an atomic lock on updates
+      2022- 4- 2 rather use lowdb (see #62) - cancelled
 
    36 2022- 2- 6 start: have an option force-clear to reset the state of stalled runfiles
                  status: have an option remove to remove the stalled services from runfiles
@@ -260,6 +254,23 @@
                   almost everywhere, the '_' prefix is for private function
                   find another prefix for there almost-virtual methods
       2022- 3-24 done with v_xxx methods
+
+   75 2022- 4- 1 upgrade IMqttClient to be able to manage several broker connections
+      2022- 3- 3 done
+
+   76 2022- 4- 1 IMqttClient should only requires cert when the broker tells so, ie let other authentification ways to be used
+                 or nothing at all
+      2022- 4- 3 cert/key is no more mandatory, used when here
+
+   77 2022- 4- 1 IMqttClient.advertise() in debug mode: do not publish security items (cert, key, username, password)
+      2022- 4- 3 possible through _securedConf()
+
+   79 2022- 4- 1 IMqttClient: do not always install 'alive' publication as the broker we connect to may be an external one
+                  implies: be able to identify a Iztiar broker, willing to accept alive pubs
+      2022- 4- 3 done
+
+   82 2022- 4- 2 IMqttClient.advertise() should be connect()
+      2022- 4- 3 done
 
 -------------------------------------------------------------------------------------------
  P. Wieser - Created on 2022, Jan. 29th

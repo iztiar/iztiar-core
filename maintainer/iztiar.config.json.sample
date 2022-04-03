@@ -9,10 +9,12 @@
             "class": "coreController",
             "IMqttClient": {
                 "feature": "BrokerOne",
-                "reconnectPeriod": 5000,
                 "cert": "config/certs/controllerOne.crt",
                 "key": "config/certs/controllerOne.key",
-                "rejectUnauthorized": false
+                "options": {
+                    "reconnectPeriod": 5000,
+                    "rejectUnauthorized": false
+                }
             },
             "ITcpServer": {
             },
@@ -25,6 +27,7 @@
         "BrokerOne": {
             "module": "@iztiar/iztiar-broker",
             "IMqttServer": {
+                "host": "xps13.trychlos.lan",
                 "certs": {
                     "rootCA": "config/certs/ca.crt",
                     "server": {
@@ -34,10 +37,16 @@
                 }
             },
             "IMqttClient": {
-                "host": "xps13.trychlos.lan",
+                "feature": "BrokerOne",
                 "cert": "config/certs/controllerOne.crt",
                 "key": "config/certs/controllerOne.key",
-                "rejectUnauthorized": false
+                "options": {
+                    "reconnectPeriod": 5000,
+                    "rejectUnauthorized": false
+                },
+                "alive": {
+                    "publish": true
+                }
             },
             "ITcpServer": {
             },
@@ -50,8 +59,7 @@
         "RestMain": {
             "module": "@iztiar/iztiar-rest",
             "IMqttClient": {
-                "feature": "BrokerOne",
-                "reconnectPeriod": 5000
+                "feature": "BrokerOne"
             }
         },
         "ControllerTwo": {
@@ -59,10 +67,11 @@
             "class": "coreController",
             "IMqttClient": {
                 "feature": "BrokerOne",
-                "reconnectPeriod": 5000,
                 "cert": "config/certs/controllerOne.crt",
                 "key": "config/certs/controllerOne.key",
-                "rejectUnauthorized": false
+                "options": {
+                    "rejectUnauthorized": false
+                }
             },
             "ITcpServer": {
                 "port": 24004
@@ -78,10 +87,11 @@
             "class": "coreController",
             "IMqttClient": {
                 "feature": "BrokerOne",
-                "reconnectPeriod": 5000,
                 "cert": "config/certs/controllerOne.crt",
                 "key": "config/certs/controllerOne.key",
-                "rejectUnauthorized": false
+                "options": {
+                    "rejectUnauthorized": false
+                }
             },
             "ITcpServer": {
                 "port": 24005
@@ -91,8 +101,7 @@
             "module": "core",
             "class": "coreController",
             "IMqttClient": {
-                "feature": "BrokerOne",
-                "reconnectPeriod": 5000
+                "feature": "BrokerOne"
             },
             "ITcpServer": {
                 "port": 24006
@@ -103,7 +112,9 @@
             "class": "coreController",
             "IMqttClient": {
                 "feature": "BrokerOne",
-                "reconnectPeriod": 5000
+                "options": {
+                    "reconnectPeriod": 5000
+                }
             },
             "ITcpServer": {
                 "port": 24007
@@ -111,12 +122,25 @@
         },
         "mySensorsGw": {
             "module": "@iztiar/iztiar-mysensors",
-            "IMqttClient": {
+            "mySensors": {
+                "type": "MQTT"
+            },
+            "IMqttClient.devicesMqttBus": {
                 "uri": "mqtt://pidom.trychlos.lan:1883",
-                "username": "dirwatch",
                 "topics": {
                     "fromDevices": "jeedomv4/mySensors/fromDevice",
                     "toDevices": "jeedomv4/mySensors/toDevice"
+                },
+                "options": {
+                    "username": "dirwatch"
+                }
+            },
+            "IMqttClient.iztiar": {
+                "feature": "BrokerOne",
+                "cert": "config/certs/mySensorsGw.crt",
+                "key": "config/certs/mySensorsGw.key",
+                "options": {
+                    "rejectUnauthorized": false
                 }
             },
             "ITcpServer": {
