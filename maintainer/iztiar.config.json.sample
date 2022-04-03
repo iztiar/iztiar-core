@@ -141,6 +141,9 @@
                 "key": "config/certs/mySensorsGw.key",
                 "options": {
                     "rejectUnauthorized": false
+                },
+                "alive": {
+                    "publish": true
                 }
             },
             "ITcpServer": {

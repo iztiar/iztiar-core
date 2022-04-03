@@ -9,7 +9,6 @@ import { IStatus, MqttConnect, Msg } from './index.js';
 export class IMqttClient {
 
     _instance = null;
-
     _clients = {};
 
     /**
@@ -20,7 +19,6 @@ export class IMqttClient {
    constructor( instance ){
         Msg.debug( 'IMqttClient instanciation' );
         this._instance = instance;
-
         return this;
     }
 
@@ -69,33 +67,6 @@ export class IMqttClient {
        *** *************************************************************************************** */
 
     /**
-     * Try to connect to the specified message bus (aka broker) - retry every minute if needed
-     * @param {Object} options the configuration
-     *  host {String} the hostname (for now only localhost)
-     *  port {Integer} the port number
-     *  connectPeriod {Integer} the connect retry period in ms, default to 60*1000
-     *  alivePeriod {Integer} the interval to refresh the alive status, defaults to 60*1000
-     * [-Public API-]
-     */
-    /*
-    advertise( options={} ){
-        Msg.debug( 'IMqttClient.advertise()', options );
-        const self = this;
-
-        this._client = mqtt.connect( options.uri, options );
-
-        this._client.on( 'connect', function(){
-            Msg.verbose( 'IMqttClient (re)connect' );
-            self._aliveInstall( options );
-        });
-
-        this._client.on( 'error', ( e ) => {
-            Msg.error( 'IMqttClient error', e );
-        });
-    }
-    */
-
-    /**
      * Try to make each declared client connect to its respective broker
      * [-Public API-]
      */
@@ -139,57 +110,20 @@ export class IMqttClient {
     }
 
     /**
-     * @returns {String[]} array of connection names
+     * @returns {Object} the managed connections
      */
     getConnections(){
-        return Object.keys( this._clients );
+        return this._clients;
     }
 
     /**
-     * Publish a payload message on the MQTT bus
-     * @param {String} topic must begin with 'iztiar/'
-     * @param {Object} payload the data to be published
-     * @param {Object} options as name says (see https://www.npmjs.com/package/mqtt#api)
-     * [-Public API-]
-     */
-    publish( topic, payload, options={} ){
-        if( this._client ){
-            this._client.publish( topic, JSON.stringify( payload ), options );
-        } else {
-            Msg.error( 'IMqttClient.publish() not connected while trying to publish on \''+topic+'\' topic' );
-        }
-    }
-
-    /**
-     * Subscribe to a topic
-     * @param {String} topic the topic to subscribe to
-     * @param {Object} instance an instance to become 'this' inside of the callback
-     * @param {Function} fn the function ( topic, payload ) to be called when a message is seen on this topic
-     * [-Public API-]
-     */
-    subscribe( topic, instance, fn ){
-        if( this._client ){
-            Msg.debug( 'IMqttClient.subscribe() topic='+topic );
-            this._client.subscribe( topic, ( err ) => {
-                Msg.error( 'IMqttClient.subscribe() topic='+topic, 'error', err );
-            });
-            this._client.on( 'message', ( t, p ) => { fn.apply( instance, [ t, p ]); });
-        } else {
-            Msg.error( 'IMqttClient.subscribe() not connected while trying to subscribe to \''+topic+'\' topic' );
-        }
-    }
-
-    /**
-     * When the server is asker for terminating, also close the MQTT connection
+     * When the server is asked for terminating, also close the MQTT connections
      * [-Public API-]
      */
     terminate(){
-        if( this._client ){
-            if( this._aliveInterval ){
-                clearInterval( this._aliveInterval );
-                this._aliveInterval = null;
-            }
-            this._client.end();
-        }
+        Object.keys( this._clients ).every(( key ) => {
+            this._clients[key].terminate();
+            return true;
+        });
     }
 }

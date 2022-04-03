@@ -44,7 +44,7 @@ export class MqttConnect {
      * @param {String} key the key of this client connection configuration group
      * @returns {MqttConnect}
      */
-   constructor( instance, key ){
+    constructor( instance, key ){
         Msg.debug( 'MqttConnect instanciation', 'key='+key );
         this._key = key;
         IStatus.add( instance, this._statusPart, this );
@@ -268,7 +268,7 @@ export class MqttConnect {
     }
 
     /**
-     * When the server is asker for terminating, also close the MQTT connection
+     * When the server is asked for terminating, also close the MQTT connection
      * [-Public API-]
      */
     terminate(){
