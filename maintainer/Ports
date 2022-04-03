@@ -1,0 +1,10 @@
+24001   ControllerOne TCP server
+24002   BrokerOne TCP server
+24003   BrokerOne MQTT
+24004   ControllerTwo TCP server
+24005   ControllerThree TCP server
+24006   ControllerFour TCP server
+24007   ControllerFive TCP server
+24008
+24009   mySensorsGw netGw:port
+24010   mySensorsGw TCP server

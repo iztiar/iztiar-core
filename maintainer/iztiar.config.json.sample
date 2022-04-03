@@ -138,7 +138,7 @@
         "mySensorsGw": {
             "module": "@iztiar/iztiar-mysensors",
             "mySensors": {
-                "type": "MQTT"
+                "type": "mqtt"
             },
             "IMqttClient.devicesMqttBus": {
                 "uri": "mqtt://pidom.trychlos.lan:1883",
