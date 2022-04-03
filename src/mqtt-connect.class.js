@@ -253,15 +253,18 @@ export class MqttConnect {
      * @param {String} topic the topic to subscribe to
      * @param {Object} instance an instance to become 'this' inside of the callback
      * @param {Function} fn the function ( topic, payload ) to be called when a message is seen on this topic
+     * @param {*} args more arguments to be passed to fn callback
      * [-Public API-]
      */
-    subscribe( topic, instance, fn ){
+    subscribe( topic, instance, fn, args ){
         if( this._client ){
+            let _args = [ ...arguments ];
+            _args.splice( 3 );
             Msg.debug( 'MqttConnect.subscribe() topic='+topic );
             this._client.subscribe( topic, ( err ) => {
                 Msg.error( 'MqttConnect.subscribe() topic='+topic, 'error', err );
             });
-            this._client.on( 'message', ( t, p ) => { fn.apply( instance, [ t, p ]); });
+            this._client.on( 'message', ( t, p ) => { fn.apply( instance, [ t, p, ..._args ]); });
         } else {
             Msg.error( 'MqttConnect.subscribe() not connected while trying to subscribe to \''+topic+'\' topic' );
         }

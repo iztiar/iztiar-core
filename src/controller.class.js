@@ -204,6 +204,7 @@ export class coreController {
             return Promise.resolve( true )
                 .then(() => { this.ITcpServer.create( featCard.config().ITcpServer.port ); })
                 .then(() => { exports.Msg.debug( 'coreController.ifeatureproviderStart() tcpServer created' ); })
+                .then(() => { this._started = exports.utils.now(); })
                 .then(() => { this.IMqttClient.connects(); })
                 .then(() => { mqtt.subscribe( this ); })
                 .then(() => { mqtt.startTimers( this ); })
@@ -378,7 +379,6 @@ export class coreController {
         // run-status.schema.json
         const _runStatus = function(){
             return new Promise(( resolve, reject ) => {
-                if( !self._started ) self._started = featApi.exports().utils.now();
                 const o = {
                     module: featCard.module(),
                     class: featCard.class(),
@@ -387,7 +387,8 @@ export class coreController {
                     runfile: self.IRunFile.runFile( _serviceName ),
                     started: self._started,
                     hostname: os.hostname(),
-                    id: self.id()
+                    id: self.id(),
+                    electedMaster: mqtt.masterController()
                 };
                 Msg.debug( 'coreController.publiableStatus()', 'runStatus', o );
                 status = { ...status, ...o };
