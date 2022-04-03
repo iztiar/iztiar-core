@@ -31,8 +31,9 @@ export const mqtt = {
      * @param {coreController} controller
      * @param {String} topic
      * @param {JSON} json
+     * @param {MqttConnect} client
      */
-    detectAliveController: function( controller, topic, json ){
+    detectAliveController: function( controller, topic, json, client ){
         if( topic.startsWith( 'iztiar/alive/' )){
             const _class = json.class;
             const _name = topic.split( '/' )[2];
@@ -52,8 +53,9 @@ export const mqtt = {
      * @param {coreController} controller
      * @param {String} topic
      * @param {JSON} json
+     * @param {MqttConnect} client
      */
-    detectAdminVote: function( controller, topic, json ){
+    detectAdminVote: function( controller, topic, json, client ){
         if( topic.startsWith( mqtt.masterVoteTopic )){
             const _name = topic.split( '/' )[3];
             mqtt.votes[_name] = json;
@@ -66,8 +68,9 @@ export const mqtt = {
      * @param {coreController} controller
      * @param {String} topic
      * @param {JSON} json
+     * @param {MqttConnect} client
      */
-     detectAdminMaster: function( controller, topic, json ){
+    detectAdminMaster: function( controller, topic, json, client ){
         if( topic === mqtt.masterElectedTopic ){
             mqtt.masterElected = json;
             mqtt.masterElected.stamp = Date.now();
@@ -90,6 +93,8 @@ export const mqtt = {
         const tnow = Date.now();
         const myName = controller.IFeatureProvider.feature().name();
         //Msg.debug( 'mqtt.masterVoting() masterPhase='+mqtt.masterPhase+' '+( mqtt.masterElected ? mqtt.masterElected.name : '' ));
+        const clients = controller.IMqttClient.getConnections();
+        const key = Object.keys( clients )[0];
 
         // return true if a master has been elected and is still valid
         const _masterElected = function(){
@@ -106,7 +111,7 @@ export const mqtt = {
 
         // publish myself either as a vote or as elected
         const _publishMe = function( topic, options={} ){
-            controller.IMqttClient.publish( topic, {
+            clients[key].publish( topic, {
                 name: myName,
                 id: controller.id(),
                 hostname: os.hostname(),
@@ -151,7 +156,7 @@ export const mqtt = {
                     if( chosen ){
                         Msg.debug( 'voting for master chosen', chosen );
                         chosen.stamp = tnow;
-                        controller.IMqttClient.publish( mqtt.masterVoteTopic+myName, chosen, options );
+                        clients[key].publish( mqtt.masterVoteTopic+myName, chosen, options );
                         mqtt.masterPhase = VOTEAGAIN;
                     } else {
                         _publishMe( mqtt.masterElectedTopic );
@@ -179,12 +184,37 @@ export const mqtt = {
      * @param {coreController} controller
      * @param {String} topic
      * @param {JSON} json
+     * @param {MqttConnect} client
      */
-    received: function( controller, topic, json ){
+    receivedIztiar: function( controller, topic, json, client ){
         // detect other coreControllers
-        mqtt.detectAliveController( controller, topic, json );
-        mqtt.detectAdminVote( controller, topic, json );
-        mqtt.detectAdminMaster( controller, topic, json );
+        mqtt.detectAliveController( controller, topic, json, client );
+        mqtt.detectAdminVote( controller, topic, json, client );
+        mqtt.detectAdminMaster( controller, topic, json, client );
+    },
+
+    // a subscription function to be advertised of mqtt messages
+    // we want to detect other alive coreControllers on the network and negociate a master
+    receivedMessages( topic, payload, client ){
+        if( topic.startsWith( 'iztiar/' )){
+            const _bufferStr = new Buffer.from( payload ).toString().replace( /[\r\n]+/, '' );
+            const _json = JSON.parse( _bufferStr );
+            mqtt.receivedIztiar( this, topic, _json, client );
+        } else {
+            Msg.info( 'coreController.mqtt.receivedMessages() receives topic=\''+topic+'\'' );
+        }
+    },
+
+    /**
+     * Subscribe to iztiar/ topics
+     * @param {coreController} controller
+     */
+    subscribe: function( controller ){
+        const _clients = controller.IMqttClient.getConnections();
+        Object.keys( _clients ).every(( key ) => {
+            _clients[key].subscribe( 'iztiar/#', controller, mqtt.receivedMessages, _clients[key] );
+            return true;
+        });
     },
 
     /**

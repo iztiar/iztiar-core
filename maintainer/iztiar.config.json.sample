@@ -14,6 +14,9 @@
                 "options": {
                     "reconnectPeriod": 5000,
                     "rejectUnauthorized": false
+                },
+                "alive": {
+                    "publish": true
                 }
             },
             "ITcpServer": {
@@ -71,6 +74,9 @@
                 "key": "config/certs/controllerOne.key",
                 "options": {
                     "rejectUnauthorized": false
+                },
+                "alive": {
+                    "publish": true
                 }
             },
             "ITcpServer": {
@@ -91,6 +97,9 @@
                 "key": "config/certs/controllerOne.key",
                 "options": {
                     "rejectUnauthorized": false
+                },
+                "alive": {
+                    "publish": true
                 }
             },
             "ITcpServer": {
@@ -101,7 +110,10 @@
             "module": "core",
             "class": "coreController",
             "IMqttClient": {
-                "feature": "BrokerOne"
+                "feature": "BrokerOne",
+                "alive": {
+                    "publish": true
+                }
             },
             "ITcpServer": {
                 "port": 24006
@@ -114,6 +126,9 @@
                 "feature": "BrokerOne",
                 "options": {
                     "reconnectPeriod": 5000
+                },
+                "alive": {
+                    "publish": true
                 }
             },
             "ITcpServer": {

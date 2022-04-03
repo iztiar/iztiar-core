@@ -153,18 +153,6 @@ export class coreController {
         return this.IFeatureProvider.fillConfig( _filled ).then(( c ) => { return feature.config( c ); });
     }
 
-    // a subscription function to be advertised of mqtt messages
-    // we want to detect other alive coreControllers on the network and negociate a master
-    _mqttMessages( topic, payload ){
-        if( topic.startsWith( 'iztiar/' )){
-            const _bufferStr = new Buffer.from( payload ).toString().replace( /[\r\n]+/, '' );
-            const _json = JSON.parse( _bufferStr );
-            mqtt.received( this, topic, _json );
-        } else {
-            Msg.info( 'coreController.mqttMessages() receives topic=\''+topic+'\'' );
-        }
-    }
-
     /*
      * Called on each and every loaded add-on when the main hosting feature has terminated with its initialization
      * Time, for example, to increment all interfaces we are now sure they are actually implemented
@@ -217,7 +205,7 @@ export class coreController {
                 .then(() => { this.ITcpServer.create( featCard.config().ITcpServer.port ); })
                 .then(() => { exports.Msg.debug( 'coreController.ifeatureproviderStart() tcpServer created' ); })
                 .then(() => { this.IMqttClient.connects(); })
-                .then(() => { this.IMqttClient.subscribe( 'iztiar/#', this, this._mqttMessages ); })
+                .then(() => { mqtt.subscribe( this ); })
                 .then(() => { mqtt.startTimers( this ); })
                 .then(() => { return new Promise(() => {}); });
         } else {
