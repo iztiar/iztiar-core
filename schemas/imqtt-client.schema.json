@@ -41,7 +41,14 @@
                 },
                 "options": {
                     "type": "object",
-                    "description": "any client connection option that the official MQTT.js library accepts"
+                    "description": "any client connection option that the official MQTT.js library accepts",
+                    "properties": {
+                        "reconnectPeriod": {
+                            "type": "integer",
+                            "description": "interval between two reconnections (MQTT.js default=1000)",
+                            "default": 5000
+                        }
+                    }
                 },
                 "alive": {
                     "type": "object",

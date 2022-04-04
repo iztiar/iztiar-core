@@ -19,8 +19,8 @@ export class MqttConnect {
         host: 'localhost',
         port: 24003,
         name: 'default',
-        // MQTT client connect options we override
-        connectPeriod: 60*1000
+        // MQTT client connect options we override (MQTT.js default = 1000)
+        reconnectPeriod: 5*1000
     };
 
     // the key of the client configuration group
@@ -225,8 +225,8 @@ export class MqttConnect {
                 if( !conf.options ){
                     conf.options = {};
                 }
-                if( !conf.options.connectPeriod ){
-                    conf.options.connectPeriod = MqttConnect.d.connectPeriod;
+                if( !conf.options.reconnectPeriod ){
+                    conf.options.reconnectPeriod = MqttConnect.d.reconnectPeriod;
                 }
                 // starting with v0.7.0, our IMqttServer broker requires TLS connections
                 // reading server key and cert files may also throw exceptions, which is acceptable here

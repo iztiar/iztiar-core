@@ -92,8 +92,6 @@
    85 2022- 4- 4 masterController should be published as retained message
                   and election algorithm updated accordingly
 
-   87 2022- 4- 4 fix connectPeriod vs reconnectPeriod in IMqttClient configuration
-
    88
 
    89
@@ -284,6 +282,9 @@
       2022- 4- 3 done
 
    86 2022- 4- 4 rootCA should be moved from broker to core configuration
+      2022- 4- 4 done
+
+   87 2022- 4- 4 fix connectPeriod vs reconnectPeriod in IMqttClient configuration
       2022- 4- 4 done
 
 -------------------------------------------------------------------------------------------
