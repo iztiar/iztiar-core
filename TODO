@@ -85,7 +85,20 @@
    81 2022- 4- 2 ITcpServer interface: should have a wildcard function when adding commands so that the
                   implementation is able to see all what is not pre-planned
 
-   83
+   83 2022- 4- 3 IFeatureProvider.v_killed() should be renamed postStop()
+
+   84 2022- 4- 3 As a consequence of #83, also have preStart, postStart, preStop ?
+
+   85 2022- 4- 4 masterController should be published as retained message
+                  and election algorithm updated accordingly
+
+   86 2022- 4- 4 rootCA should be moved from broker to core configuration
+
+   87 2022- 4- 4 fix connectPeriod vs reconnectPeriod in IMqttClient configuration
+
+   88
+
+   89
 
 -------------------------------------------------------------------------------------------
  Done
