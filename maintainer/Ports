@@ -8,3 +8,10 @@
 24008
 24009   mySensorsGw netGw:port
 24010   mySensorsGw TCP server
+24011   Rest API
+24012   Rest TCP server
+24013
+24014
+24015
+24016
+24017   Mongo
