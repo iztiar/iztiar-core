@@ -1,7 +1,9 @@
 {
     "core": {
         "logLevel": "DEBUG",
-        "environment": "development"
+        "environment": "development",
+        "database": {
+        }
     },
     "features": {
         "ControllerOne": {
@@ -62,7 +64,25 @@
         "RestMain": {
             "module": "@iztiar/iztiar-rest",
             "IMqttClient": {
-                "feature": "BrokerOne"
+                "feature": "BrokerOne",
+                "cert": "config/certs/RestMain.crt",
+                "key": "config/certs/RestMain.key",
+                "options": {
+                    "reconnectPeriod": 5000,
+                    "rejectUnauthorized": false
+                },
+                "alive": {
+                    "publish": true
+                }
+            },
+            "ITcpServer": {
+            },
+            "Rest": {
+            },
+            "add-ons": {
+                "pidUsage": {
+                    "module": "@iztiar/iztiar-pidusage"
+                }
             }
         },
         "ControllerTwo": {
@@ -162,6 +182,11 @@
                 }
             },
             "ITcpServer": {
+            },
+            "add-ons": {
+                "pidUsage": {
+                    "module": "@iztiar/iztiar-pidusage"
+                }
             }
         }
     }

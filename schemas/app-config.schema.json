@@ -23,6 +23,13 @@
                     "type": "string",
                     "description": "the name of the environment",
                     "default": "production"
+                },
+                "database": {
+                    "type": "object",
+                    "description": "database acces properties",
+                    "properties": {
+
+                    }
                 }
             }
         },
@@ -67,10 +74,6 @@
                                             "type": "boolean",
                                             "description": "whether the add-on feature is enabled or disabled",
                                             "default": true
-                                        },
-                                        "targets": {
-                                            "type": "string[]",
-                                            "description": "the list of classes to be extended by this add-on"
                                         }
                                     }
                                 }
