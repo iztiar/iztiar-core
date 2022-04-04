@@ -24,6 +24,7 @@
  * 
  *  Not yet a Logger at instanciation time, but command-line has been successfullly parsed.
  */
+import fs from 'fs';
 import path from 'path';
 
 import { cliApplication, Logger, Msg, utils } from './index.js';
@@ -99,6 +100,12 @@ export class coreConfig {
             filled.features = filled.features || [];
             const _jsonCore = json && json.core ? json.core : {};
             const _jsonPlugins = json && json.features ? json.features : {};
+            // core: root CA
+            if( _jsonCore.rootCA){
+                filled.core.rootCACert = fs.readFileSync( path.join( coreConfig.storageDir(), _jsonCore.rootCA ))
+            } else {
+                throw new Error( 'coreConfig: root CA is not specified' );
+            }
             // core: console level
             if( !_jsonCore.consoleLevel || opts.consoleLevel !== coreConfig.getDefaultConsoleLevel()){
                 filled.core.consoleLevel = opts.consoleLevel;

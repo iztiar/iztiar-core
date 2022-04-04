@@ -2,6 +2,7 @@
     "core": {
         "logLevel": "DEBUG",
         "environment": "development",
+        "rootCA": "config/certs/ca.crt",
         "database": {
         }
     },
@@ -14,8 +15,7 @@
                 "cert": "config/certs/controllerOne.crt",
                 "key": "config/certs/controllerOne.key",
                 "options": {
-                    "reconnectPeriod": 5000,
-                    "rejectUnauthorized": false
+                    "reconnectPeriod": 5000
                 },
                 "alive": {
                     "publish": true
@@ -33,11 +33,11 @@
             "module": "@iztiar/iztiar-broker",
             "IMqttServer": {
                 "host": "xps13.trychlos.lan",
-                "certs": {
-                    "rootCA": "config/certs/ca.crt",
-                    "server": {
+                "options": {
+                    "tls": {
                         "cert": "config/certs/brokerOne.crt",
-                        "key": "config/certs/brokerOne.key"
+                        "key": "config/certs/brokerOne.key",
+                        "rejectUnauthorized": false
                     }
                 }
             },
@@ -46,8 +46,7 @@
                 "cert": "config/certs/controllerOne.crt",
                 "key": "config/certs/controllerOne.key",
                 "options": {
-                    "reconnectPeriod": 5000,
-                    "rejectUnauthorized": false
+                    "reconnectPeriod": 5000
                 },
                 "alive": {
                     "publish": true
@@ -68,8 +67,7 @@
                 "cert": "config/certs/RestMain.crt",
                 "key": "config/certs/RestMain.key",
                 "options": {
-                    "reconnectPeriod": 5000,
-                    "rejectUnauthorized": false
+                    "reconnectPeriod": 5000
                 },
                 "alive": {
                     "publish": true
@@ -92,9 +90,6 @@
                 "feature": "BrokerOne",
                 "cert": "config/certs/controllerOne.crt",
                 "key": "config/certs/controllerOne.key",
-                "options": {
-                    "rejectUnauthorized": false
-                },
                 "alive": {
                     "publish": true
                 }
@@ -115,9 +110,6 @@
                 "feature": "BrokerOne",
                 "cert": "config/certs/controllerOne.crt",
                 "key": "config/certs/controllerOne.key",
-                "options": {
-                    "rejectUnauthorized": false
-                },
                 "alive": {
                     "publish": true
                 }
@@ -174,9 +166,6 @@
                 "feature": "BrokerOne",
                 "cert": "config/certs/mySensorsGw.crt",
                 "key": "config/certs/mySensorsGw.key",
-                "options": {
-                    "rejectUnauthorized": false
-                },
                 "alive": {
                     "publish": true
                 }

@@ -24,6 +24,10 @@
                     "description": "the name of the environment",
                     "default": "production"
                 },
+                "rootCA": {
+                    "type": "string",
+                    "description": "path (relative to storageDir) to the root CA certificate, mandatory as of v0.7.x"
+                },
                 "database": {
                     "type": "object",
                     "description": "database acces properties",

@@ -53,8 +53,9 @@ export class IFeatureProvider {
             // general runtime constants
             logfile: exports.Logger.logFname(),
             version: self.api().packet().getVersion(),
-            core: self.api().config().core()
+            core: { ...self.api().config().core() }
         };
+        delete o.core.rootCACert;
         return Promise.resolve( o );
     }
 

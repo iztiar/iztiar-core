@@ -149,6 +149,7 @@ export class MqttConnect {
     _securedConf(){
         if( !this._secConfig ){
             this._secConfig = deepcopy( this._filledConf );
+            delete this._secConfig.options.ca;
             delete this._secConfig.options.cert;
             delete this._secConfig.options.key;
             delete this._secConfig.options.password;
@@ -174,6 +175,8 @@ export class MqttConnect {
      * Try to connect to the specified message bus (aka broker) - retry every minute if needed
      * @param {IMqttClient} iface
      * @param {Object} conf the client connection configuration
+     * Note:
+     *  Starting with v0.7, our IMqttServer makes use of self-signed root CA
      * [-Public API-]
      */
     connect( iface, conf ){
@@ -203,6 +206,7 @@ export class MqttConnect {
      */
     fillConfig( provider, conf ){
         const exports = provider.api().exports();
+        const core = provider.api().config().core();
         exports.Msg.debug( 'MqttConnect.fillConfig() key='+this._key );
         let _promise = Promise.resolve( conf )
             .then(() => { return this._fillConfigURI( provider, conf ); })
@@ -226,6 +230,13 @@ export class MqttConnect {
                 }
                 // starting with v0.7.0, our IMqttServer broker requires TLS connections
                 // reading server key and cert files may also throw exceptions, which is acceptable here
+                if( !core.rootCACert ){
+                    throw new Error( 'MqttConnect.fillConfig() root CA is not set' );
+                }
+                if( !conf.options.ca ){
+                    Msg.debug( 'MqttConnect.fillConfig() installing root CA' );
+                    conf.options.ca = core.rootCACert;
+                }
                 if( conf.cert ){
                     this._clientCert = fs.readFileSync( path.join( exports.coreConfig.storageDir(), conf.cert ))
                     this._clientCertPath = conf.cert;
