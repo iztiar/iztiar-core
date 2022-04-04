@@ -1,0 +1,10 @@
+security:
+    authorization: "enabled"
+
+net:
+    bindIp: 0.0.0.0
+    tls:
+        #mode: requireTLS
+        mode: preferTLS
+        certificateKeyFile: /etc/mongo/mongodb.pem
+        CAFile: /etc/mongo/ca.crt
