@@ -56,6 +56,7 @@ export class coreController {
             Msg.debug( 'coreController.izStop()', 'replying with', reply );
             return Promise.resolve( reply );
         });
+        return Promise.resolve( true );
     }
 
     // when this feature has started
