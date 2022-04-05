@@ -37,7 +37,7 @@ export const mqtt = {
         if( topic.startsWith( 'iztiar/alive/' )){
             const _class = json.class;
             const _name = topic.split( '/' )[2];
-            if( _class === 'coreController' && _name !== controller.IFeatureProvider.feature().name()){
+            if( _class === 'coreController' && _name !== controller.feature().name()){
                 Msg.debug( 'mqtt.detectAliveController() detects another coreController \''+_name+'\'' );
                 mqtt.controllers[_name] = {
                     id: json.id,
@@ -91,7 +91,7 @@ export const mqtt = {
     masterVoting: function( controller ){
 
         const tnow = Date.now();
-        const myName = controller.IFeatureProvider.feature().name();
+        const myName = controller.feature().name();
         //Msg.debug( 'mqtt.masterVoting() masterPhase='+mqtt.masterPhase+' '+( mqtt.masterElected ? mqtt.masterElected.name : '' ));
         const clients = controller.IMqttClient.getConnections();
         const key = Object.keys( clients )[0];

@@ -8,7 +8,7 @@
 import chalk from 'chalk';
 import ps from 'ps';
 
-import { IFeatureProvider, featureCard, Msg, utils } from './index.js';
+import { featureCard, featureProvider, Msg, utils } from './index.js';
 
 /**
  * Stop the named feature
@@ -25,9 +25,9 @@ export function cliStop( api, name, options={} ){
     const _consoleLevel = Object.keys( options ).includes( 'consoleLevel' ) ? options.consoleLevel : _origLevel;
     if( _consoleLevel !== _origLevel ) Msg.consoleLevel( _consoleLevel );
 
-    const feature = api.pluginManager().byName( api, name );
+    const featCard = api.pluginManager().byName( api, name );
 
-    if( !feature || !( feature instanceof featureCard )){
+    if( !featCard || !( featCard instanceof featureCard )){
         Msg.error( 'cliStop() unknown feature: \''+name+'\'' );
         process.exitCode += 1;
         return Promise.resolve( false );
@@ -42,10 +42,10 @@ export function cliStop( api, name, options={} ){
     const END = 'End'
 
     let _promise = Promise.resolve( true )
-        .then(() => { return feature.initialize( api ); })
-        .then(( iFeatureProvider ) => {
-            if( iFeatureProvider && iFeatureProvider instanceof IFeatureProvider ){
-                Msg.verbose( name+' iFeatureProvider sucessfully initialized' );
+        .then(() => { return featCard.initialize( api ); })
+        .then(( provider ) => {
+            if( provider && provider instanceof featureProvider ){
+                Msg.verbose( name+' featureProvider instance sucessfully initialized' );
                 result.next = STAT;
             } else {
                 Msg.verbose( name+' initialization failed' );
@@ -58,8 +58,8 @@ export function cliStop( api, name, options={} ){
     const _checkStatus = function( res, expected ){
         Msg.debug( 'cliStop()._checkStatus()', 'next='+res.next, 'expected='+expected );
         if( res.next === STAT ){
-            const _name = feature.name();
-            return feature.status()
+            const _name = featCard.name();
+            return featCard.status()
                 .then(( status ) => {
                     return new Promise(( resolve, reject ) => {
                         if( expected ){
@@ -67,7 +67,7 @@ export function cliStop( api, name, options={} ){
                                 Msg.out( chalk.green( 'Service is not running (fine). Gracefully exiting' ));
                                 result.next = END;
 
-                            } else if( status.reasons.length === 0 ){
+                            } else if( !status.reasons || status.reasons.length === 0 ){
                                 Msg.info( 'Service \''+_name+'\' is running, is stoppable (fine)' );
                                 result.next = STOP;
 
@@ -108,7 +108,7 @@ export function cliStop( api, name, options={} ){
         Msg.debug( 'cliStart()._stopService()', 'next='+res.next );
         if( res.next === STOP ){
             Msg.debug( 'cliStop()._stopService()' );
-            return feature.stop().then(() => { return Promise.resolve( res ); });
+            return featCard.stop().then(() => { return Promise.resolve( res ); });
         } else {
             return Promise.resolve( res );
         }
@@ -150,7 +150,7 @@ export function cliStop( api, name, options={} ){
                         process.kill( p, 'SIGKILL' );
                         return true;
                     })
-                    feature.iProvider().v_killed();
+                    featCard.postStop();
                     res.next = STAT;
                     resolve( result );
                 } else {
@@ -178,7 +178,7 @@ export function cliStop( api, name, options={} ){
                     }
                     return true;
                 });
-                feature.iProvider().v_killed();
+                featCard.postStop();
                 res.next = STAT;
                 resolve( result );
             });

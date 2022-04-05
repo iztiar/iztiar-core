@@ -31,17 +31,13 @@ import { cliApplication, Logger, Msg, utils } from './index.js';
 
 export class coreConfig {
 
-    static _storageDir = null;
-
     static _c = {
         configDir: 'config',
         logDir: 'logs',
         runDir: 'run'
     }
 
-    _options = null;
-    _json = null;
-    _filled = null;
+    _config = null;
 
     /**
      * @returns {String} the default verbosity level
@@ -71,70 +67,41 @@ export class coreConfig {
     }
 
     /**
-     * Getter/Setter
-     * @param {string} dir the storage directory
-     * @returns {string} the runtime storage directory
+     * @param {coreApi} api a core API instance
      */
-    static storageDir( dir ){
-        if( dir && typeof dir === 'string' && dir.length ){
-            coreConfig._storageDir = dir;
+    constructor( api ){
+        const _options = api.cmdLine();
+        const _configFname = path.join( api.storageDir(), coreConfig._c.configDir, cliApplication.const.commonName+'.json' );
+        this._config = utils.jsonReadFileSync( _configFname );
+        this._config.core = this._config.core || {};
+        this._config.features = this._config.features || {};
+        // core: root CA
+        if( this._config.core.rootCA){
+            this._config.core.rootCACert = fs.readFileSync( path.join( api.storageDir(), this._config.core.rootCA ))
+        } else {
+            throw new Error( 'coreConfig: root CA is not specified' );
         }
-        return coreConfig._storageDir;
-    }
-
-    /**
-     * @param {Object} options the command-line option values
-     */
-    constructor( options ){
-
-        coreConfig.storageDir( options.storageDir );
-
-        this._options = options;
-
-        const _configFname = path.join( options.storageDir, coreConfig._c.configDir, cliApplication.const.commonName+'.json' );
-        this._json = utils.jsonReadFileSync( _configFname );
-
-        const _fillupConfig = function( opts, json ){
-            let filled = { ...json };
-            filled.core = filled.core || {};
-            filled.features = filled.features || [];
-            const _jsonCore = json && json.core ? json.core : {};
-            const _jsonPlugins = json && json.features ? json.features : {};
-            // core: root CA
-            if( _jsonCore.rootCA){
-                filled.core.rootCACert = fs.readFileSync( path.join( coreConfig.storageDir(), _jsonCore.rootCA ))
-            } else {
-                throw new Error( 'coreConfig: root CA is not specified' );
-            }
-            // core: console level
-            if( !_jsonCore.consoleLevel || opts.consoleLevel !== coreConfig.getDefaultConsoleLevel()){
-                filled.core.consoleLevel = opts.consoleLevel;
-            }
-            filled.core.consoleLevel = filled.core.consoleLevel.toUpperCase();
-            // core: environment
-            if( !_jsonCore.environment ){
-                filled.core.environment = coreConfig.getDefaultEnvironment();
-            }
-            // core: log level
-            if( !_jsonCore.logLevel || opts.logLevel !== coreConfig.getDefaultLogLevel()){
-                filled.core.logLevel = opts.logLevel;
-            }
-            filled.core.logLevel = filled.core.logLevel.toUpperCase();
-            // core: storage dir
-            filled.core.storageDir = coreConfig.storageDir();
-            // core: config dir
-            filled.core.configDir = path.join( coreConfig.storageDir(), coreConfig._c.configDir );
-            // core: log dir
-            filled.core.logDir = path.join( coreConfig.storageDir(), coreConfig._c.logDir );
-            // core: run dir
-            filled.core.runDir = path.join( coreConfig.storageDir(), coreConfig._c.runDir );
-            // feature objects
-            //  we can only take a glance here the key we know: module, enabled
-            //  see docs/Architecture.md
-            //console.log( filled );
-            return filled;
-        };
-        this._filled = _fillupConfig( this._options, this._json );
+        // core: console level
+        if( !this._config.core.consoleLevel || _options.consoleLevel !== coreConfig.getDefaultConsoleLevel()){
+            this._config.core.consoleLevel = _options.consoleLevel;
+        }
+        this._config.core.consoleLevel = this._config.core.consoleLevel.toUpperCase();
+        // core: environment
+        if( !this._config.core.environment ){
+            this._config.core.environment = coreConfig.getDefaultEnvironment();
+        }
+        // core: log level
+        if( !this._config.core.logLevel || _options.logLevel !== coreConfig.getDefaultLogLevel()){
+            this._config.core.logLevel = _options.logLevel;
+        }
+        this._config.core.logLevel = this._config.core.logLevel.toUpperCase();
+        // core: config dir
+        this._config.core.configDir = path.join( api.storageDir(), coreConfig._c.configDir );
+        // core: log dir
+        this._config.core.logDir = path.join( api.storageDir(), coreConfig._c.logDir );
+        // core: run dir
+        this._config.core.runDir = path.join( api.storageDir(), coreConfig._c.runDir );
+        // feature objects
 
         return this;
     }
@@ -146,30 +113,30 @@ export class coreConfig {
      */
     consoleLevel( level ){
         if( level && typeof level === 'string' && level.length ){
-            this._filled.core.consoleLevel = level.toUpperCase();
+            this._config.core.consoleLevel = level.toUpperCase();
         }
-        return this._filled.core.consoleLevel;
+        return this._config.core.consoleLevel;
     }
 
     /**
-     * @returns {Object} the core (filled) application configuration
+     * @returns {Object} the core (this._config) application configuration
      */
     core(){
-        return this._filled.core;
+        return this._config.core;
     }
 
     /**
      * @returns {String} the log directory full pathname
      */
     logDir(){
-        return this._filled.core.logDir;
+        return this._config.core.logDir;
     }
 
     /**
      * @returns {uppercase-String} the configured log level label
      */
     logLevel(){
-        return this._filled.core.logLevel;
+        return this._config.core.logLevel;
     }
 
     /**
@@ -177,13 +144,13 @@ export class coreConfig {
      *  Is expected to be an Object keyed by service names.
      */
     features(){
-        return this._filled.features;
+        return this._config.features;
     }
 
     /**
      * @returns {String} the run directory full pathname
      */
     runDir(){
-        return this._filled.core.runDir;
+        return this._config.core.runDir;
     }
 }

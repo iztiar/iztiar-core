@@ -2,6 +2,7 @@
  * IForkable interface
  *
  *  May be implemented by any class which want to be forked (i.e. act as a daemon).
+ *  Provides the ad-hoc v_start(), v_status() and v_stop() methods.
  */
 import cp from 'child_process';
 
@@ -21,8 +22,11 @@ export class IForkable {
         return IForkable.c.forkable;
     }
 
-    constructor(){
+    _instance = null;
+
+    constructor( instance ){
         Msg.debug( 'IForkable instanciation' );
+        this._instance = instance;
 
         // install signal handlers
         const self = this;
@@ -36,7 +40,7 @@ export class IForkable {
 
         process.on( 'SIGTERM', () => {
             Msg.debug( 'process receives SIGTERM signal' );
-            self.v_terminate();
+            this._instance.terminate();
         });
 
         process.on( 'SIGHUP', () => {
@@ -53,12 +57,42 @@ export class IForkable {
        *** *************************************************************************************** */
 
     /**
-     * Terminates the child process
-     * @returns {Promise} which resolves when the process is actually about to terminate (only waiting for this Promise)
+     * Start the service (and just that)
+     * @param {String} name the name of the feature
+     * @param {Callback|null} cb the funtion to be called on IPC messages reception (only relevant if a process is forked)
+     * @param {String[]} args arguments list (only relevant if a process is forked)
+     * @returns {Promise}
+     * Notes:
+     *  - If the service must start in its own process, then the calling application must have taken care of forking the ad-hoc
+     *    process before calling this method.
+     *  - This method is not expected to check that the service is not running before to start, and not expected either to check
+     *    that the service is rightly running after that.
+     * @returns {Promise}
      * [-implementation Api-]
      */
-    v_terminate(){
-        return Promise.resolve( true );
+    v_start(){
+        Msg.verbose( 'IForkable.v_start()' );
+        return Promise.resolve( false );
+    }
+
+    /**
+     * Returns the status of the detached process
+     * @returns {Promise} which resolves to the status
+     * [-implementation Api-]
+     */
+    v_status(){
+        Msg.verbose( 'IForkable.v_status()' );
+        return Promise.resolve( false );
+    }
+
+    /**
+     * Terminates the detached process
+     * @returns {Promise} which resolves when the process has acknowledged the request
+     * [-implementation Api-]
+     */
+    v_stop(){
+        Msg.verbose( 'IForkable.v_stop()' );
+        return Promise.resolve( false );
     }
 
     /* *** ***************************************************************************************

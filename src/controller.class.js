@@ -76,23 +76,11 @@ export class coreController {
         const exports = api.exports();
         const Interface = exports.Interface;
 
-        //Interface.extends( this, exports.baseProvider, api, card );
+        // must derive from featureProvider
+        Interface.extends( this, exports.featureProvider, api, card );
         Msg.debug( 'coreController instanciation' );
 
-        // must implement the IFeatureProvider
-        //  should implement that first so that we can install the engineApi and the featureCard as soon as possible
-        Interface.add( this, exports.IFeatureProvider, {
-            v_featureInitialized: this.ifeatureproviderFeatureInitialized,
-            v_forkable: this.ifeatureproviderForkable,
-            v_killed: this.ifeatureproviderKilled,
-            v_start: this.ifeatureproviderStart,
-            v_status: this.ifeatureproviderStatus,
-            v_stop: this.ifeatureproviderStop
-        });
-        this.IFeatureProvider.api( api );
-        this.IFeatureProvider.feature( card );
-
-        let _promise = this._fillConfig()
+        let _promise = this.fillConfig()
             .then(() => {
                 // add this rather sooner, so that other interfaces may take advantage of it
                 Interface.add( this, exports.ICapability );
@@ -100,16 +88,18 @@ export class coreController {
                     'checkableStatus', ( o ) => { return o.checkableStatus(); }
                 );
                 this.ICapability.add(
-                    'controller', ( o ) => { return Promise.resolve( o.IRunFile.get( o.IFeatureProvider.feature().name(), 'helloMessage' )); }
+                    'controller', ( o ) => { return Promise.resolve( o.IRunFile.get( o.feature().name(), 'helloMessage' )); }
                 );
                 this.ICapability.add(
-                    'helloMessage', ( o, cap ) => { return Promise.resolve( o.IRunFile.get( o.IFeatureProvider.feature().name(), cap )); }
+                    'helloMessage', ( o, cap ) => { return Promise.resolve( o.IRunFile.get( o.feature().name(), cap )); }
                 );
                 return Interface.fillConfig( this, 'ICapability' );
             })
             .then(() => {
                 Interface.add( this, exports.IForkable, {
-                    v_terminate: this.iforkableTerminate
+                    v_start: this.iforkableStart,
+                    v_status: this.iforkableStatus,
+                    v_stop: this.iforkableStop
                 });
                 return Interface.fillConfig( this, 'IForkable' );
             })
@@ -137,56 +127,6 @@ export class coreController {
     }
 
     /*
-     * @param {engineApi} api the engine API as described in engine-api.schema.json
-     * @param {featureCard} card a description of this feature
-     * @returns {Promise} which resolves to the filled feature part configuration
-     * 
-     * Nothing to do here, but give a chance to IFeatureProvider...
-     */
-    _fillConfig(){
-        if( !this.IFeatureProvider ){
-            throw new Error( 'IFeatureProvider is expected to have been instanciated before calling this function' );
-        }
-        Msg.debug( 'coreController.fillConfig()' );
-        const feature = this.IFeatureProvider.feature();
-        let _filled = { ...feature.config() };
-        return this.IFeatureProvider.fillConfig( _filled ).then(( c ) => { return feature.config( c ); });
-    }
-
-    /*
-     * Called on each and every loaded add-on when the main hosting feature has terminated with its initialization
-     * Time, for example, to increment all interfaces we are now sure they are actually implemented
-     * Here: add verbs to ITcpServer
-     */
-    ifeatureproviderFeatureInitialized(){
-        Msg.debug( 'coreController.ifeatureproviderFeatureInitialized()' );
-        const self = this;
-        Object.keys( coreController.verbs ).every(( key ) => {
-            const o = coreController.verbs[key];
-            self.ITcpServer.add( key, o.label, o.fn, o.end ? o.end : false );
-            return true;
-        });
-    }
-
-    /*
-     * @returns {Boolean} true if the process must be forked
-     * [-implementation Api-]
-     */
-    ifeatureproviderForkable(){
-        Msg.debug( 'coreController.ifeatureproviderForkable()' );
-        return true;
-    }
-
-    /*
-     * If the service had to be SIGKILL'ed to be stoppped, then gives it an opportunity to make some cleanup
-     * [-implementation Api-]
-     */
-    ifeatureproviderKilled(){
-        Msg.debug( 'coreController.ifeatureproviderKilled()' );
-        this.IRunFile.remove( this.IFeatureProvider.feature().name());
-    }
-
-    /*
      * @param {String} name the name of the feature
      * @param {Callback|null} cb the funtion to be called on IPC messages reception (only relevant if a process is forked)
      * @param {String[]} args arguments list (only relevant if a process is forked)
@@ -195,12 +135,12 @@ export class coreController {
      *  - which resolves to the forked child process in the main process
      * [-implementation Api-]
      */
-    ifeatureproviderStart( name, cb, args ){
-        const exports = this.IFeatureProvider.api().exports();
+    iforkableStart( name, cb, args ){
+        const exports = this.api().exports();
         const _forked = exports.IForkable.forkedProcess();
-        Msg.debug( 'coreController.ifeatureproviderStart()', 'forkedProcess='+_forked );
+        Msg.debug( 'coreController.iforkableStart()', 'forkedProcess='+_forked );
         if( _forked ){
-            const featCard = this.IFeatureProvider.feature();
+            const featCard = this.feature();
             return Promise.resolve( true )
                 .then(() => { this.ITcpServer.create( featCard.config().ITcpServer.port ); })
                 .then(() => { exports.Msg.debug( 'coreController.ifeatureproviderStart() tcpServer created' ); })
@@ -219,11 +159,11 @@ export class coreController {
      * @returns {Promise} which resolves the a status object
      * [-implementation Api-]
      */
-    ifeatureproviderStatus(){
-        Msg.debug( 'coreController.ifeatureproviderStatus()' );
-        this.IFeatureProvider.api().exports().utils.tcpRequest( this.IFeatureProvider.feature().config().ITcpServer.port, 'iz.status' )
+    iforkableStatus(){
+        Msg.debug( 'coreController.iforkableStatus()' );
+        this.api().exports().utils.tcpRequest( this.feature().config().ITcpServer.port, 'iz.status' )
             .then(( answer ) => {
-                Msg.debug( 'coreController.ifeatureproviderStatus()', 'receives answer to \'iz.status\'', answer );
+                Msg.debug( 'coreController.iforkableStatus()', 'receives answer to \'iz.status\'', answer );
             }, ( failure ) => {
                 // an error message is already sent by the called self.api().exports().utils.tcpRequest()
                 //  what more to do ??
@@ -235,26 +175,16 @@ export class coreController {
      * @returns {Promise}
      * [-implementation Api-]
      */
-    ifeatureproviderStop(){
-        Msg.debug( 'coreController.ifeatureproviderStop()' );
-        this.IFeatureProvider.api().exports().utils.tcpRequest( this.IFeatureProvider.feature().config().ITcpServer.port, 'iz.stop' )
+    iforkableStop(){
+        Msg.debug( 'coreController.iforkableStatus()' );
+        return this.api().exports().utils.tcpRequest( this.feature().config().ITcpServer.port, 'iz.stop' )
             .then(( answer ) => {
-                Msg.debug( 'coreController.ifeatureproviderStop()', 'receives answer to \'iz.stop\'', answer );
+                Msg.debug( 'coreController.iforkableStatus()', 'receives answer to \'iz.stop\'', answer );
             }, ( failure ) => {
                 // an error message is already sent by the called self.api().exports().utils.tcpRequest()
                 //  what more to do ??
                 //Msg.error( 'TCP error on iz.stop command:', failure );
             });
-    }
-
-    /*
-     * Terminates the child process
-     * @returns {Promise} which resolves when the process is actually about to terminate (only waiting for this Promise)
-     * [-implementation Api-]
-     */
-    iforkableTerminate(){
-        Msg.debug( 'coreController.iforkableTerminate()' );
-        return this.terminate();
     }
 
     /*
@@ -275,7 +205,7 @@ export class coreController {
      */
     irunfileRunDir(){
         Msg.debug( 'coreController.irunfileRunDir()' );
-        return this.IFeatureProvider.api().config().runDir();
+        return this.api().config().runDir();
     }
 
     /*
@@ -287,12 +217,12 @@ export class coreController {
      */
     itcpserverListening( tcpServerStatus ){
         Msg.debug( 'coreController.itcpserverListening()' );
-        const featCard = this.IFeatureProvider.feature();
+        const featCard = this.feature();
         const _name = featCard.name();
         const _port = featCard.config().ITcpServer.port;
         let _msg = 'Hello, I am \''+_name+'\' '+featCard.class();
         _msg += ', running with pid '+process.pid+ ', listening on port '+_port;
-        const Checkable = this.IFeatureProvider.api().exports().Checkable;
+        const Checkable = this.api().exports().Checkable;
         let st = new Checkable();
         st.pids = [ process.pid ];
         st.ports = [ _port ];
@@ -329,14 +259,14 @@ export class coreController {
     */
 
     /*
-     * @returns {Promise} which must resolve to an object conform to check-status.schema.json
+     * @returns {Promise} which must resolve to an object conform to checkable.schema.json
      * [-implementation Api-]
      */
     checkableStatus(){
         Msg.debug( 'coreController.checkableStatus()' );
-        const _name = this.IFeatureProvider.feature().name();
+        const _name = this.feature().name();
         const _json = this.IRunFile.jsonByName( _name );
-        const Checkable = this.IFeatureProvider.api().exports().Checkable;
+        const Checkable = this.api().exports().Checkable;
         let o = new Checkable();
         if( _json && _json[_name] ){
             o.pids = _json[_name].pids;
@@ -346,6 +276,16 @@ export class coreController {
             o.startable = true;
         }
         return Promise.resolve( o );
+    }
+
+    /*
+     * @returns {Promise} which resolves to the filled feature part configuration
+     * Nothing to do here, but give a chance to the base featureProvider...
+     */
+    fillConfig(){
+        Msg.debug( 'coreController.fillConfig()' );
+        let _promise = super.fillConfig();
+        return _promise;
     }
 
     /*
@@ -360,6 +300,15 @@ export class coreController {
         return this._myId;
     }
 
+    /*
+     * If the service had to be SIGKILL'ed to be stoppped, then gives it an opportunity to make some cleanup
+     */
+    postStop(){
+        super.postStop();
+        Msg.debug( 'coreController.postStop()' );
+        this.IRunFile.remove( this.feature().name());
+    }
+
     /**
      * @returns {Promise} which resolves to a status Object
      * Note:
@@ -370,8 +319,8 @@ export class coreController {
      *  A minimum of structure is so required, described in run-status.schema.json.
      */
     publiableStatus(){
-        const featApi = this.IFeatureProvider.api();
-        const featCard = this.IFeatureProvider.feature();
+        const featApi = this.api();
+        const featCard = this.feature();
         const _serviceName = featCard.name();
         Msg.debug( 'coreController.publiableStatus()', 'serviceName='+_serviceName );
         const self = this;
@@ -406,6 +355,22 @@ export class coreController {
             });
     }
 
+    /*
+     * Called on each and every loaded add-on when the main hosting feature has terminated with its initialization
+     * Time, for example, to increment all interfaces we are now sure they are actually implemented
+     * Here: add verbs to ITcpServer
+     */
+    ready(){
+        super.ready();
+        Msg.debug( 'coreController.ready()' );
+        const self = this;
+        Object.keys( coreController.verbs ).every(( key ) => {
+            const o = coreController.verbs[key];
+            self.ITcpServer.add( key, o.label, o.fn, o.end ? o.end : false );
+            return true;
+        });
+    }
+
     /**
      * terminate the server
      * Does its best to advertise the main process of what it will do
@@ -419,7 +384,7 @@ export class coreController {
      *  this terminate() function. So, try to prevent a double execution.
      */
     terminate( args=[], cb=null ){
-        const exports = this.IFeatureProvider.api().exports();
+        const exports = this.api().exports();
         Msg.debug( 'coreController.terminate()' );
         this.ITcpServer.status().then(( res ) => {
             if( res.status === exports.ITcpServer.s.STOPPING ){
@@ -432,9 +397,9 @@ export class coreController {
             }
         });
 
-        const _name = this.IFeatureProvider.feature().name();
-        const _module = this.IFeatureProvider.feature().module();
-        const _class = this.IFeatureProvider.feature().class();
+        const _name = this.feature().name();
+        const _module = this.feature().module();
+        const _class = this.feature().class();
         this._forwardPort = args && args[0] && exports.utils.isInt( args[0] ) ? args[0] : 0;
 
         const self = this;
@@ -448,7 +413,7 @@ export class coreController {
         let _promise = Promise.resolve( true )
             .then(() => {
                 if( cb && typeof cb === 'function' ){
-                    cb({ name:_name, module:_module, class:_class, pid:process.pid, port:self.IFeatureProvider.feature().config().ITcpServer.port });
+                    cb({ name:_name, module:_module, class:_class, pid:process.pid, port:self.feature().config().ITcpServer.port });
                 }
                 return self.ITcpServer.terminate();
             })

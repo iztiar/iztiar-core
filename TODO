@@ -94,7 +94,9 @@
 
    88 2022- 4- 4 have an interface to manage devices inclusion (see schemas/iinclusion.schema.md)
 
-   89
+   89 2022- 4- 5 have core().storageDir() method instead of static coreConfig.storageDir()
+
+   90
 
 -------------------------------------------------------------------------------------------
  Done

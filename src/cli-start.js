@@ -7,7 +7,7 @@
  */
 import chalk from 'chalk';
 
-import { IForkable, IFeatureProvider, featureCard, Msg, utils } from './index.js';
+import { IForkable, featureCard, featureProvider, Msg, utils } from './index.js';
 
 /**
  * Start the named feature
@@ -27,9 +27,9 @@ export function cliStart( api, name, options={} ){
 
     const _args = Object.keys( options ).includes( 'args' ) ? options.args : process.argv;
 
-    const feature = api.pluginManager().byName( api, name );
+    const featCard = api.pluginManager().byName( api, name );
 
-    if( !feature || !( feature instanceof featureCard )){
+    if( !featCard || !( featCard instanceof featureCard )){
         Msg.error( 'cliStart() unknown feature: \''+name+'\'' );
         process.exitCode += 1;
         return Promise.resolve( false );
@@ -43,10 +43,10 @@ export function cliStart( api, name, options={} ){
     const END = 'End'
 
     let _promise = Promise.resolve( true )
-        .then(() => { return feature.initialize( api ); })
-        .then(( iFeatureProvider ) => {
-            if( iFeatureProvider && iFeatureProvider instanceof IFeatureProvider ){
-                Msg.verbose( name+' IFeatureProvider interface sucessfully initialized' );
+        .then(() => { return featCard.initialize( api ); })
+        .then(( provider ) => {
+            if( provider && provider instanceof featureProvider ){
+                Msg.verbose( name+' featureProvider instance sucessfully initialized' );
                 result.next = STAT;
             } else {
                 Msg.verbose( name+' initialization failed' );
@@ -56,7 +56,7 @@ export function cliStart( api, name, options={} ){
 
     if( IForkable.forkedProcess()){
         _promise = _promise
-            .then(() => { return feature.start(); });
+            .then(() => { return featCard.start(); });
 
     } else {
         Msg.out( 'Starting \''+name+'\' feature' );
@@ -66,8 +66,8 @@ export function cliStart( api, name, options={} ){
         const _checkStatus = function( res, expected ){
             Msg.debug( 'cliStart()._checkStatus()', 'next='+res.next, 'expected='+expected );
             if( res.next === STAT ){
-                const _name = feature.name();
-                return feature.status()
+                const _name = featCard.name();
+                return featCard.status()
                     .then(( status ) => {
                         return new Promise(( resolve, reject ) => {
                             if( expected ){
@@ -76,7 +76,7 @@ export function cliStart( api, name, options={} ){
                                     res.next = END;
                                     process.exitCode += 1;
 
-                                } else if( status.reasons.length > 0 ){
+                                } else if( status.reasons && status.reasons.length > 0 ){
                                     Msg.warn( 'Service is said started, but exhibits', status.reasons.length,'error message(s)' );
                                     status.reasons.every(( m ) => {
                                         Msg.warn( ' '+m );
@@ -88,9 +88,9 @@ export function cliStart( api, name, options={} ){
                                 } else {
                                     res.started = true;
                                     Msg.out( chalk.green( 'Service(s) \''+_name+'\' successfully started' ));
-                                    const hello = feature.iProvider().getCapability( 'helloMessage' );
+                                    const hello = featCard.provider().getCapability( 'helloMessage' );
                                     if( hello ){
-                                        hello.then(( res ) => { Msg.out( chalk.green( 'Greetings message is « '+res+' »' )); });
+                                        hello.then(( res ) => { Msg.info( chalk.green( 'Greetings message is « '+res+' »' )); });
                                     }
                                     res.next = END;
                                 }
@@ -99,7 +99,7 @@ export function cliStart( api, name, options={} ){
                                     Msg.info( 'Service is not already running, is startable (fine)' );
                                     res.next = START;
 
-                                } else if( status.reasons.length === 0 ){
+                                } else if( !status.reasons || status.reasons.length === 0 ){
                                     Msg.out( chalk.green( 'Service \''+_name+'\' is already running (fine). Gracefully exiting.' ));
                                     res.next = END;
 
@@ -126,8 +126,9 @@ export function cliStart( api, name, options={} ){
             Msg.debug( 'cliStart()._forkOrStart()', 'next='+res.next );
             if( res.next === START ){
                 return new Promise(( resolve, reject ) => {
-                    feature.start( _ipcCallback, _args ).then(( st ) => {
-                        if( feature.iProvider().v_forkable()){
+                    featCard.start( _ipcCallback, _args ).then(( st ) => {
+                        const _provider = featCard.provider();
+                        if( _provider.IForkable ){
                             res.child = st;
                             res.ipcStartupReceived = false;
                         }
@@ -195,7 +196,7 @@ export function cliStart( api, name, options={} ){
                 if( result.child ){
                     Msg.verbose( 'cliStart().killIfNeeded() killing process', result.child.pid );
                     process.kill( result.child.pid, 'SIGKILL' );
-                    feature.iProvider().v_killed();
+                    featCard.iProvider().v_killed();
                 }
             }
             return Promise.resolve( res );

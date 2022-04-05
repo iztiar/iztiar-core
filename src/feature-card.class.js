@@ -12,7 +12,7 @@
  */
 import path from 'path';
 
-import { IForkable, IFeatureProvider, coreApi, Checkable, coreController, engineApi, Msg, utils } from './index.js';
+import { IForkable, coreApi, Checkable, coreController, engineApi, featureProvider, Msg, utils } from './index.js';
 
 export class featureCard {
 
@@ -88,7 +88,7 @@ export class featureCard {
      *  In other words, depending of the module rules, the class may or may not be specified in the application
      *  configuration file (for now, only 'core' requires that the class be specified).
      *  Before the plugin be initialized, the featureCard.class() method returns the class read
-     *  from the application configuration file. The IFeatureProvider interface takes care of setting
+     *  from the application configuration file. The featureProvider base class will take care of setting
      *  here the actual runtime class name.
      */
     class( name ){
@@ -134,7 +134,7 @@ export class featureCard {
         // first search in our cache
         if( Object.keys( featureCard._initializedFeatures ).includes( _name )){
             Msg.verbose( 'featureCard.initialize() '+_name+' already initialized' );
-            return Promise.resolve( featureCard._initializedFeatures[_name].iProvider());
+            return Promise.resolve( featureCard._initializedFeatures[_name].provider());
         }
         // else initialize the feature
         Msg.verbose( 'featureCard.initialize()', 'initializing '+_name, 'module='+_module );
@@ -182,7 +182,7 @@ export class featureCard {
             switch( _class ){
                 case 'coreController':
                     return new coreController( api, self )
-                        .then(( o ) => { return self._featureProvider = o.IFeatureProvider; });
+                        .then(( o ) => { return self._featureProvider = o; });
                 default:
                     // this is a configuration error rather a runtime one
                     throw new Error( 'featureCard.initialize()', _name, 'unknown class \''+_class+'\'' );
@@ -201,36 +201,30 @@ export class featureCard {
         _promise = _promise.then(( res ) => {
             Msg.debug( 'featureCard.initialize()', _name, 'result:', res );
             Msg.debug( 'featureCard.initialize()', _name, 'config:', this.config());
-            if( res && res instanceof IFeatureProvider ){
+            if( res && res instanceof featureProvider ){
+                Msg.debug( 'adding '+_name+' to featureCard._initializedFeatures' );
                 featureCard._initializedFeatures[_name] = this;
                 if( instance ){
+                    Msg.debug( 'adding '+_name+' to featureCard._initializedAddons' );
                     featureCard._initializedAddons[_name] = this;
                 } else {
-                    // only advertise the add-ons of *this* feature (plus the main feature itself)
+                    // advertise the add-ons of *this* feature (plus the main feature itself)
                     Object.keys( featureCard._initializedAddons ).every(( name ) => {
                         const _short = name.split( '/' )[0];
                         if( _short === _name ){
-                            featureCard._initializedAddons[name].iProvider().featInitialized();
+                            featureCard._initializedAddons[name].provider().ready();
                         }
                         return true;
                     });
-                    this.iProvider().featInitialized();
+                    this.provider().ready();
                 }
                 return Promise.resolve( res );
             } else {
-                throw new Error( _name, 'IFeatureProvider expected, '+res+' received: rejected' );
+                throw new Error( _name, 'featureProvider expected, '+res+' received: rejected' );
             }
         });
 
         return _promise;
-    }
-
-    /**
-     * @returns {IFeatureProvider} the instance of the interface provided by the feature
-     *  Null before initialization
-     */
-    iProvider(){
-        return this._featureProvider;
     }
 
     module(){
@@ -246,11 +240,19 @@ export class featureCard {
     }
 
     /**
+     * @returns {featureProvider} the instance of the interface provided by the feature
+     *  Null before initialization
+     */
+    provider(){
+        return this._featureProvider;
+    }
+
+    /**
      * @param {Callback|null} cb the funtion to be called on IPC messages reception (only relevant if a process is forked)
      * @param {String[]} args arguments list (only relevant if a process is forked)
      * @returns {Promise} which may:
-     *  - resolve to the child process (the IFeatureProvider has forked),
-     *  - never resolve (the IFeatureProvider has started a daemon adn doesn't want the program exit)
+     *  - resolve to the child process (the featureProvider has forked),
+     *  - never resolve (the featureProvider has started a daemon and doesn't want the program exit)
      *  - be rejected (a runtime condition has been detected)
      *  - resolve to another startup result...
      */
@@ -265,8 +267,10 @@ export class featureCard {
             process.title = _title;
         }
         let _promise = Promise.resolve( true )
-        if( this._featureProvider && this._featureProvider.v_start && typeof this._featureProvider.v_start === 'function' ){
-            _promise = _promise.then(() => { return this._featureProvider.v_start( _name, cb, args ); });
+        if( this._featureProvider.IForkable ){
+            _promise = _promise.then(() => { return this._featureProvider.IForkable.v_start( _name, cb, args ); });
+        } else {
+            _promise = _promise.then(() => { return this._featureProvider.start( _name, cb, args ); });
         }
         return _promise;
     }
@@ -301,6 +305,7 @@ export class featureCard {
 
         // the returned object which will resolve the promise
         let result = new Checkable();
+        result.reasons = [];
         result.alive = { pids:[], ports:[] };
 
         // using promises here happens to be rather conterproductive as the functions are already mainly used inside of Promises
@@ -312,9 +317,9 @@ export class featureCard {
             Msg.info( ...arguments );
         }
 
-        // first ask the IFeatureProvider to provide its own status check (must conform to check-status.schema.json)
+        // first ask the featureProvider to provide its own status check (must conform to check-status.schema.json)
         const _checkablePromise = function(){
-            return self.iProvider().getCheckable()
+            return self.provider().getCheckable()
                 .then(( res ) => {
                     if( res ){
                         //console.log( 'getCheckable', res );
@@ -324,9 +329,9 @@ export class featureCard {
                 });
         };
 
-        // first ask the IFeatureProvider to provide its own status check (must conform to check-status.schema.json)
+        // also try the corresponding capability
         const _serviceablePromise = function(){
-            const p = self.iProvider().getCapability( 'checkableStatus' );
+            const p = self.provider().getCapability( 'checkableStatus' );
             if( p && p instanceof Promise ){
                 return p.then(( res ) => {
                     if( res ){
@@ -389,7 +394,7 @@ export class featureCard {
                     utils.tcpRequest( port, 'iz.status' )
                         .then(( res ) => {
                             //console.log( 'iz.status returns', res );
-                            if( !res || Object.keys( res ).includes( 'reason' ) || typeof res.answer !== 'object' ){
+                            if( !res || Object.keys( res ).includes( 'reasons' ) || typeof res.answer !== 'object' ){
                                 _cerr( 'statusOf request rejected', res );
                                 resolve( false );
                             } else {
@@ -479,13 +484,20 @@ export class featureCard {
      */
     stop(){
         Msg.verbose( 'featureCard.stop()', 'name='+this.name());
-        let promise = Promise.resolve( true )
-        if( this._featureProvider && this._featureProvider.v_stop && typeof this._featureProvider.v_stop === 'function' ){
-            promise = promise.then(() => { return this._featureProvider.v_stop(); });
+        let _promise = Promise.resolve( true );
+        if( this._featureProvider.IForkable ){
+            _promise = _promise.then(() => { return this._featureProvider.IForkable.v_stop(); });
         } else {
-            Msg.verbose( 'featureCard.stop()', 'name='+this.name(), 'IFeatureProvider.stop is not a function' );
+            _promise = _promise.then(() => { return this._featureProvider.stop(); });
         }
-        promise = promise.then(( res ) => { return Promise.resolve( res )});
-        return promise;
+        return _promise;
+    }
+
+    /**
+     * Called after the stop has returned, time to do some cleaning if needed
+     */
+    postStop(){
+        Msg.verbose( 'featureCard.postStop()', 'name='+this.name());
+        this._featureProvider.postStop();
     }
 }

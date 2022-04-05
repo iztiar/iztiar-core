@@ -89,7 +89,7 @@ export class MqttConnect {
     }
 
     // try to build an URI to address the broker
-    // @param {IFeatureProvider} provider
+    // @param {featureProvider} provider
     // @param {Object} conf this client configuration
     // @returns {Promise} which resolves to provided conf
     _fillConfigURI( provider, conf ){
@@ -200,13 +200,14 @@ export class MqttConnect {
 
     /**
      * Fill the configuration for this client connection
-     * @param {IFeatureProvider} provider
+     * @param {featureProvider} provider
      * @param {Object} conf the client configuration
      * @returns {Promise} which resolves to the filled client configuration
      */
     fillConfig( provider, conf ){
-        const exports = provider.api().exports();
-        const core = provider.api().config().core();
+        const featApi = provider.api();
+        const exports = featApi.exports();
+        const core = featApi.config().core();
         exports.Msg.debug( 'MqttConnect.fillConfig() key='+this._key );
         let _promise = Promise.resolve( conf )
             .then(() => { return this._fillConfigURI( provider, conf ); })
@@ -238,12 +239,12 @@ export class MqttConnect {
                     conf.options.ca = core.rootCACert;
                 }
                 if( conf.cert ){
-                    this._clientCert = fs.readFileSync( path.join( exports.coreConfig.storageDir(), conf.cert ))
+                    this._clientCert = fs.readFileSync( path.join( featApi.storageDir(), conf.cert ))
                     this._clientCertPath = conf.cert;
                     conf.options.cert = this._clientCert;
                 }
                 if( conf.key ){
-                    this._clientKey = fs.readFileSync( path.join( exports.coreConfig.storageDir(), conf.key ));
+                    this._clientKey = fs.readFileSync( path.join( featApi.storageDir(), conf.key ));
                     this._clientKeyPath = conf.key;
                     conf.options.key = this._clientKey;
                 }
@@ -292,11 +293,12 @@ export class MqttConnect {
     /**
      * When the server is asked for terminating, also close the MQTT connection
      * @param {IMqttClient} iface
+     * @returns {Promise}
      * [-Public API-]
      */
     terminate( iface ){
+        let _promise = Promise.resolve( true );
         if( this._client ){
-            let _promise = Promise.resolve( true );
             if( this._aliveInterval ){
                 clearInterval( this._aliveInterval );
                 _promise = this._aliveRun( iface, true );
@@ -307,5 +309,6 @@ export class MqttConnect {
                 this._client.end();
             });
         }
+        return _promise;
     }
 }

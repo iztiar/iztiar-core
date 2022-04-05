@@ -1,2 +1,4 @@
+certs/*/*.key
+certs/*/*.pem
 db/*.passwd
 node_modules/

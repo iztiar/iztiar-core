@@ -2,7 +2,6 @@
 export * from './icapability.interface.js';
 export * from './icheckable.interface.js';
 export * from './icmdline.interface.js';
-export * from './ifeature-provider.interface.js';
 export * from './iforkable.interface.js';
 export * from './imqtt-client.interface.js';
 export * from './iplugin-manager.interface.js';
@@ -19,6 +18,7 @@ export * from './core-api.class.js';
 export * from './controller.class.js';
 export * from './engine-api.class.js';
 export * from './feature-card.class.js';
+export * from './feature-provider.class.js';
 export * from './interface.class.js';
 export * from './log-level.class.js';
 export * from './logger.class.js';

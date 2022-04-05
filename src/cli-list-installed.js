@@ -21,7 +21,7 @@ export function cliListInstalled( api, options={} ){
     Msg.out( 'Listing installed Iztiar modules' );
     Msg.verbose( 'An Iztiar module is identified by its name; its target is qualified from package.json \'iztiar\' group' );
     
-    const installedModules = api.pluginManager().getInstalled( api);
+    const installedModules = api.pluginManager().getInstalled();
 
     let displayedMods = [];
 

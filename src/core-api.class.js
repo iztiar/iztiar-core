@@ -11,16 +11,31 @@ export class coreApi {
     // the common name of the application
     _cname = null;
 
+    // the command-line options filled with their defaults
+    _cmdline = null;
+
     // the coreConfig object from the application configuration file
     //  this object is filled for application configuration data
     //  but left unchanged, as read from configuration, for features
     _config = null;
 
-    // the PackageJson object which describes the '@iztiar/iztiar-core' application module
+    // the PackageJson object which describes this '@iztiar/iztiar-core' application module
     _package = null;
 
     // the IPluginManager interface instance
     _pluginManager = null;
+
+    /**
+     * Getter/Setter
+     * @param {String} o the common name of the application
+     * @returns {String}
+     */
+    cmdLine( o ){
+        if( o && typeof o === 'object' ){
+            this._cmdline = o;
+        }
+        return this._cmdline;
+    }
 
     /**
      * Getter/Setter
@@ -69,5 +84,12 @@ export class coreApi {
             this._pluginManager = o;
         }
         return this._pluginManager;
+    }
+
+    /**
+     * @returns {String} the storage directory
+     */
+    storageDir(){
+        return this._cmdline.storageDir;
     }
 }

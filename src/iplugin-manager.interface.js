@@ -3,12 +3,12 @@
  */
 import path from 'path';
 
-import { IFeatureProvider, featureCard, Msg, PackageJson, utils } from './index.js';
+import { featureCard, featureProvider, Msg, PackageJson, utils } from './index.js';
 
 export class IPluginManager {
 
-    // cache of installed plugins
-    _installed = [];
+    // cache of installed plugins: index is plugin name, data is plugin json package
+    _installed = {};
 
     /* *** ***************************************************************************************
        *** The implementation API, i.e; the functions the implementation may want to implement ***
@@ -20,18 +20,40 @@ export class IPluginManager {
 
     /**
      * @param {coreApi} api a coreApi instance
-     * @param {String} name the name of the instance of the plugin
+     * @param {String} name the name of the searched feature
      * @returns {featureCard|null} the named service
      * [-public API-]
      */
     byName( api, name ){
-        return this.byNameExt( api.config(), api.packet(), name );
+        const _config = api.config();
+        if( !Object.keys( _config.features()).includes( name )){
+            Msg.error( 'feature not found in the application configuration', Object.keys( _config.features()));
+            return null;
+        }
+        const _feats = _config.features();
+        if( !Object.keys( _feats[name] ).length ){
+            Msg.error( 'feature is found, but not configured' );
+            return null;
+        }
+        if( !Object.keys( _feats[name] ).includes( 'module' )){
+            Msg.error( 'module property is mandatory, not found' );
+            return null;
+        }
+        if( _feats[name].module === 'core' ){
+            Msg.debug( 'module=\'core\'' );
+            return new featureCard( name, _feats[name], null );
+        }
+        if( !Object.keys( this._installed ).includes( _feats[name].module )){
+            Msg.error( 'module is not installed: '+_feats[name].module );
+            return null;
+        }
+        return new featureCard( name, _feats[name], this._installed[_feats[name].module] );
     }
 
     /**
      * @param {coreConfig} config the filled application configuration
-     * @param {PackageJson} packet the package.json of the main '@iztiar/iztiar-core' module
-     * @param {String} name the name of the instance of the plugin
+     * @param {PackageJson} packet the package.json of this main '@iztiar/iztiar-core' module
+     * @param {String} name the name of the searched feature
      * @returns {featureCard|null} the named service
      * [-public API-]
      */
@@ -48,38 +70,32 @@ export class IPluginManager {
     }
 
     /**
-     * @param {Object} instance the implementation instance
+     * @param {featureProvider} provider the implementation instance
      * @param {String} name the searched add-on feature
      * @param {Object} conf the configuration of the searched add-on
-     *  If unset, then the full filled configuration is returned in the promise
+     *  If unset, then the full filled configuration is returned by the promise
      * @returns {Promise} which resolves to the filled configuration of the add-on or null
      * [-public API-]
      */
-    getAddonConfig( instance, name, conf ){
+    getAddonConfig( provider, name, conf ){
         if( !Object.keys( conf ).includes( 'module' )){
             Msg.error( 'IPluginManager.getAddonConfig() '+name+' configuration doesn\'t include module' );
             return Promise.resolve( null );
         }
-        let _feat = null;
-        const api = instance.IFeatureProvider.api();
-        const feature = instance.IFeatureProvider.feature();
-        this.getInstalled( api ).every(( pck ) => {
-            if( pck.getName() === conf.module ){
-                _feat = new featureCard( feature.name()+'/'+name, conf, pck );
-                return false;
-            }
-            return true;
-        });
-        if( !_feat ){
-            Msg.error( 'IPluginManager.getAddonConfig() feature not found:', name );
+        const _installed = this.getInstalled();
+        if( !Object.keys( _installed ).includes( conf.module )){
+            Msg.error( 'IPluginManager.getAddonConfig() module '+conf.module+' is not installed' );
             return Promise.resolve( null );
         }
-        let _promise = _feat.initialize( api, instance )
-            .then(( _provider ) => {
-                if( _provider && _provider instanceof IFeatureProvider ){
-                    return _feat.config();
+        const api = provider.api();
+        const feature = provider.feature();
+        const _addonFeature = new featureCard( feature.name()+'/'+name, conf, _installed[conf.module] );
+        let _promise = _addonFeature.initialize( api, provider )
+            .then(( _addonProvider ) => {
+                if( _addonProvider && _addonProvider instanceof featureProvider ){
+                    return _addonFeature.config();
                 } else {
-                    Msg.error( 'IPluginManager.getConfig() unable to initialize the feature' );
+                    Msg.error( 'IPluginManager.getAddonConfig() unable to initialize the add-on feature' );
                     return null;
                 }
             });
@@ -89,19 +105,31 @@ export class IPluginManager {
     /**
      * @param {coreApi} api a coreApi instance
      * @param {String} name the searched feature
-     * @param {String|null} iface the searched interface in the searched feature
+     * @param {String|null} iface the searched interface name in the searched feature
      * @returns {Promise} which resolves to the filled configuration of iface in the named feature or null
      * [-public API-]
      */
     getConfig( api, name, iface=null ){
-        const _feat = this.byNameExt( api.config(), api.packet(), name );
-        if( !_feat ){
-            Msg.error( 'IPluginManager.getConfig() feature not found:', name );
-            return Promise.resolve( null );
+        const _config = api.config();
+        let _promise = Promise.resolve( null );
+        if( !Object.keys( _config.features()).includes( name )){
+            Msg.error( 'IPluginManager.getConfig() feature not found in the application configuration', Object.keys( _config.features()));
+            return _promise;
         }
-        let _promise = _feat.initialize( api )
+        const _feats = _config.features();
+        if( !Object.keys( _feats[name] ).includes( 'module' )){
+            Msg.error( 'IPluginManager.getConfig() feature doesn\'t exhibit module property' );
+            return _promise;
+        }
+        const _installed = this.getInstalled();
+        if( !Object.keys( _installed ).includes( _feats[name].module )){
+            Msg.error( 'IPluginManager.getConfig() module '+_feats[name].module+' is not installed' );
+            return _promise;
+        }
+        const _feat = new featureCard( name, _feats[name], _installed[_feats[name].module] );
+        _promise = _feat.initialize( api )
             .then(( _provider ) => {
-                if( _provider && _provider instanceof IFeatureProvider ){
+                if( _provider && _provider instanceof featureProvider ){
                     return _provider.feature().config();
                 } else {
                     Msg.error( 'IPluginManager.getConfig() unable to initialize the feature' );
@@ -166,28 +194,10 @@ export class IPluginManager {
     }
 
     /**
-     * @param {coreApi} api a coreApi instance
      * @returns {PackageJson[]} the array of installed modules of our Iztiar family (including this one)
-     *  Rationale:
-     *  - the package should be named '@iztiar/iztiar-xxxxxxxxxx'
-     *    as a consequence, the npm package manager will install it besides of this '@iztiar/iztiar-core' module
      * [-public API-]
      */
-    getInstalled( api ){
-        if( this._installed.length ){
-            Msg.debug( 'IPluginManager.getInstalled() reusing already cached installed plugins' );
-            return( this._installed );
-        }
-        Msg.debug( 'IPluginManager.getInstalled() searching for installed plugins' );
-        const parentDir = path.dirname( api.packet().getDir());
-        const regex = [
-            new RegExp( '^[^\.]' ),
-            new RegExp( '^'+api.commonName()+'-' )
-        ];
-        utils.dirScanSync( parentDir, { type:'d', regex:regex }).every(( p ) => {
-            this._installed.push( new PackageJson( p ));
-            return true;
-        });
+    getInstalled(){
         return this._installed;
     }
 
@@ -203,19 +213,44 @@ export class IPluginManager {
 
     /**
      * @param {PackageJson} packet the package.json of this '@iztiar/iztiar-core' module
-     * @param {String} name
+     * @param {String} module the name of the searched module in the feature configuration
      * @returns {PackageJson|null} the PackageJson instance for the (installed) module
+     * @throws {Error}
      * [-public API-]
      */
-    getPackageExt( packet, name ){
+    getPackageExt( packet, module ){
         let pck = null;
-        const _words = name.split( '/' );
+        const _words = module.split( '/' );
         const _short = _words.length > 1 ? _words[1] : _words[0];
         const dir = path.join( path.dirname( packet.getDir()), _short );
         const fname = path.join( dir, 'package.json' );
-        if( utils.fileExistsSync( fname )){
-            pck = new PackageJson( dir );
+        return new PackageJson( dir );
+    }
+
+    /**
+     * @param {coreApi} api a coreApi instance
+     * @returns {PackageJson[]} the array of installed modules of our Iztiar family (including this one)
+     *  Rationale:
+     *  - the package should be named '@iztiar/iztiar-xxxxxxxxxx'
+     *    as a consequence, the npm package manager will install it besides of this '@iztiar/iztiar-core' module
+     * [-public API-]
+     */
+    loadInstalled( api ){
+        if( Object.keys( this._installed ).length ){
+            Msg.debug( 'IPluginManager.loadInstalled() reusing already cached installed plugins' );
+            return( this._installed );
         }
-        return pck;
+        Msg.debug( 'IPluginManager.loadInstalled() searching for installed plugins' );
+        const parentDir = path.dirname( api.packet().getDir());
+        const regex = [
+            new RegExp( '^[^\.]' ),
+            new RegExp( '^'+api.commonName()+'-' )
+        ];
+        utils.dirScanSync( parentDir, { type:'d', regex:regex }).every(( p ) => {
+            const _pck = new PackageJson( p );
+            this._installed[_pck.getName()] = _pck;
+            return true;
+        });
+        return this._installed;
     }
 }

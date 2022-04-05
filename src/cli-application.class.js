@@ -53,6 +53,9 @@ export class cliApplication {
         this._cApi.packet( new PackageJson( path.dirname( path.dirname( new URL( import.meta.url ).pathname ))));
         this._cApi.pluginManager( this.IPluginManager );
 
+        // cache the installed Iztiar packages
+        this.IPluginManager.loadInstalled( this._cApi );
+
         cliApplication._singleton = this;
         return cliApplication._singleton;
     }

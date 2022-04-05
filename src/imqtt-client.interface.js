@@ -4,7 +4,7 @@
  * One instance of the interface is instanciated at implementation time.
  * Several connections can be managed which are each handled by their own MqttConnect instance.
  */
-import { IStatus, MqttConnect, Msg } from './index.js';
+import { MqttConnect, Msg } from './index.js';
 
 export class IMqttClient {
 
@@ -28,7 +28,7 @@ export class IMqttClient {
 
     /**
      * @returns {Promise} which resolves to the payload of the 'alive' message
-     * A date-hour timestamp is always added before publishing
+     * A date-hour timestamp is always added by the MqttConnect client before publishing
      * [-implementation Api-]
      */
     v_alive(){
@@ -43,7 +43,7 @@ export class IMqttClient {
      * [-implementation Api-]
      */
     v_class(){
-        return this._instance.IFeatureProvider.feature().class();
+        return this._instance.feature().class();
     }
 
     /**
@@ -51,7 +51,7 @@ export class IMqttClient {
      * [-implementation Api-]
      */
     v_module(){
-        return this._instance.IFeatureProvider.feature().module();
+        return this._instance.feature().module();
     }
 
     /**
@@ -59,7 +59,7 @@ export class IMqttClient {
      * [-implementation Api-]
      */
     v_name(){
-        return this._instance.IFeatureProvider.feature().name();
+        return this._instance.feature().name();
     }
 
     /* *** ***************************************************************************************
@@ -73,7 +73,7 @@ export class IMqttClient {
     connects(){
         Msg.debug( 'IMqttClient.connects()' );
         const self = this;
-        const featConfig = self._instance.IFeatureProvider.feature().config();
+        const featConfig = self._instance.feature().config();
         Object.keys( this._clients ).every(( key ) => {
             self._clients[key].connect( self, featConfig[key] );
             return true;
@@ -81,10 +81,10 @@ export class IMqttClient {
     }
 
     /**
-     * @returns {IFeatureProvider}
+     * @returns {featureProvider} the implementing instance
      */
     featureProvider(){
-        return this._instance.IFeatureProvider;
+        return this._instance;
     }
 
     /**
@@ -95,7 +95,7 @@ export class IMqttClient {
      * @returns {Promise} which resolves to the filled interface configuration, or null if several configurations are found
      */
     fillConfig( conf, founds ){
-        const featApi = this._instance.IFeatureProvider.api();
+        const featApi = this._instance.api();
         const exports = featApi.exports();
         exports.Msg.debug( 'IMqttClient.fillConfig()', 'founds=', founds );
         const self = this;
@@ -103,7 +103,7 @@ export class IMqttClient {
         founds.every(( k ) => {
             self._clients[k] = new MqttConnect( self._instance, k );
             _promise = _promise
-                .then(() => { return self._clients[k].fillConfig( this._instance.IFeatureProvider, conf[k] ); });
+                .then(() => { return self._clients[k].fillConfig( this._instance, conf[k] ); });
             return true;
         });
         return _promise;
@@ -118,12 +118,15 @@ export class IMqttClient {
 
     /**
      * When the server is asked for terminating, also close the MQTT connections
+     * @returns {Promise}
      * [-Public API-]
      */
     terminate(){
+        let _promise = Promise.resolve( true );
         Object.keys( this._clients ).every(( key ) => {
-            this._clients[key].terminate( this );
+            _promise = _promise.then(() => { return this._clients[key].terminate( this ); });
             return true;
         });
+        return _promise;
     }
 }

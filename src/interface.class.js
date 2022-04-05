@@ -6,7 +6,7 @@
  * 
  * To be called from the implementing constructor.
  */
-import { Msg } from './index.js';
+import { featureProvider, Msg } from './index.js';
 
 export class Interface {
 
@@ -196,11 +196,11 @@ export class Interface {
         Msg.debug( 'Interface.fillConfig()', instance.constructor.name+':'+iface );
         let _promise = Promise.resolve( null );
 
-        if( !instance.IFeatureProvider || !instance.IFeatureProvider.feature || typeof instance.IFeatureProvider.feature !== 'function' ){
-            Msg.verbose( 'Interface.fillConfig()', instance.constructor.name+':'+iface, 'IFeatureProvider is not set' );
+        if( !( instance instanceof featureProvider )){
+            Msg.verbose( 'Interface.fillConfig()', instance.constructor.name+':'+iface, 'instance is not a featureProvider' );
 
         } else {
-            const featCard = instance.IFeatureProvider.feature();
+            const featCard = instance.feature();
             let _conf = featCard.config();
             _promise = Promise.resolve( _conf )
 

@@ -5,6 +5,10 @@
     "description": "the coreApi globally used in the application",
     "type": "object",
     "properties": {
+        "cmdLine": {
+            "type": "object",
+            "description": "the command-line options (getter/setter)"
+        },
         "commonName": {
             "type": "string",
             "description": "the common name of the application (getter/setter)"

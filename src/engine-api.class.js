@@ -19,6 +19,7 @@ export class engineApi extends coreApi {
      */
     constructor( core ){
         super();
+        this.cmdLine( core.cmdLine());
         this.commonName( core.commonName());
         this.config( core.config());
         this.packet( core.packet());

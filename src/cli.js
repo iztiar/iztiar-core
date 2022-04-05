@@ -16,5 +16,6 @@ const app = new cliApplication();
 
 app.IRunnable.displayCopyright();
 app.ICmdline.parseArgs();
-app.core().config( new coreConfig( app.ICmdline.getOptions()));
+app.core().cmdLine( app.ICmdline.getOptions());
+app.core().config( new coreConfig( app.core()));
 app.IRunnable.run( app );

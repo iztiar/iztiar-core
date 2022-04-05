@@ -14,6 +14,7 @@ export class PackageJson {
      * Constructor
      * @param {String} dir the directory where we want find a package.json
      * @returns {PackageJson}
+     * @throws {Error}
      */
     constructor( dir ){
         this._dir = dir;

@@ -92,7 +92,7 @@ export class ITcpServer {
      * @returns {ITcpServer}
      */
     constructor( instance ){
-        const exports = instance.IFeatureProvider.api().exports();
+        const exports = instance.api().exports();
         const Interface = exports.Interface;
         const Msg = exports.Msg;
 
@@ -112,15 +112,15 @@ export class ITcpServer {
         return this;
     }
 
+    // @param {featureProvider} instance actually the derived class (e.g. coreController)
     // @returns {Checkable} adapted to current ITcpServer
     //  note that this is only useful in the forked process
     _newCheckable( instance ){
-        const Checkable = instance.IFeatureProvider.api().exports().Checkable;
+        const Checkable = instance.api().exports().Checkable;
         let res = new Checkable();
-        const self = instance ? instance : this;
-        if( self._port ){
+        if( instance.ITcpServer._port ){
             res.startable = false;
-            res.ports = [ self._port ];
+            res.ports = [ instance.ITcpServer._port ];
         }
         return Promise.resolve( res );
     }
@@ -246,7 +246,7 @@ export class ITcpServer {
     answer( client, obj, close=false ){
         const _msg = JSON.stringify( obj )+'\r\n';
         client.write( _msg );
-        Msg.info( 'server answers to request with', obj );
+        Msg.info( 'server answers to request with', obj, 'close='+close );
         this._outMsgCount += 1;
         this._outBytesCount += _msg.length;
         if( close ){
@@ -387,7 +387,7 @@ export class ITcpServer {
      * @returns {Promise} which resolves to the filled interface configuration
      */
     fillConfig( conf ){
-        const exports = this._instance.IFeatureProvider.api().exports();
+        const exports = this._instance.api().exports();
         exports.Msg.debug( 'ITcpServer.fillConfig()', this._instance.constructor.name );
         let _filled = conf.ITcpServer;
         if( !_filled.port ){
