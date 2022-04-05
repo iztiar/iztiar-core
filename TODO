@@ -92,7 +92,7 @@
    85 2022- 4- 4 masterController should be published as retained message
                   and election algorithm updated accordingly
 
-   88
+   88 2022- 4- 4 have an interface to manage devices inclusion (see schemas/iinclusion.schema.md)
 
    89
 

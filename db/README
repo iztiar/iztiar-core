@@ -1,3 +1,14 @@
+Podman
+======
+It seems that the podman run command has only to be used once (or after any configuration change).
+
+After that:
+    podman start iztiarDB
+    podman stop iztiarDB
+
+After a configuration change:
+    podman rm iztiarDB
+    db/start.sh
 
 Mongosh session
 ===============
