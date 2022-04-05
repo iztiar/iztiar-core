@@ -65,12 +65,6 @@
 
    62 2022- 3-18 use lowdb to manage run files
 
-   64 2022- 3-21 review status functions chaining: ifeatureprovider is not called
-
-   67 2022- 3-22 engineApi.config.filled is equal to engineApi.config.json
-
-   68 2022- 3-23 rename featureCard.iProvider() to something better
-
    70 2022- 3-23 a feature works in its own instance, while an add-on works in its hosting instance
                   maybe this could be materialized by a different interface or derived classes
 
@@ -78,14 +72,10 @@
 
    74 2022- 3-27 update election algorythm to allow a controller to force its own election when it starts up
 
-   78 2022- 4- 1 cliStart, cliStop and cliStatus: greetingsMessage should be a level up to normal (info?)
-
    80 2022- 4- 1 split the application configuration name by feature ?
 
    81 2022- 4- 2 ITcpServer interface: should have a wildcard function when adding commands so that the
                   implementation is able to see all what is not pre-planned
-
-   83 2022- 4- 3 IFeatureProvider.v_killed() should be renamed postStop()
 
    84 2022- 4- 3 As a consequence of #83, also have preStart, postStart, preStop ?
 
@@ -93,8 +83,6 @@
                   and election algorithm updated accordingly
 
    88 2022- 4- 4 have an interface to manage devices inclusion (see schemas/iinclusion.schema.md)
-
-   89 2022- 4- 5 have core().storageDir() method instead of static coreConfig.storageDir()
 
    90
 
@@ -248,11 +236,20 @@
       2022- 3-22 coreBroker: done
       2022- 3-23 coreController: done
 
+   64 2022- 3-21 review status functions chaining: ifeatureprovider is not called
+      2022- 4- 5 obsoleted with v0.8.0
+
    65 2022- 3-22 deprecate IFeatureProvider.IsForkable()
       2022- 3-23 done
 
    66 2022- 3-22 featureCard exhibits a 'class' member, while it should be in config
       2022- 3-23 fixed
+
+   67 2022- 3-22 engineApi.config.filled is equal to engineApi.config.json
+      2022- 4- 5 fixed with v0.8.0
+
+   68 2022- 3-23 rename featureCard.iProvider() to something better
+      2022- 4- 5 done with v0.8.0
 
    69 2022- 3-23 ITcpServer: just ignore empty commands
       2022- 3-24 no: depending of the client, we may wait for an answer
@@ -276,6 +273,9 @@
    77 2022- 4- 1 IMqttClient.advertise() in debug mode: do not publish security items (cert, key, username, password)
       2022- 4- 3 possible through _securedConf()
 
+   78 2022- 4- 1 cliStart, cliStop and cliStatus: greetingsMessage should be a level up to normal (info?)
+      2022- 4- 5 done with v0.8.0
+
    79 2022- 4- 1 IMqttClient: do not always install 'alive' publication as the broker we connect to may be an external one
                   implies: be able to identify a Iztiar broker, willing to accept alive pubs
       2022- 4- 3 done
@@ -283,11 +283,17 @@
    82 2022- 4- 2 IMqttClient.advertise() should be connect()
       2022- 4- 3 done
 
+   83 2022- 4- 3 IFeatureProvider.v_killed() should be renamed postStop()
+      2022- 4- 5 done with v0.8.0
+
    86 2022- 4- 4 rootCA should be moved from broker to core configuration
       2022- 4- 4 done
 
    87 2022- 4- 4 fix connectPeriod vs reconnectPeriod in IMqttClient configuration
       2022- 4- 4 done
+
+   89 2022- 4- 5 have core().storageDir() method instead of static coreConfig.storageDir()
+      2022- 4- 5 done with v0.8.0
 
 -------------------------------------------------------------------------------------------
  P. Wieser - Created on 2022, Jan. 29th
