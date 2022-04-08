@@ -76,7 +76,7 @@ export class coreConfig {
         this._config.core = this._config.core || {};
         this._config.features = this._config.features || {};
         // core: root CA
-        if( this._config.core.rootCA){
+        if( this._config.core.rootCA ){
             this._config.core.rootCACert = fs.readFileSync( path.join( api.storageDir(), this._config.core.rootCA ))
         } else {
             throw new Error( 'coreConfig: root CA is not specified' );

@@ -109,6 +109,22 @@ export class Logger {
         Logger._log( Logger.const.DEBUG, ...arguments );
     }
 
+    // these methods defined to satisfy fastify prerequisites
+    //  https://www.fastify.io/docs/latest/Reference/Server/#logger
+    static fatal(){
+        Logger._log( Logger.const.ERROR, ...arguments );
+    }
+
+    static trace(){
+        Logger._log( Logger.const.DEBUG, ...arguments );
+    }
+
+    static child(){
+        const child = Object.create( this );
+        child.pino = pino.child( ...arguments );
+        return child;
+    }
+
     /**
      * Early initialization
      * Define the needed constants
@@ -132,6 +148,13 @@ export class Logger {
      */
     static logFname(){
         return Logger._logFname;
+    }
+
+    /**
+     * @returns {pino} the pino instance
+     */
+    static logInstance(){
+        return Logger._logInstance;
     }
 
     /**

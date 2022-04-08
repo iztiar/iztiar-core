@@ -4,6 +4,8 @@
         "environment": "development",
         "rootCA": "config/certs/ca.crt",
         "database": {
+            "uri": "mongodb://izrest:<passwd>@localhost:24017/iztiar",
+            "passwdFile": "config/rest.passwd"
         }
     },
     "features": {
@@ -75,7 +77,12 @@
             },
             "ITcpServer": {
             },
-            "Rest": {
+            "REST": {
+                "host": "xps13.trychlos.lan",
+                "tls": {
+                    "cert": "config/certs/RestServer.crt",
+                    "key": "config/certs/RestServer.key"
+                }
             },
             "add-ons": {
                 "pidUsage": {
@@ -154,10 +161,6 @@
             },
             "IMqttClient.devicesMqttBus": {
                 "uri": "mqtt://pidom.trychlos.lan:1883",
-                "topics": {
-                    "fromDevices": "jeedomv4/mySensors/fromDevice",
-                    "toDevices": "jeedomv4/mySensors/toDevice"
-                },
                 "options": {
                     "username": "dirwatch"
                 }
@@ -171,6 +174,11 @@
                 }
             },
             "ITcpServer": {
+            },
+            "IMqttBus": {
+                "IMqttClient": "IMqttClient.devicesMqttBus",
+                "fromDevices": "jeedomv4/mySensors/fromDevice",
+                "toDevices": "jeedomv4/mySensors/toDevice"
             },
             "add-ons": {
                 "pidUsage": {

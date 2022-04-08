@@ -102,3 +102,46 @@ On a given host, and for a given environment, it gathers all the configurations 
 The storage directory is determined at install time, and defaults to `/var/lib/iztiar` in *nix-like systems.
 
 It must be specified - if not the default - as a command-line argument for all CLI commands.
+
+## Homie vs Jeedom vs Iztiar
+
+    [Homie](https://homieiot.github.io/specification/)
+    Homie aims to define a MQTT standard exchange language. It makes use of a Device / Node / (settable) Property hierarchy.
+
+    [Jeedom](https://jeedom.com/)
+    Jeedom hierarchy is Zone / Equipment / Command(info|action)
+    In Jeedom, zones may be built as a tree (a zone in a zone in a zone) of arbitrary deep.
+    Zone is a powerful level, as it may organize and present the equipments in every way we can imagine.
+    An equipment is attached to at most one zone.
+    One can think that a Jeedom equipment is almost analogous to Homie device+node.
+
+    [MySensors](https://www.mysensors.org/)
+    MySensors defines Node / Sensor
+
+    The table below ignore all visual/display properties.
+
+ +----------------------------+--------------------------------------+----------------+-----------------
+ |       Homie v4             |           Jeedom                     | MySensors      |     Iztiar
+ +----------------------------+--------------------------------------+----------------+------------------+
+ |                            | Zone      $name                      |                | Zone    name     |
+ |                            |           $children (zone|equipment) |                |         children |
+ |                            |                                      |                |  
+ | Device    $name            | Equipment $name                      |                |
+ |           $nodes           |           $category                  |                |
+ |           $homie           |           $active                    |                |  
+ |           $state           |           $commands                  |                |
+ |           $extensions      |                                      |                |
+ |           $implementation  |                                      |                |
+ |                            |                                      |                |
+ | Node      $name            |                                      | Node    $id    |
+ |           $type            |                                      |         $name  |
+ |           $properties      |                                      |                |
+ |                            |                                      |                |
+ |                            |                                      |                |
+ | Property  $name            | Command   $name                      | Sensor  $id    |
+ |           $datatype        |           $nature (info|action)      |         $name  | 
+ |           $retained        |           $datatype                  |                |
+ |           $settable        |                                      |                |
+ |           $unit            |                                      |                |
+ |           $format          |                                      |                |
+ +----------------------------+--------------------------------------+----------------+-----------------
