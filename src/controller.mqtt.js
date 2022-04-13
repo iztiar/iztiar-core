@@ -23,8 +23,8 @@ export const mqtt = {
     masterInterval: null,
     masterPhase: null,
     masterElected: null,
-    masterVoteTopic: 'iztiar/ADMIN/masterVotes/',
-    masterElectedTopic: 'iztiar/ADMIN/masterController',
+    masterVoteTopic: 'iztiar/$IZ/masterVotes/',
+    masterElectedTopic: 'iztiar/$IZ/masterController',
 
     /**
      * Detect other coreControllers via alive/ messages
@@ -34,7 +34,7 @@ export const mqtt = {
      * @param {MqttConnect} client
      */
     detectAliveController: function( controller, topic, json, client ){
-        if( topic.startsWith( 'iztiar/alive/' )){
+        if( topic.startsWith( 'iztiar/$IZ/alive/' )){
             const _class = json.class;
             const _name = topic.split( '/' )[2];
             if( _class === 'coreController' && _name !== controller.feature().name()){

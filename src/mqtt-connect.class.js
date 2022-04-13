@@ -65,7 +65,7 @@ export class MqttConnect {
         const exports = iface.featureProvider().api().exports();
         let _promise = Promise.resolve( true );
         if( this._client && this._aliveInterval ){
-            const topic = 'iztiar/alive/'+iface.v_name();
+            const topic = 'iztiar/$IZ/alive/'+iface.v_name();
             let _payload = null;
             if( empty ){
                 _promise = _promise.then(() => { _payload = undefined; });
