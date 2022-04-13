@@ -156,8 +156,10 @@
         },
         "mySensorsGw": {
             "module": "@iztiar/iztiar-mysensors",
+            "izMqtt": "IMqttClient.iztiar",
             "mySensors": {
-                "type": "mqtt"
+                "type": "mqtt",
+                "inclusionDelay": 600000
             },
             "IMqttClient.devicesMqttBus": {
                 "uri": "mqtt://pidom.trychlos.lan:1883",
@@ -184,6 +186,11 @@
                 "pidUsage": {
                     "module": "@iztiar/iztiar-pidusage"
                 }
+            },
+            "REST": {
+                "feature": "RestMain",
+                "cert": "config/certs/mySensorsToRest.crt",
+                "key": "config/certs/mySensorsToRest.key"
             }
         }
     }

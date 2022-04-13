@@ -66,6 +66,23 @@ export const utils = {
     },
 
     /**
+     * @param {integer} stamp the timestamp as a long integer
+     * @returns {String} the timestamp as 'yyyy-mm-dd hh:mi:ss.sss'
+     */
+    humanStamp: function( stamp ){
+        const date = new Date( stamp );
+        const year = ( '0000'+date.getFullYear()).slice( -4 );
+        const mm = 1+date.getMonth();
+        const month = ( '00'+mm).slice( -2 );
+        const day = ( '00'+date.getDate()).slice( -2 );
+        const hours = ( '00'+date.getHours()).slice( -2 );
+        const mins = ( '00'+date.getMinutes()).slice( -2 );
+        const secs = ( '00'+date.getSeconds()).slice( -2 );
+        const millis = ( '000'+date.getMilliseconds()).slice( -3 );
+        return year+'-'+month+'-'+day+' '+hours+':'+mins+':'+secs+'.'+millis;
+    },
+
+    /**
      * @param {integer} pid the PID of the process to check
      * @returns {Promise} which will will resolves with [{ pid, user, time, etime }], or false
      */
@@ -231,16 +248,7 @@ export const utils = {
      * @returns {String} the current timestamp as 'yyyy-mm-dd hh:mi:ss.sss'
      */
     now: function(){
-        const date = new Date( Date.now());
-        const year = ( '0000'+date.getFullYear()).slice( -4 );
-        const mm = 1+date.getMonth();
-        const month = ( '00'+mm).slice( -2 );
-        const day = ( '00'+date.getDate()).slice( -2 );
-        const hours = ( '00'+date.getHours()).slice( -2 );
-        const mins = ( '00'+date.getMinutes()).slice( -2 );
-        const secs = ( '00'+date.getSeconds()).slice( -2 );
-        const millis = ( '000'+date.getMilliseconds()).slice( -3 );
-        return year+'-'+month+'-'+day+' '+hours+':'+mins+':'+secs+'.'+millis;
+        return utils.humanStamp( Date.now());
     },
 
     /**

@@ -6,7 +6,7 @@
 24006   ControllerFour TCP server
 24007   ControllerFive TCP server
 24008
-24009   mySensorsGw netGw:port
+24009   mySensorsGw net:port
 24010   mySensorsGw TCP server
 24011   Rest API
 24012   Rest TCP server

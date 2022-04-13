@@ -239,7 +239,7 @@ export class MqttConnect {
                     conf.options.ca = core.rootCACert;
                 }
                 if( conf.cert ){
-                    this._clientCert = fs.readFileSync( path.join( featApi.storageDir(), conf.cert ))
+                    this._clientCert = fs.readFileSync( path.join( featApi.storageDir(), conf.cert ));
                     this._clientCertPath = conf.cert;
                     conf.options.cert = this._clientCert;
                 }

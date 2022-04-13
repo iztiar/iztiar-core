@@ -24,6 +24,10 @@
         "pluginManager": {
             "type": "IPluginManager",
             "description": "the IPluginManager interface as instanciated by the core application (getter/setter)"
+        },
+        "storageDir": {
+            "type": "String",
+            "description": "the storage directory defined at startup time"
         }
     }
 }

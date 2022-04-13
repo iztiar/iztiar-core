@@ -96,16 +96,28 @@ export class IMqttClient {
      */
     fillConfig( conf, founds ){
         const featApi = this._instance.api();
-        const exports = featApi.exports();
-        exports.Msg.debug( 'IMqttClient.fillConfig()', 'founds=', founds );
+        const Msg = featApi.exports().Msg;
+        Msg.debug( 'IMqttClient.fillConfig()', 'founds=', founds );
         const self = this;
         let _promise = Promise.resolve( null );
+        if( !Object.keys( conf ).includes( 'izMqtt' )){
+            conf.izMqtt = 'IMqttClient';
+        }
+        let _found = false;
         founds.every(( k ) => {
+            if( k === conf.izMqtt ){
+                _found = true;
+            }
             self._clients[k] = new MqttConnect( self._instance, k );
             _promise = _promise
                 .then(() => { return self._clients[k].fillConfig( this._instance, conf[k] ); });
             return true;
         });
+        _promise = _promise.then(() => {
+            if( !_found ){
+                Msg.warn( 'IMqttClient.fillConfig() izMqtt='+conf.izMqtt+' not found among configured clients' );
+            }
+        })
         return _promise;
     }
 

@@ -58,6 +58,11 @@
                             "description": "whether the service is enabled or disabled",
                             "default": true
                         },
+                        "izMqtt": {
+                            "type": "string",
+                            "description": "the name of the group which describe the IMqttClient interface to the iztiar MQTT message bus",
+                            "default": "IMqttClient"
+                        },
                         "add-ons": {
                             "type": "object",
                             "description": "some features to be added to this one",

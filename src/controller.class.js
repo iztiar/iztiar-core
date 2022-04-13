@@ -293,10 +293,8 @@ export class coreController {
      * allocate if needed, and return the random identifier of this controller
      */
     id(){
-        if( !this._myId ){
-            while( !this._myId ){
-                this._myId = Math.floor( Math.random() * 1000000 );
-            }
+        while( !this._myId ){
+            this._myId = Math.floor( Math.random() * 1000000 );
         }
         return this._myId;
     }
