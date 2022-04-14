@@ -70,17 +70,6 @@ export class IMqttClient {
         return this._instance.feature().name();
     }
 
-    /**
-     * @returns {Promise} which resolves to the payload of the 'properties' message
-     * [-implementation Api-]
-     */
-    v_properties(){
-        return Promise.resolve({
-            module: this.v_module(),
-            class: this.v_class()
-        });
-    }
-
     /* *** ***************************************************************************************
        *** The public API, i.e; the API anyone may call to access the interface service        ***
        *** *************************************************************************************** */
