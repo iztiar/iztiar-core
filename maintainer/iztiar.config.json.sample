@@ -19,8 +19,9 @@
                 "options": {
                     "reconnectPeriod": 5000
                 },
-                "alive": {
-                    "publish": true
+                "publications": {
+                    "alive": true,
+                    "conf": true
                 }
             },
             "ITcpServer": {
@@ -50,8 +51,9 @@
                 "options": {
                     "reconnectPeriod": 5000
                 },
-                "alive": {
-                    "publish": true
+                "publications": {
+                    "alive": true,
+                    "conf": true
                 }
             },
             "ITcpServer": {
@@ -99,8 +101,9 @@
                 "feature": "BrokerOne",
                 "cert": "config/certs/controllerOne.crt",
                 "key": "config/certs/controllerOne.key",
-                "alive": {
-                    "publish": true
+                "publications": {
+                    "alive": true,
+                    "conf": true
                 }
             },
             "ITcpServer": {
@@ -119,8 +122,9 @@
                 "feature": "BrokerOne",
                 "cert": "config/certs/controllerOne.crt",
                 "key": "config/certs/controllerOne.key",
-                "alive": {
-                    "publish": true
+                "publications": {
+                    "alive": true,
+                    "conf": true
                 }
             },
             "ITcpServer": {
@@ -132,8 +136,9 @@
             "class": "coreController",
             "IMqttClient": {
                 "feature": "BrokerOne",
-                "alive": {
-                    "publish": true
+                "publications": {
+                    "alive": true,
+                    "conf": true
                 }
             },
             "ITcpServer": {
@@ -148,8 +153,9 @@
                 "options": {
                     "reconnectPeriod": 5000
                 },
-                "alive": {
-                    "publish": true
+                "publications": {
+                    "alive": true,
+                    "conf": true
                 }
             },
             "ITcpServer": {
