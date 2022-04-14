@@ -56,12 +56,17 @@
                     "properties": {
                         "alive": {
                             "type": "boolean",
-                            "description": "whether to publish an alive message",
+                            "description": "whether to periodically publish an alive message",
                             "default": "false"
                         },
                         "conf": {
                             "type": "boolean",
                             "description": "whether to publish the feature configuration",
+                            "default": "false"
+                        },
+                        "documents": {
+                            "type": "boolean",
+                            "description": "whether to automatically publish the documents",
                             "default": "false"
                         },
                         "period": {

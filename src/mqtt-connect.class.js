@@ -8,13 +8,14 @@ import fs from 'fs';
 import mqtt from 'mqtt';
 import path from 'path';
 
-import { IStatus, Msg } from './index.js';
+import { IStatus, Msg, utils } from './index.js';
 
 export class MqttConnect {
 
     static d = {
         pubAlive: false,
         pubConf: false,
+        pubDocuments: false,
         pubPeriod: 60*1000,
         proto: 'mqtt',
         host: 'localhost',
@@ -27,10 +28,11 @@ export class MqttConnect {
     // the key of the client configuration group
     _key = null;
 
+    // the MQTT client connection
     _client = null;
 
+    // the JS interval for periodic alive publication
     _aliveInterval = null;
-    _confInterval = null;
 
     // TLS certificate and key
     _clientCert = null;
@@ -54,6 +56,9 @@ export class MqttConnect {
         return this;
     }
 
+    /*
+     * 'alive' messages are periodically published
+     */
     _aliveInstall( iface ){
         Msg.debug( 'MqttConnect._aliveInstall()', 'this._client is '+( this._client ? 'set':'unset' ));
         if( !this._aliveInterval ){
@@ -87,18 +92,12 @@ export class MqttConnect {
         }
     }
 
-    _confInstall( iface ){
-        Msg.debug( 'MqttConnect._confInstall()', 'this._client is '+( this._client ? 'set':'unset' ));
-        if( !this._confInterval ){
-            Msg.debug( 'MqttConnect._confInstall() installing confInterval' );
-            this._confInterval = setInterval(() => { this._confRun( iface )}, this._filledConf.publications.period );
-            this._confRun( iface );
-        }
-    }
-
+    /*
+     * conf/ hierarchy is published once at startup
+     */
     _confRun( iface, empty=false ){
         const exports = iface.featureProvider().api().exports();
-        if( this._client && this._confInterval ){
+        if( this._client ){
             const topic = 'iztiar/$IZ/'+iface.v_name()+'/conf';
             let _payload = null;
             if( empty ){
@@ -182,25 +181,12 @@ export class MqttConnect {
         return _promise;
     }
 
-    // build and returns a secured options object
-    //  i.e. without any security indications
-    _securedConf(){
-        if( !this._secConfig ){
-            this._secConfig = deepcopy( this._filledConf );
-            delete this._secConfig.options.ca;
-            delete this._secConfig.options.cert;
-            delete this._secConfig.options.key;
-            delete this._secConfig.options.password;
-        }
-        return this._secConfig;
-    }
-
     // publish the MqttConnect status as part of the global one
     _statusPart( instance, self ){
         Msg.debug( 'MqttConnect.statusPart()' );
         let o = {};
         o[ self._key ] = {
-            ... self._securedConf()
+            ... self._filledConf
         };
         return Promise.resolve( o );
     }
@@ -208,6 +194,13 @@ export class MqttConnect {
     /* *** ***************************************************************************************
        *** The public API, i.e; the API anyone may call to access the interface service        ***
        *** *************************************************************************************** */
+
+    /**
+     * @returns {Object} the secured filled configuration
+     */
+    config(){
+        return this._filledConf;
+    }
 
     /**
      * Try to connect to the specified message bus (aka broker) - retry every minute if needed
@@ -219,7 +212,10 @@ export class MqttConnect {
      */
     connect( iface, conf ){
         Msg.debug( 'MqttConnect.connect()' );
-        this._filledConf = deepcopy( conf );
+
+        this._filledConf = utils.filterBuffer( conf );
+        delete this._filledConf.options.password;
+
         const self = this;
 
         this._client = mqtt.connect( conf.uri, conf.options );
@@ -230,7 +226,7 @@ export class MqttConnect {
                 self._aliveInstall( iface );
             }
             if( self._filledConf.publications.conf ){
-                self._confInstall( iface );
+                self._confRun( iface );
             }
         });
 
@@ -265,6 +261,9 @@ export class MqttConnect {
                 }
                 if( !conf.publications.conf ){
                     conf.publications.conf = MqttConnect.d.pubConf;
+                }
+                if( !conf.publications.documents ){
+                    conf.publications.documents = MqttConnect.d.pubDocuments;
                 }
                 // mqtt client options we override
                 if( !conf.options ){
@@ -348,10 +347,8 @@ export class MqttConnect {
                 this._aliveRun( iface, true );
                 this._aliveInterval = null;
             }
-            if( this._confInterval ){
-                clearInterval( this._confInterval );
+            if( this._filledConf.publications.conf ){
                 this._confRun( iface, true );
-                this._confInterval = null;
             }
             _promise = _promise.then(() => {
                 Msg.debug( 'MqttConnect.terminate() ending client connection' );

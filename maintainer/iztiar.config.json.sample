@@ -71,8 +71,10 @@
                 "options": {
                     "reconnectPeriod": 5000
                 },
-                "alive": {
-                    "publish": true
+                "publications": {
+                    "alive": true,
+                    "conf": true,
+                    "documents": true
                 }
             },
             "ITcpServer": {
@@ -173,10 +175,8 @@
                 "key": "config/certs/mySensorsGw.key",
                 "publications": {
                     "alive": true,
-                    "conf": true
-                },
-                "alive": {
-                    "publish": true
+                    "conf": true,
+                    "documents": true
                 }
             },
             "ITcpServer": {
