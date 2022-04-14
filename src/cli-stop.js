@@ -150,7 +150,7 @@ export function cliStop( api, name, options={} ){
                         process.kill( p, 'SIGKILL' );
                         return true;
                     })
-                    featCard.postStop();
+                    featCard.provider().stopPost();
                     res.next = STAT;
                     resolve( result );
                 } else {
@@ -178,7 +178,7 @@ export function cliStop( api, name, options={} ){
                     }
                     return true;
                 });
-                featCard.postStop();
+                featCard.provider().stopPost();
                 res.next = STAT;
                 resolve( result );
             });

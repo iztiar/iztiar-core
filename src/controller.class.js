@@ -299,15 +299,6 @@ export class coreController {
         return this._myId;
     }
 
-    /*
-     * If the service had to be SIGKILL'ed to be stoppped, then gives it an opportunity to make some cleanup
-     */
-    postStop(){
-        super.postStop();
-        Msg.debug( 'coreController.postStop()' );
-        this.IRunFile.remove( this.feature().name());
-    }
-
     /**
      * @returns {Promise} which resolves to a status Object
      * Note:
@@ -355,19 +346,28 @@ export class coreController {
     }
 
     /*
-     * Called on each and every loaded add-on when the main hosting feature has terminated with its initialization
+     * Called on each and every loaded feature when the main hosting feature has terminated with its startup
      * Time, for example, to increment all interfaces we are now sure they are actually implemented
      * Here: add verbs to ITcpServer
      */
-    ready(){
-        super.ready();
-        Msg.debug( 'coreController.ready()' );
+    startPost(){
+        super.startPost();
+        Msg.debug( 'coreController.startPost()' );
         const self = this;
         Object.keys( coreController.verbs ).every(( key ) => {
             const o = coreController.verbs[key];
             self.ITcpServer.add( key, o.label, o.fn, o.end ? o.end : false );
             return true;
         });
+    }
+
+    /*
+     * If the service had to be SIGKILL'ed to be stoppped, then gives it an opportunity to make some cleanup
+     */
+    stopPost(){
+        super.stopPost();
+        Msg.debug( 'coreController.stopPost()' );
+        this.IRunFile.remove( this.feature().name());
     }
 
     /**

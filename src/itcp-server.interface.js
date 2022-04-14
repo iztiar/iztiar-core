@@ -156,7 +156,7 @@ export class ITcpServer {
        *** *************************************************************************************** */
 
     /**
-     * What to do when this ITcpServer is ready listening ?
+     * What to do when this ITcpServer is initPost listening ?
      * @param {Object} status of the ITcpServer
      * [-implementation Api-]
      */

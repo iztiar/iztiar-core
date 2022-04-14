@@ -153,8 +153,8 @@ export class featureProvider {
      * Called on each add-on/service feature when the (main hosting) feature has terminated with its initialization
      * Time, for example, to increment all interfaces we are now sure they are actually implemented
      */
-    ready(){
-        Msg.debug( this.feature().name()+' featureProvider.ready()' );
+    initPost(){
+        Msg.debug( this.feature().name()+' featureProvider.initPost()' );
         return;
     }
 
@@ -167,6 +167,13 @@ export class featureProvider {
     }
 
     /**
+     * A placeholder to be able to call featureProvider.startPost()
+     */
+    startPost(){
+        Msg.debug( this.feature().name()+' featureProvider.startPost()' );
+    }
+
+    /**
      * A placeholder to be able to call featureProvider.stop() in case the derived class doesn't implement IForkable
      */
     stop(){
@@ -175,14 +182,14 @@ export class featureProvider {
     }
 
     /**
-     * A placeholder to be able to call featureProvider.postStop()
+     * A placeholder to be able to call featureProvider.stopPost()
      */
-    postStop(){
-        Msg.debug( this.feature().name()+' featureProvider.terminate()' );
+    stopPost(){
+        Msg.debug( this.feature().name()+' featureProvider.stopPost()' );
     }
 
     /**
-     * A placeholder to be able to call featureProvider.postStop()
+     * A placeholder to be able to call featureProvider.terminate()
      */
     terminate(){
         Msg.debug( this.feature().name()+' featureProvider.terminate()' );

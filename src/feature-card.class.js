@@ -107,7 +107,7 @@ export class featureCard {
      * @returns {Object} the current feature configuration
      */
     config( conf ){
-        if( conf && Object.keys( conf ).length ){
+        if( conf && Object.keys( conf ).length && typeof conf === 'object' ){
             Msg.debug( 'featureCard.config()', 'name='+this._name, conf );
             this._config = conf;
         }
@@ -212,11 +212,11 @@ export class featureCard {
                     Object.keys( featureCard._initializedAddons ).every(( name ) => {
                         const _short = name.split( '/' )[0];
                         if( _short === _name ){
-                            featureCard._initializedAddons[name].provider().ready();
+                            featureCard._initializedAddons[name].provider().initPost();
                         }
                         return true;
                     });
-                    this.provider().ready();
+                    this.provider().initPost();
                 }
                 return Promise.resolve( res );
             } else {
@@ -269,8 +269,10 @@ export class featureCard {
         let _promise = Promise.resolve( true )
         if( this._featureProvider.IForkable ){
             _promise = _promise.then(() => { return this._featureProvider.IForkable.v_start( _name, cb, args ); });
+            _promise = _promise.then(() => { return this._featureProvider.startPost(); });
         } else {
             _promise = _promise.then(() => { return this._featureProvider.start( _name, cb, args ); });
+            _promise = _promise.then(() => { return this._featureProvider.startPost(); });
         }
         return _promise;
     }
@@ -491,13 +493,5 @@ export class featureCard {
             _promise = _promise.then(() => { return this._featureProvider.stop(); });
         }
         return _promise;
-    }
-
-    /**
-     * Called after the stop has returned, time to do some cleaning if needed
-     */
-    postStop(){
-        Msg.verbose( 'featureCard.postStop()', 'name='+this.name());
-        this._featureProvider.postStop();
     }
 }

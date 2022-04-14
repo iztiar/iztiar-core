@@ -150,7 +150,7 @@ export class IForkable {
     }
 
     /**
-     * Send an IPC message to the parent when this (child process) service is ready
+     * Send an IPC message to the parent when this (child process) service is initPost
      * @param {*} data to be send to the parent, for example the current status of the server
      * @throw {Error}
      */
