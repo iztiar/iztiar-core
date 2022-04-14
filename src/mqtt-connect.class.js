@@ -13,8 +13,9 @@ import { IStatus, Msg } from './index.js';
 export class MqttConnect {
 
     static d = {
-        alivePublish: false,
-        alivePeriod: 60*1000,
+        pubAlive: false,
+        pubConf: false,
+        pubPeriod: 60*1000,
         proto: 'mqtt',
         host: 'localhost',
         port: 24003,
@@ -27,7 +28,9 @@ export class MqttConnect {
     _key = null;
 
     _client = null;
+
     _aliveInterval = null;
+    _confInterval = null;
 
     // TLS certificate and key
     _clientCert = null;
@@ -52,40 +55,75 @@ export class MqttConnect {
     }
 
     _aliveInstall( iface ){
-        //console.log( 'MqttConnect._aliveInstall()', this._client );
         Msg.debug( 'MqttConnect._aliveInstall()', 'this._client is '+( this._client ? 'set':'unset' ));
         if( !this._aliveInterval ){
-            Msg.debug( 'MqttConnect._aliveInstall() installing aliveInterval' );
-            this._aliveInterval = setInterval(() => { this._aliveRun( iface )}, this._filledConf.alive.period );
+            Msg.debug( 'MqttConnect._aliveInstall() installing _aliveInterval' );
+            this._aliveInterval = setInterval(() => { this._aliveRun( iface )}, this._filledConf.publications.period );
             this._aliveRun( iface );
         }
     }
 
     _aliveRun( iface, empty=false ){
         const exports = iface.featureProvider().api().exports();
-        let _promise = Promise.resolve( true );
         if( this._client && this._aliveInterval ){
+            let _promise = Promise.resolve( true );
             const topic = 'iztiar/$IZ/alive/'+iface.v_name();
             let _payload = null;
             if( empty ){
-                _promise = _promise.then(() => { _payload = undefined; });
+                _promise = _promise
+                    .then(() => { _payload = undefined; });
             } else {
-                _promise = iface.v_alive()
+                _promise = _promise
+                    .then(() => { return iface.v_alive(); })
                     .then(( res ) => {
-                        if( res ){
-                            _payload = res;
-                        } else {
-                            _payload = {};
-                        }
+                        _payload = res ? res : {};
                         _payload.timestamp = exports.utils.now();
                     });
             }
             _promise = _promise.then(() => {
-                Msg.debug( 'MqttConnect._alive() publishing', topic, _payload );
+                Msg.debug( 'MqttConnect._aliveOrigRun() publishing', topic, _payload );
                 this.publish( topic, _payload, { retain: true });
             });
         }
-        return _promise;
+    }
+
+    _confInstall( iface ){
+        Msg.debug( 'MqttConnect._confInstall()', 'this._client is '+( this._client ? 'set':'unset' ));
+        if( !this._confInterval ){
+            Msg.debug( 'MqttConnect._confInstall() installing confInterval' );
+            this._confInterval = setInterval(() => { this._confRun( iface )}, this._filledConf.publications.period );
+            this._confRun( iface );
+        }
+    }
+
+    _confRun( iface, empty=false ){
+        const exports = iface.featureProvider().api().exports();
+        if( this._client && this._confInterval ){
+            const topic = 'iztiar/$IZ/'+iface.v_name()+'/conf';
+            let _payload = null;
+            if( empty ){
+                _payload = undefined;
+                Msg.debug( 'MqttConnect._confRun() publishing', topic, _payload );
+                this.publish( topic, _payload, { retain: true });
+            } else {
+                _payload = iface.v_conf();
+                Object.keys( _payload ).every(( k ) => {
+                    if( typeof _payload[k] === 'object' ){
+                        Object.keys( _payload[k] ).every(( subk ) => {
+                            const tt = topic+'/'+k+'/'+subk;
+                            Msg.debug( 'MqttConnect._confRun() publishing', tt, _payload[k][subk] );
+                            this.publish( tt, _payload[k][subk], { retain: true });
+                            return true;
+                        });
+                    } else {
+                        const tt = topic+'/'+k;
+                        Msg.debug( 'MqttConnect._confRun() publishing', tt, _payload[k] );
+                        this.publish( tt, _payload[k], { retain: true });
+                    }
+                    return true;
+                });
+            }
+        }
     }
 
     // try to build an URI to address the broker
@@ -188,8 +226,11 @@ export class MqttConnect {
 
         this._client.on( 'connect', function(){
             Msg.verbose( 'MqttConnect (re)connect' );
-            if( self._filledConf.alive.publish ){
+            if( self._filledConf.publications.alive ){
                 self._aliveInstall( iface );
+            }
+            if( self._filledConf.publications.conf ){
+                self._confInstall( iface );
             }
         });
 
@@ -213,14 +254,17 @@ export class MqttConnect {
             .then(() => { return this._fillConfigURI( provider, conf ); })
             .then(() => {
                 // MqttConnect options
-                if( !conf.alive ){
-                    conf.alive = {};
+                if( !conf.publications ){
+                    conf.publications = {};
                 }
-                if( !conf.alive.period ){
-                    conf.alive.period = MqttConnect.d.alivePeriod;
+                if( !conf.publications.period ){
+                    conf.publications.period = MqttConnect.d.pubPeriod;
                 }
-                if( !conf.alive.publish ){
-                    conf.alive.publish = MqttConnect.d.alivePublish;
+                if( !conf.publications.alive ){
+                    conf.publications.alive = MqttConnect.d.pubAlive;
+                }
+                if( !conf.publications.conf ){
+                    conf.publications.conf = MqttConnect.d.pubConf;
                 }
                 // mqtt client options we override
                 if( !conf.options ){
@@ -301,8 +345,13 @@ export class MqttConnect {
         if( this._client ){
             if( this._aliveInterval ){
                 clearInterval( this._aliveInterval );
-                _promise = this._aliveRun( iface, true );
+                this._aliveRun( iface, true );
                 this._aliveInterval = null;
+            }
+            if( this._confInterval ){
+                clearInterval( this._confInterval );
+                this._confRun( iface, true );
+                this._confInterval = null;
             }
             _promise = _promise.then(() => {
                 Msg.debug( 'MqttConnect.terminate() ending client connection' );

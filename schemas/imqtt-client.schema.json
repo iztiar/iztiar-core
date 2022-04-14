@@ -50,18 +50,23 @@
                         }
                     }
                 },
-                "alive": {
+                "publications": {
                     "type": "object",
-                    "description": "publication of an alive message on this connection",
+                    "description": "the automated publications on this message bus",
                     "properties": {
-                        "publish": {
+                        "alive": {
                             "type": "boolean",
-                            "description": "whether to publish an alive message on this connection",
+                            "description": "whether to publish an alive message",
+                            "default": "false"
+                        },
+                        "conf": {
+                            "type": "boolean",
+                            "description": "whether to publish the feature configuration",
                             "default": "false"
                         },
                         "period": {
                             "type": "integer",
-                            "description": "interval (ms) between two alive publications, defaulting to 1mn",
+                            "description": "publications periodicity, defaulting to 1mn",
                             "default": 60000
                         }
                     }

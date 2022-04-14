@@ -171,6 +171,10 @@
                 "feature": "BrokerOne",
                 "cert": "config/certs/mySensorsGw.crt",
                 "key": "config/certs/mySensorsGw.key",
+                "publications": {
+                    "alive": true,
+                    "conf": true
+                },
                 "alive": {
                     "publish": true
                 }

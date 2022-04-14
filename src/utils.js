@@ -2,6 +2,7 @@
  * utils.js
  */
 import deepEqual from 'deepequal';
+import deepCopy from 'deepcopy';
 import fs from 'fs';
 import net from 'net';
 import path from 'path';
@@ -63,6 +64,30 @@ export const utils = {
         const exists = fs.existsSync( fname );
         Msg.debug( 'utils.fileExistsSync()', 'fname='+fname, exists ? 'exists':'doesn\' exist' );
         return fs.existsSync( fname );
+    },
+
+    /**
+     * @param {Object} obj the object to filter Buffer from
+     * @returns {Object} a deep copy of obj, without any Buffer data
+     */
+    filterBuffer: function( obj ){
+        const debug = false;
+        // recursive filtering function
+        const _rfn = function( o ){
+            if( debug ) Msg.debug( 'filterBuffer() typeof o='+typeof o );
+            if( typeof o === 'object' ){
+                Object.keys( o ).every(( k ) => {
+                    if( o[k] instanceof Buffer ){
+                        o[k] = { type:'Buffer' };
+                    } else if( typeof o[k] === 'object' ){
+                        return _rfn( o[k] );
+                    }
+                    return true;
+                });
+            }
+            return o;
+        };
+        return _rfn( deepCopy( obj ));
     },
 
     /**

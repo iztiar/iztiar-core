@@ -4,7 +4,7 @@
  * One instance of the interface is instanciated at implementation time.
  * Several connections can be managed which are each handled by their own MqttConnect instance.
  */
-import { MqttConnect, Msg } from './index.js';
+import { MqttConnect, Msg, utils } from './index.js';
 
 export class IMqttClient {
 
@@ -47,6 +47,14 @@ export class IMqttClient {
     }
 
     /**
+     * @returns {Object} a deepcopy of the feature configuration object after TLS filtering
+     * [-implementation Api-]
+     */
+    v_conf(){
+        return utils.filterBuffer( this._instance.feature().config());
+    }
+
+    /**
      * @returns {String} the name of the implementation module
      * [-implementation Api-]
      */
@@ -60,6 +68,17 @@ export class IMqttClient {
      */
     v_name(){
         return this._instance.feature().name();
+    }
+
+    /**
+     * @returns {Promise} which resolves to the payload of the 'properties' message
+     * [-implementation Api-]
+     */
+    v_properties(){
+        return Promise.resolve({
+            module: this.v_module(),
+            class: this.v_class()
+        });
     }
 
     /* *** ***************************************************************************************
