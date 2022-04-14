@@ -143,6 +143,7 @@ export class coreController {
         if( _forked ){
             const featCard = this.feature();
             return Promise.resolve( true )
+                .then(() => { this.startPre(); })
                 .then(() => { this.ITcpServer.create( featCard.config().ITcpServer.port ); })
                 .then(() => { exports.Msg.debug( 'coreController.ifeatureproviderStart() tcpServer created' ); })
                 .then(() => { this._started = exports.utils.now(); })
@@ -346,13 +347,13 @@ export class coreController {
     }
 
     /*
-     * Called on each and every loaded feature when the main hosting feature has terminated with its startup
+     * First start action
      * Time, for example, to increment all interfaces we are now sure they are actually implemented
      * Here: add verbs to ITcpServer
      */
-    startPost(){
-        super.startPost();
-        Msg.debug( 'coreController.startPost()' );
+    startPre(){
+        super.startPre();
+        Msg.debug( 'coreController.startPre()' );
         const self = this;
         Object.keys( coreController.verbs ).every(( key ) => {
             const o = coreController.verbs[key];

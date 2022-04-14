@@ -159,6 +159,13 @@ export class featureProvider {
     }
 
     /**
+     * A placeholder to be able to call featureProvider.startPre()
+     */
+    startPre(){
+        Msg.debug( this.feature().name()+' featureProvider.startPre()' );
+    }
+
+    /**
      * A placeholder to be able to call featureProvider.start() in case the derived class doesn't implement IForkable
      */
     start(){
