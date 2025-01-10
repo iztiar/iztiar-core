@@ -23,8 +23,8 @@ export const mqtt = {
     masterInterval: null,
     masterPhase: null,
     masterElected: null,
-    masterVoteTopic: 'iztiar/$IZ/masterVotes/',
-    masterElectedTopic: 'iztiar/$IZ/masterController',
+    masterVoteTopic: 'iztiar/$IZ/master/votes/',
+    masterElectedTopic: 'iztiar/$IZ/master/controller',
 
     /**
      * Detect other coreControllers via alive/ messages
@@ -57,7 +57,7 @@ export const mqtt = {
      */
     detectAdminVote: function( controller, topic, json, client ){
         if( topic.startsWith( mqtt.masterVoteTopic )){
-            const _name = topic.split( '/' )[3];
+            const _name = topic.split( '/' )[4];
             mqtt.votes[_name] = json;
             Msg.debug( 'mqtt.detectAdminVote() '+_name+' votes for ',json,' as master' );
         }

@@ -1,0 +1,38 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://github.com/iztiar/iztiar-core/schemas/iinclusion.schema.json",
+    "title": "IInclusion",
+    "description": "an interface to manage equipments inclusion, to be implemented by features which would take advantage of this function",
+    "type": "object",
+    "properties": {
+        "always": {
+            "type": "boolean",
+            "description": "whether the inclusion mode is always active (true) or requires to be explicitely activated (false)",
+            "default": false
+        },
+        "duration": {
+            "type": "integer",
+            "description": "if activation is explicite, the (ms) duration of its action, defaulting to 3mn",
+            "default": 180000
+        },
+        "tcp": {
+            "type": "string",
+            "description": "if activation is explicite, the tcp command to activate/unactivate the inclusion mode",
+            "default": ""
+        },
+        "rest": {
+            "type": "object",
+            "description": "if activation is explicite, the REST URLs to be considered",
+            "properties": {
+                "get": {
+                    "type": "string",
+                    "description": "the URL to be GET'ed to get the inclusion status"
+                },
+                "put": {
+                    "type": "string",
+                    "description": "the URL to be PUT'ted to set the inclusion status"
+                }
+            }
+        }
+    }
+}

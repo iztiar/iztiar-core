@@ -98,7 +98,7 @@ export class MqttConnect {
     _confRun( iface, empty=false ){
         const exports = iface.featureProvider().api().exports();
         if( this._client ){
-            const topic = 'iztiar/$IZ/'+iface.v_name()+'/conf';
+            const topic = 'iztiar/$IZ/feature/'+iface.v_name()+'/conf';
             let _payload = null;
             if( empty ){
                 _payload = undefined;
